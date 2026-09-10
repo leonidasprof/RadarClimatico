@@ -44,6 +44,62 @@
 :root {
   --radius: 0.5rem;
 
+  /* Modo Claro (Light Theme) */
+  --background: oklch(0.975 0.006 245);
+  --foreground: oklch(0.18 0.02 250);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 250);
+
+  --primary: oklch(0.62 0.2 45);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.93 0.012 245);
+  --secondary-foreground: oklch(0.22 0.02 250);
+
+  --muted: oklch(0.93 0.012 245);
+  --muted-foreground: oklch(0.46 0.025 250);
+
+  --accent: oklch(0.58 0.14 195);
+  --accent-foreground: oklch(0.99 0 0);
+
+  --destructive: oklch(0.58 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.86 0.015 245);
+  --input: oklch(0.86 0.015 245);
+  --ring: oklch(0.62 0.2 45);
+
+  /* Escala de calor adaptada para fundo claro */
+  --heat-1: oklch(0.6 0.13 220);
+  --heat-2: oklch(0.66 0.15 150);
+  --heat-3: oklch(0.72 0.17 85);
+  --heat-4: oklch(0.65 0.2 50);
+  --heat-5: oklch(0.56 0.24 27);
+  --canopy: oklch(0.55 0.16 150);
+
+  --gradient-heat: linear-gradient(
+    90deg,
+    var(--heat-1),
+    var(--heat-2),
+    var(--heat-3),
+    var(--heat-4),
+    var(--heat-5)
+  );
+  --gradient-panel: linear-gradient(
+    160deg,
+    color-mix(in oklab, var(--card) 97%, var(--primary) 3%),
+    var(--card)
+  );
+  --shadow-panel: 0 10px 30px -15px oklch(0.15 0.02 250 / 0.12), 0 0 0 1px oklch(0.15 0.02 250 / 0.06);
+  --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--primary) 30%, transparent),
+    0 8px 24px -10px color-mix(in oklab, var(--primary) 35%, transparent);
+}
+
+.dark {
+  /* Modo Escuro (Dark Tech / Radar Operacional) */
   --background: oklch(0.17 0.018 250);
   --foreground: oklch(0.96 0.008 90);
 
@@ -71,7 +127,7 @@
   --input: oklch(0.3 0.022 252);
   --ring: oklch(0.72 0.185 48);
 
-  /* Heat scale (cool -> critical) */
+  /* Escala de calor original para fundo escuro */
   --heat-1: oklch(0.72 0.12 220);
   --heat-2: oklch(0.82 0.13 150);
   --heat-3: oklch(0.86 0.16 90);
@@ -79,14 +135,6 @@
   --heat-5: oklch(0.62 0.24 27);
   --canopy: oklch(0.74 0.15 150);
 
-  --gradient-heat: linear-gradient(
-    90deg,
-    var(--heat-1),
-    var(--heat-2),
-    var(--heat-3),
-    var(--heat-4),
-    var(--heat-5)
-  );
   --gradient-panel: linear-gradient(
     160deg,
     color-mix(in oklab, var(--card) 92%, var(--primary) 8%),
@@ -109,15 +157,16 @@
     background-image:
       radial-gradient(
         900px 500px at 85% -10%,
-        color-mix(in oklab, var(--heat-5) 16%, transparent),
+        color-mix(in oklab, var(--heat-5) 12%, transparent),
         transparent
       ),
       radial-gradient(
         700px 420px at 5% 110%,
-        color-mix(in oklab, var(--accent) 12%, transparent),
+        color-mix(in oklab, var(--accent) 10%, transparent),
         transparent
       );
     background-attachment: fixed;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
   h1,

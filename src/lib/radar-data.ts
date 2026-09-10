@@ -23,6 +23,116 @@ export const zones: Zone[] = [
   { id: "ibura", name: "Ibura", temp: 34.9, feels: 41.0, humidity: 64, canopy: 16, vuln: 82, rating: "D", x: 33, y: 88, size: 140 },
 ];
 
+export type RatingDefinition = {
+  rating: "A" | "B" | "C" | "D" | "E";
+  name: string;
+  shortDesc: string;
+  fullDesc: string;
+  color: string;
+  urgency: string;
+};
+
+export const ratingDefinitions: Record<"A" | "B" | "C" | "D" | "E", RatingDefinition> = {
+  A: {
+    rating: "A",
+    name: "Excelente / Refúgio Climático",
+    shortDesc: "Baixo estresse e alto conforto térmico",
+    fullDesc: "Microclima favorável e protetor, sensação térmica amena (≤32 °C) e alta cobertura arbórea (>50%). Risco nulo à saúde pública.",
+    color: "oklch(0.68 0.18 142)",
+    urgency: "Preservação",
+  },
+  B: {
+    rating: "B",
+    name: "Favorável / Seguro",
+    shortDesc: "Microclima estável e equilibrado",
+    fullDesc: "Microclima estável, boa arborização (30–50%), baixo estresse térmico para a população e boa retenção de umidade.",
+    color: "oklch(0.75 0.14 125)",
+    urgency: "Preventivo",
+  },
+  C: {
+    rating: "C",
+    name: "Moderado / Atenção",
+    shortDesc: "Desconforto pontual em horários de pico",
+    fullDesc: "Desconforto térmico perceptível em picos diurnos, cobertura arbórea média (15–30%), requer hidratação preventiva para pedestres.",
+    color: "var(--heat-3)",
+    urgency: "Monitoramento",
+  },
+  D: {
+    rating: "D",
+    name: "Alto Risco / Alerta",
+    shortDesc: "Estresse térmico severo e pouca vegetação",
+    fullDesc: "Estresse térmico elevado (sensação >40 °C), déficit crítico de árvores (<15%), risco a idosos, crianças e trabalhadores ao ar livre.",
+    color: "var(--heat-4)",
+    urgency: "Prioridade Alta",
+  },
+  E: {
+    rating: "E",
+    name: "Crítico / Risco Extremo",
+    shortDesc: "Ilha de calor crítica e urgência de ação",
+    fullDesc: "Ilha de calor severa (sensação >43 °C), solo impermeabilizado, alta vulnerabilidade social. Demanda resposta imediata da Defesa Civil.",
+    color: "var(--heat-5)",
+    urgency: "Despacho Imediato",
+  },
+};
+
+export type OrganRecommendation = {
+  organ: string;
+  urgency: "Imediata" | "Alta" | "Monitoramento" | "Preventiva";
+  action: string;
+  description: string;
+};
+
+export const zoneOrganRecommendations: Record<string, OrganRecommendation> = {
+  "santo-amaro": {
+    organ: "Defesa Civil & Secretaria de Saúde",
+    urgency: "Imediata",
+    action: "Despacho de caminhões-pipa e agentes comunitários",
+    description: "Priorizar o envio emergencial de caminhões-pipa para as áreas de baixa renda. A operação requer acompanhamento de agentes comunitários para suporte local e orientação sobre prevenção à insolação.",
+  },
+  "boa-vista": {
+    organ: "Defesa Civil & CTTU",
+    urgency: "Imediata",
+    action: "Acionamento de aspersores térmicos e contenção de pedestres em áreas expostas",
+    description: "Mobilizar equipes para mitigação no corredor da Av. Conde da Boa Vista e orientar trabalhadores urbanos para refúgios refrigerados.",
+  },
+  "afogados": {
+    organ: "Defesa Civil & EMLURB",
+    urgency: "Alta",
+    action: "Instalação de estruturas provisórias de sombreamento e distribuição de água",
+    description: "Intervir no entorno do Mercado de Afogados e feiras livres, garantindo pontos de alívio térmico imediato e fiscalização de insolação.",
+  },
+  "imbiribeira": {
+    organ: "EMLURB & Defesa Civil",
+    urgency: "Alta",
+    action: "Cobertura emergencial de paradas de ônibus e vistoria em rotas a pé",
+    description: "Trecho de 1,4 km com déficit crítico de sombra; instalar coberturas provisórias de lona refletiva nos pontos de maior embarque.",
+  },
+  "ibura": {
+    organ: "Defesa Civil & Assistência Social",
+    urgency: "Alta",
+    action: "Rondas comunitárias preventivas e suporte a famílias vulneráveis",
+    description: "Monitorar encostas com alta retenção de radiação infravermelha e emitir alerta sonoro via líderes comunitários.",
+  },
+  "boa-viagem": {
+    organ: "Defesa Civil & Guarda Municipal",
+    urgency: "Monitoramento",
+    action: "Campanha de alerta e conscientização na orla e centros de compras",
+    description: "Alertar banhistas e trabalhadores sobre radiação solar máxima e hidratação regular entre 11h e 15h.",
+  },
+  "casa-forte": {
+    organ: "Secretaria de Meio Ambiente",
+    urgency: "Preventiva",
+    action: "Manutenção fitossanitária e vigilância do corredor verde da Zona Norte",
+    description: "Preservar a integridade do dossel arbóreo como barreira térmica protetora para os bairros limítrofes mais quentes.",
+  },
+  "dois-irmaos": {
+    organ: "Secretaria de Meio Ambiente",
+    urgency: "Preventiva",
+    action: "Proteção da Reserva Florestal e monitoramento de umidade microclimática",
+    description: "Assegurar a conservação do refúgio florestal metropolitano que ameniza a temperatura de toda a bacia do Capibaribe.",
+  },
+};
+
 export const historyDays = ["18/08", "19/08", "20/08", "21/08", "22/08", "23/08", "24/08"];
 
 // Histórico dos últimos 7 dias (máxima diária, °C) — derivado de forma determinística
@@ -90,3 +200,54 @@ export function heatVar(temp: number) {
   if (temp >= 30) return "var(--heat-2)";
   return "var(--heat-1)";
 }
+
+export type AlertLevel = "critico" | "alto" | "moderado";
+
+export type AlertItem = {
+  id: string | number;
+  level: AlertLevel;
+  zone: string;
+  title: string;
+  detail: string;
+  time: string;
+  eta: string;
+  notified?: boolean;
+};
+
+/**
+ * Retorna tonalidade verde proporcional à densidade arbórea.
+ * Usado na camada 'Cobertura vegetal' do Heatmap e no Dashboard Verde.
+ */
+export function canopyVar(canopy: number) {
+  if (canopy >= 50) return "var(--canopy)";
+  if (canopy >= 30) return "oklch(0.68 0.16 142)";
+  if (canopy >= 15) return "oklch(0.75 0.14 125)";
+  return "oklch(0.78 0.12 95)"; // Déficit crítico de vegetação
+}
+
+/**
+ * Retorna cor baseada no IVS (Índice de Vulnerabilidade Social 0-100).
+ * Usado na camada 'Vulnerabilidade' do Heatmap para evidenciar populações expostas.
+ */
+export function vulnVar(vuln: number) {
+  if (vuln >= 70) return "var(--heat-5)";
+  if (vuln >= 50) return "var(--heat-4)";
+  if (vuln >= 30) return "var(--heat-3)";
+  return "var(--accent)";
+}
+
+/**
+ * Lógica de negócio para análise comparativa entre dois bairros:
+ * Calcula deltas térmicos, de arborização e vulnerabilidade social
+ * para subsidiar tomadas de decisão da Defesa Civil e Planejamento Urbano.
+ */
+export function calculateMicroclimateDelta(primary: Zone, secondary: Zone) {
+  return {
+    tempDiff: Number((primary.temp - secondary.temp).toFixed(1)),
+    feelsDiff: Number((primary.feels - secondary.feels).toFixed(1)),
+    canopyDiff: Number((primary.canopy - secondary.canopy).toFixed(1)),
+    vulnDiff: Number((primary.vuln - secondary.vuln).toFixed(0)),
+    humidityDiff: Number((primary.humidity - secondary.humidity).toFixed(0)),
+  };
+}
+
