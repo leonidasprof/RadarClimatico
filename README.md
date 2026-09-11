@@ -2,8 +2,7 @@
   <img src="public/fundo_escuro.png" alt="Logo Arboris - Radar Climático" width="350" />
 
   **Inteligência territorial e microclimática para detectar, comunicar e mitigar ondas de calor.**
-
-  [![Acesso ao MVP](https://img.shields.io/badge/🚀_Acessar-MVP_Interativo-00E5FF?style=for-the-badge&logoColor=black)](https://radarclimatico.vercel.app/)
+  
   [![React 19](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
   [![TanStack Start](https://img.shields.io/badge/TanStack-Start-FF4154?style=for-the-badge&logo=tanstack&logoColor=white)](https://tanstack.com/start)
   [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind-v4.2-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
@@ -28,7 +27,7 @@ Você pode interagir e testar a interface operacional do nosso painel de control
 
 ## 🎯 O Desafio Urbano
 
-Recife é uma das capitais mais vulneráveis do Brasil a eventos climáticos extremos e picos de estresse térmico. A carência de sistemas integrados de monitoramento microclimático de alta granularidade prejudica a saúde pública — gerando desidratação, internações e sobrecarga nas Unidades de Pronto Atendimento (UPAs) —, além de dificultar o direcionamento assertivo de recursos para arborização urbana e infraestrutura verde resiliente.
+Recife é uma das capitais mais vulneráveis do Brasil a eventos climáticos extremos e picos de estresse térmico. A carência de sistemas integrados de monitoramento microclimático de alta granularidade prejudica a saúde pública gerando desidratação, internações e sobrecarga nas Unidades de Pronto Atendimento (UPAs), além de dificultar o direcionamento assertivo de recursos para arborização urbana e infraestrutura verde resiliente.
 
 **Persona Principal:** *Jorge Gonçalves (57 anos)* – Coordenador de Operações da Defesa Civil do Recife (CODECIR). Necessita cruzar anomalias de sensação térmica com vulnerabilidade socioespacial para despachar equipes de campo, emitir alertas antecipados e subsidiar ações preventivas conjuntas com a EMLURB, CTTU e Secretaria de Saúde.
 

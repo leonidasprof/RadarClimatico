@@ -8,6 +8,7 @@ import {
   type Zone,
 } from "@/lib/radar-data";
 import { RecifeSatelliteMap } from "./RecifeSatelliteMap";
+import { MapLayerSwitcher } from "./MapLayerSwitcher";
 import {
   Trees,
   Leaf,
@@ -108,74 +109,54 @@ export function VegetationCoverView({
 
         {/* Seletores de Camada e de Comparação Territorial no Mapa Térmico */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Seletor de Camadas Integrado do Mapa */}
-          <div className="flex gap-1 rounded-md border border-border p-0.5 text-xs bg-card/60">
-            <button
-              id="veg-view-layer-calor"
-              onClick={() => handleSwitchLayer("calor")}
-              className="rounded px-2.5 py-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            >
-              Calor
-            </button>
-            <button
-              id="veg-view-layer-vegetal"
-              onClick={() => handleSwitchLayer("vegetal")}
-              className="rounded px-2.5 py-1 bg-secondary text-foreground font-medium shadow-sm transition-colors cursor-pointer"
-            >
-              Cobertura vegetal
-            </button>
-            <button
-              id="veg-view-layer-vulnerabilidade"
-              onClick={() => handleSwitchLayer("vulnerabilidade")}
-              className="rounded px-2.5 py-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            >
-              Vulnerabilidade
-            </button>
-          </div>
+          {/* Seletor de Camadas Integrado do Mapa (Borda laranja e cores distintas) */}
+          <MapLayerSwitcher activeLayer={activeLayer} onChangeLayer={handleSwitchLayer} />
 
           <div className="h-5 w-px bg-border/60 hidden sm:block" />
 
-          {/* Seletores Territoriais de Comparação entre 2 Bairros */}
-          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-2.5 py-1 text-xs">
-            <span className="rounded bg-primary/20 px-1.5 py-0.2 font-mono text-[10px] font-bold text-primary">
-              Bairro A
-            </span>
-            <select
-              value={zoneA.id}
-              onChange={(e) => {
-                const found = zones.find((z) => z.id === e.target.value);
-                if (found) handleSelectPrimary(found);
-              }}
-              className="bg-transparent font-semibold text-foreground focus:outline-none cursor-pointer"
-            >
-              {zones.map((z) => (
-                <option key={`a-${z.id}`} value={z.id} className="bg-card text-foreground">
-                  {z.name} ({z.canopy}% copa)
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Seletores Territoriais de Comparação entre 2 Bairros (Sempre na mesma linha) */}
+          <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
+            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-2.5 py-1 text-xs whitespace-nowrap">
+              <span className="rounded bg-primary/20 px-1.5 py-0.2 font-mono text-[10px] font-bold text-primary shrink-0">
+                Bairro A
+              </span>
+              <select
+                value={zoneA.id}
+                onChange={(e) => {
+                  const found = zones.find((z) => z.id === e.target.value);
+                  if (found) handleSelectPrimary(found);
+                }}
+                className="bg-transparent font-semibold text-foreground focus:outline-none cursor-pointer"
+              >
+                {zones.map((z) => (
+                  <option key={`a-${z.id}`} value={z.id} className="bg-card text-foreground">
+                    {z.name} ({z.canopy}% copa)
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <span className="text-xs font-mono text-muted-foreground">vs</span>
+            <span className="text-xs font-mono text-muted-foreground shrink-0">vs</span>
 
-          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-2.5 py-1 text-xs">
-            <span className="rounded bg-accent/20 px-1.5 py-0.2 font-mono text-[10px] font-bold text-accent">
-              Bairro B
-            </span>
-            <select
-              value={zoneB.id}
-              onChange={(e) => {
-                const found = zones.find((z) => z.id === e.target.value);
-                if (found) setZoneB(found);
-              }}
-              className="bg-transparent font-semibold text-foreground focus:outline-none cursor-pointer"
-            >
-              {zones.map((z) => (
-                <option key={`b-${z.id}`} value={z.id} className="bg-card text-foreground">
-                  {z.name} ({z.canopy}% copa)
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-2.5 py-1 text-xs whitespace-nowrap">
+              <span className="rounded bg-accent/20 px-1.5 py-0.2 font-mono text-[10px] font-bold text-accent shrink-0">
+                Bairro B
+              </span>
+              <select
+                value={zoneB.id}
+                onChange={(e) => {
+                  const found = zones.find((z) => z.id === e.target.value);
+                  if (found) setZoneB(found);
+                }}
+                className="bg-transparent font-semibold text-foreground focus:outline-none cursor-pointer"
+              >
+                {zones.map((z) => (
+                  <option key={`b-${z.id}`} value={z.id} className="bg-card text-foreground">
+                    {z.name} ({z.canopy}% copa)
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>

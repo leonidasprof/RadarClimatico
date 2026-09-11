@@ -23,6 +23,8 @@ import { GreenDashboardView } from "@/components/dashboard/GreenDashboardView";
 import { ComparisonHistoryView } from "@/components/history/ComparisonHistoryView";
 import { VegetationCoverView } from "@/components/dashboard/VegetationCoverView";
 import { SocialVulnerabilityView } from "@/components/dashboard/SocialVulnerabilityView";
+import { MapLayerSwitcher } from "@/components/dashboard/MapLayerSwitcher";
+import { LoginPage } from "./login";
 import { toast } from "sonner";
 import {
   Sun,
@@ -81,13 +83,6 @@ function Dashboard() {
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
   const { isDark } = useTheme();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate({ to: "/login" });
-    }
-  }, [isLoading, isAuthenticated, navigate]);
 
   /**
    * Lógica de negócio: Disparo operacional de alerta (Épico 1)
@@ -123,8 +118,9 @@ function Dashboard() {
     );
   }
 
+  // Quando o app abrir, exige autenticação na tela de login
   if (!isAuthenticated) {
-    return null;
+    return <LoginPage />;
   }
 
   return (
@@ -592,34 +588,8 @@ function MapPanel({
             </select>
           </div>
 
-          {/* Seletor de camadas interativo */}
-          <div className="flex gap-1 rounded-md border border-border p-0.5 text-xs bg-card/60">
-            {layers.map((l) => {
-              const isActive = activeLayer === l.id;
-              return (
-                <button
-                  key={l.id}
-                  id={`map-layer-btn-${l.id}`}
-                  onClick={() => onChangeLayer(l.id)}
-                  className={
-                    "rounded px-2.5 py-1 transition-colors cursor-pointer " +
-                    (isActive
-                      ? "bg-secondary text-foreground font-medium shadow-sm"
-                      : "text-muted-foreground hover:text-foreground")
-                  }
-                  title={
-                    l.id === "vegetal"
-                      ? `Exibir Cobertura Vegetal para ${selected.name}`
-                      : l.id === "vulnerabilidade"
-                      ? `Exibir Vulnerabilidade Social & Saúde para ${selected.name}`
-                      : "Exibir camada de calor"
-                  }
-                >
-                  {l.label}
-                </button>
-              );
-            })}
-          </div>
+          {/* Seletor de camadas com contorno laranja e botões com cores distintas */}
+          <MapLayerSwitcher activeLayer={activeLayer} onChangeLayer={onChangeLayer} />
         </div>
       </div>
 

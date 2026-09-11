@@ -49,21 +49,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Inicializa a sessão a partir do localStorage
+  // Ao abrir o app, garante que o usuário inicie deslogado para exibir a tela de login
   useEffect(() => {
     try {
-      const storedSession = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (storedSession) {
-        const parsed = JSON.parse(storedSession) as UserProfile;
-        setUser(parsed);
-      }
-    } catch (e) {
-      console.error("Erro ao carregar sessão:", e);
-    } finally {
-      setIsLoading(false);
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch {
+      // ignore
     }
+    setIsLoading(false);
   }, []);
 
   const login = async (email: string, _password?: string): Promise<{ success: boolean; error?: string }> => {

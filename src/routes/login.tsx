@@ -30,7 +30,7 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-function LoginPage() {
+export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void } = {}) {
   const { isAuthenticated, login, isLoading } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -40,12 +40,16 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Redireciona para a raiz se já estiver logado
+  // Redireciona para a raiz se já estiver logado (ao acessar /login diretamente)
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate({ to: "/" });
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      } else {
+        navigate({ to: "/" });
+      }
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, navigate, onLoginSuccess]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +66,11 @@ function LoginPage() {
       toast.success("Acesso concedido com sucesso!", {
         description: `Bem-vindo ao Radar Climático.`,
       });
-      navigate({ to: "/" });
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      } else {
+        navigate({ to: "/" });
+      }
     } else {
       toast.error(res.error || "Falha na autenticação.");
     }
