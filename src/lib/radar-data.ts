@@ -10,17 +10,205 @@ export type Zone = {
   x: number; // % posição no mapa
   y: number;
   size: number; // px
+  // Dados de NDVI e arborização urbana
+  ndvi: number; // Índice NDVI médio (-1 a +1)
+  treesNeeded: number; // Mudas estimadas para atingir a meta municipal de 30%
+  priorityStatus: "Crítica" | "Alta" | "Moderada" | "Refúgio";
+  // Dados demográficos e de saúde pública
+  popTotal: number;
+  popLowIncomeRisk: number; // População de baixa renda / vulnerabilidade crítica
+  upaWeeklyVisits: number; // Atendimentos UPA desidratação/insolação na semana
+  hospitalAdmissions: number; // Internações graves por choque térmico/síncope
+  vulnerableGroups: number; // Crianças <5 anos e idosos >65 anos expostos
+  sanitationDeficitPct: number; // % domicílios com déficit de saneamento
+  upaReference: string; // Unidade de Saúde / UPA de referência territorial
 };
 
 export const zones: Zone[] = [
-  { id: "boa-viagem", name: "Boa Viagem", temp: 33.4, feels: 39.1, humidity: 71, canopy: 12, vuln: 34, rating: "C", x: 62, y: 78, size: 150 },
-  { id: "santo-amaro", name: "Santo Amaro", temp: 36.8, feels: 44.2, humidity: 58, canopy: 5, vuln: 76, rating: "E", x: 47, y: 34, size: 175 },
-  { id: "boa-vista", name: "Boa Vista", temp: 36.1, feels: 43.0, humidity: 60, canopy: 7, vuln: 55, rating: "E", x: 40, y: 46, size: 145 },
-  { id: "afogados", name: "Afogados", temp: 35.2, feels: 41.6, humidity: 63, canopy: 9, vuln: 68, rating: "D", x: 26, y: 62, size: 160 },
-  { id: "imbiribeira", name: "Imbiribeira", temp: 34.6, feels: 40.4, humidity: 66, canopy: 11, vuln: 61, rating: "D", x: 46, y: 70, size: 130 },
-  { id: "casa-forte", name: "Casa Forte", temp: 30.9, feels: 34.2, humidity: 74, canopy: 38, vuln: 18, rating: "B", x: 30, y: 30, size: 120 },
-  { id: "dois-irmaos", name: "Dois Irmãos", temp: 28.7, feels: 31.0, humidity: 82, canopy: 64, vuln: 22, rating: "A", x: 15, y: 18, size: 135 },
-  { id: "ibura", name: "Ibura", temp: 34.9, feels: 41.0, humidity: 64, canopy: 16, vuln: 82, rating: "D", x: 33, y: 88, size: 140 },
+  {
+    id: "boa-viagem",
+    name: "Boa Viagem",
+    temp: 33.4,
+    feels: 39.1,
+    humidity: 71,
+    canopy: 12,
+    vuln: 34,
+    rating: "C",
+    x: 62,
+    y: 78,
+    size: 150,
+    ndvi: 0.26,
+    treesNeeded: 8200,
+    priorityStatus: "Moderada",
+    popTotal: 122000,
+    popLowIncomeRisk: 14500,
+    upaWeeklyVisits: 32,
+    hospitalAdmissions: 9,
+    vulnerableGroups: 18200,
+    sanitationDeficitPct: 8,
+    upaReference: "UPA Imbiribeira / Policlínica Pina",
+  },
+  {
+    id: "santo-amaro",
+    name: "Santo Amaro",
+    temp: 36.8,
+    feels: 44.2,
+    humidity: 58,
+    canopy: 5,
+    vuln: 76,
+    rating: "E",
+    x: 47,
+    y: 34,
+    size: 175,
+    ndvi: 0.11,
+    treesNeeded: 12400,
+    priorityStatus: "Crítica",
+    popTotal: 27900,
+    popLowIncomeRisk: 21200,
+    upaWeeklyVisits: 84,
+    hospitalAdmissions: 28,
+    vulnerableGroups: 7400,
+    sanitationDeficitPct: 42,
+    upaReference: "UPA Olinda/Recife / Policlínica Waldemar de Oliveira",
+  },
+  {
+    id: "boa-vista",
+    name: "Boa Vista",
+    temp: 36.1,
+    feels: 43.0,
+    humidity: 60,
+    canopy: 7,
+    vuln: 55,
+    rating: "E",
+    x: 40,
+    y: 46,
+    size: 145,
+    ndvi: 0.14,
+    treesNeeded: 9800,
+    priorityStatus: "Crítica",
+    popTotal: 17500,
+    popLowIncomeRisk: 8600,
+    upaWeeklyVisits: 62,
+    hospitalAdmissions: 19,
+    vulnerableGroups: 4100,
+    sanitationDeficitPct: 18,
+    upaReference: "Hospital da Restauração / UPA Torrões",
+  },
+  {
+    id: "afogados",
+    name: "Afogados",
+    temp: 35.2,
+    feels: 41.6,
+    humidity: 63,
+    canopy: 9,
+    vuln: 68,
+    rating: "D",
+    x: 26,
+    y: 62,
+    size: 160,
+    ndvi: 0.19,
+    treesNeeded: 11200,
+    priorityStatus: "Alta",
+    popTotal: 38200,
+    popLowIncomeRisk: 24800,
+    upaWeeklyVisits: 58,
+    hospitalAdmissions: 17,
+    vulnerableGroups: 8900,
+    sanitationDeficitPct: 36,
+    upaReference: "Policlínica Agamenon Magalhães / UPA Torrões",
+  },
+  {
+    id: "imbiribeira",
+    name: "Imbiribeira",
+    temp: 34.6,
+    feels: 40.4,
+    humidity: 66,
+    canopy: 11,
+    vuln: 61,
+    rating: "D",
+    x: 46,
+    y: 70,
+    size: 130,
+    ndvi: 0.23,
+    treesNeeded: 14600,
+    priorityStatus: "Alta",
+    popTotal: 49800,
+    popLowIncomeRisk: 28400,
+    upaWeeklyVisits: 51,
+    hospitalAdmissions: 15,
+    vulnerableGroups: 11200,
+    sanitationDeficitPct: 29,
+    upaReference: "UPA Imbiribeira (Av. Mascarenhas de Morais)",
+  },
+  {
+    id: "casa-forte",
+    name: "Casa Forte",
+    temp: 30.9,
+    feels: 34.2,
+    humidity: 74,
+    canopy: 38,
+    vuln: 18,
+    rating: "B",
+    x: 30,
+    y: 30,
+    size: 120,
+    ndvi: 0.62,
+    treesNeeded: 0,
+    priorityStatus: "Refúgio",
+    popTotal: 15400,
+    popLowIncomeRisk: 2100,
+    upaWeeklyVisits: 14,
+    hospitalAdmissions: 3,
+    vulnerableGroups: 3800,
+    sanitationDeficitPct: 4,
+    upaReference: "UPA Nova Descoberta",
+  },
+  {
+    id: "dois-irmaos",
+    name: "Dois Irmãos",
+    temp: 28.7,
+    feels: 31.0,
+    humidity: 82,
+    canopy: 64,
+    vuln: 22,
+    rating: "A",
+    x: 15,
+    y: 18,
+    size: 135,
+    ndvi: 0.79,
+    treesNeeded: 0,
+    priorityStatus: "Refúgio",
+    popTotal: 12800,
+    popLowIncomeRisk: 3400,
+    upaWeeklyVisits: 9,
+    hospitalAdmissions: 1,
+    vulnerableGroups: 2900,
+    sanitationDeficitPct: 9,
+    upaReference: "UPA Caxangá / Policlínica Lessa de Andrade",
+  },
+  {
+    id: "ibura",
+    name: "Ibura",
+    temp: 34.9,
+    feels: 41.0,
+    humidity: 64,
+    canopy: 16,
+    vuln: 82,
+    rating: "D",
+    x: 33,
+    y: 88,
+    size: 140,
+    ndvi: 0.31,
+    treesNeeded: 16800,
+    priorityStatus: "Crítica",
+    popTotal: 52400,
+    popLowIncomeRisk: 39800,
+    upaWeeklyVisits: 78,
+    hospitalAdmissions: 24,
+    vulnerableGroups: 13900,
+    sanitationDeficitPct: 48,
+    upaReference: "UPA Ibura (UR-1 / Zumbi do Pacheco)",
+  },
 ];
 
 export type RatingDefinition = {
@@ -250,4 +438,159 @@ export function calculateMicroclimateDelta(primary: Zone, secondary: Zone) {
     humidityDiff: Number((primary.humidity - secondary.humidity).toFixed(0)),
   };
 }
+
+/**
+ * Retorna cor baseada no índice NDVI (-1 a +1)
+ */
+export function ndviVar(ndvi: number) {
+  if (ndvi >= 0.6) return "var(--canopy)"; // #10b981 dossel denso
+  if (ndvi >= 0.35) return "oklch(0.72 0.16 135)"; // arborização média
+  if (ndvi >= 0.2) return "oklch(0.76 0.14 115)"; // vegetação rasteira / gramíneas
+  if (ndvi >= 0.12) return "oklch(0.78 0.12 85)"; // solo impermeável / transição
+  return "oklch(0.68 0.18 45)"; // asfalto e concreto crítico (NDVI < 0.12)
+}
+
+export type WeeklyHealthData = {
+  day: string;
+  date: string;
+  temp: number; // °C máx diária
+  feels: number; // °C sensação térmica
+  upaVisits: number; // Atendimentos UPA (Desidratação / Insolação)
+  hospitalAdmissions: number; // Internações clínicas
+  criticalHeat: boolean; // Flag de pico térmico
+  note?: string;
+};
+
+/**
+ * Curva semanal correlacionando a temperatura diária com o volume
+ * de internações hospitalares e atendimentos de emergência nas UPAs do Recife.
+ */
+export const weeklyHealthCorrelation: WeeklyHealthData[] = [
+  {
+    day: "Seg",
+    date: "18/08",
+    temp: 31.4,
+    feels: 35.2,
+    upaVisits: 38,
+    hospitalAdmissions: 8,
+    criticalHeat: false,
+    note: "Operação estável nas UPAs da RMR",
+  },
+  {
+    day: "Ter",
+    date: "19/08",
+    temp: 32.8,
+    feels: 37.0,
+    upaVisits: 44,
+    hospitalAdmissions: 11,
+    criticalHeat: false,
+    note: "Leve elevação nos registros pediátricos",
+  },
+  {
+    day: "Qua",
+    date: "20/08",
+    temp: 34.6,
+    feels: 40.4,
+    upaVisits: 68,
+    hospitalAdmissions: 17,
+    criticalHeat: false,
+    note: "Alerta preventivo Defesa Civil / Saúde",
+  },
+  {
+    day: "Qui",
+    date: "21/08",
+    temp: 36.8,
+    feels: 44.2,
+    upaVisits: 118,
+    hospitalAdmissions: 34,
+    criticalHeat: true,
+    note: "Pico de 36,8 °C: salto de +168% em admissões de emergência por choque térmico",
+  },
+  {
+    day: "Sex",
+    date: "22/08",
+    temp: 35.9,
+    feels: 42.8,
+    upaVisits: 96,
+    hospitalAdmissions: 26,
+    criticalHeat: true,
+    note: "Persistência do calor: 96 atendimentos por desidratação e síncope",
+  },
+  {
+    day: "Sáb",
+    date: "23/08",
+    temp: 33.2,
+    feels: 38.5,
+    upaVisits: 52,
+    hospitalAdmissions: 14,
+    criticalHeat: false,
+    note: "Queda gradual com entrada de ventos alísios",
+  },
+  {
+    day: "Dom",
+    date: "24/08",
+    temp: 32.1,
+    feels: 36.6,
+    upaVisits: 40,
+    hospitalAdmissions: 9,
+    criticalHeat: false,
+    note: "Normalização do fluxo hospitalar",
+  },
+];
+
+/**
+ * Simulador de Arrefecimento Urbano:
+ * Calcula a queda projetada na temperatura de superfície e sensação térmica
+ * com base no percentual adicional de árvores simulado.
+ */
+export function calculateCoolingImpact(zone: Zone, additionalTreesPct: number) {
+  // A cada +1% de cobertura de copa: queda média de 0,21 °C na temperatura e 0,27 °C na sensação
+  const tempDrop = Number((additionalTreesPct * 0.21).toFixed(1));
+  const feelsDrop = Number((additionalTreesPct * 0.27).toFixed(1));
+  const newTemp = Number(Math.max(26.5, zone.temp - tempDrop).toFixed(1));
+  const newFeels = Number(Math.max(28.0, zone.feels - feelsDrop).toFixed(1));
+  const newCanopy = Math.min(100, zone.canopy + additionalTreesPct);
+  
+  // Estimativa de mudas nativas para plantio (aprox. 310 mudas por cada 1% de cobertura territorial no bairro)
+  const treesToPlant = Math.round(additionalTreesPct * 310);
+  // Sequestro médio de CO2: ~22 kg por árvore adulta/ano (0,022 ton)
+  const co2Tons = Number((treesToPlant * 0.022).toFixed(1));
+  // Área de sombra contínua estimada em calçadas/vias (aprox. 14 m² por muda adulta)
+  const shadedAreaM2 = treesToPlant * 14;
+
+  // Projeção da nova classe bioclimática
+  let projectedRating: "A" | "B" | "C" | "D" | "E" = zone.rating;
+  if (newTemp <= 29.5 && newCanopy >= 45) projectedRating = "A";
+  else if (newTemp <= 32.2 && newCanopy >= 28) projectedRating = "B";
+  else if (newTemp <= 34.2) projectedRating = "C";
+  else if (newTemp <= 35.8) projectedRating = "D";
+  else projectedRating = "E";
+
+  return {
+    tempDrop,
+    feelsDrop,
+    newTemp,
+    newFeels,
+    newCanopy,
+    treesToPlant,
+    co2Tons,
+    shadedAreaM2,
+    projectedRating,
+  };
+}
+
+/**
+ * Análise comparativa sociodemográfica e epidemiológica entre dois territórios
+ */
+export function calculateVulnerabilityDelta(primary: Zone, secondary: Zone) {
+  return {
+    vulnDiff: primary.vuln - secondary.vuln,
+    lowIncomeDiff: primary.popLowIncomeRisk - secondary.popLowIncomeRisk,
+    upaVisitsDiff: primary.upaWeeklyVisits - secondary.upaWeeklyVisits,
+    hospitalAdmissionsDiff: primary.hospitalAdmissions - secondary.hospitalAdmissions,
+    vulnerableGroupsDiff: primary.vulnerableGroups - secondary.vulnerableGroups,
+    sanitationDiff: primary.sanitationDeficitPct - secondary.sanitationDeficitPct,
+  };
+}
+
 

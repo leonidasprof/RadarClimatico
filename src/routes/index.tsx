@@ -21,6 +21,8 @@ import { UserContactModal } from "@/components/auth/UserContactModal";
 import { ReportAlertModal } from "@/components/alerts/ReportAlertModal";
 import { GreenDashboardView } from "@/components/dashboard/GreenDashboardView";
 import { ComparisonHistoryView } from "@/components/history/ComparisonHistoryView";
+import { VegetationCoverView } from "@/components/dashboard/VegetationCoverView";
+import { SocialVulnerabilityView } from "@/components/dashboard/SocialVulnerabilityView";
 import { toast } from "sonner";
 import {
   Sun,
@@ -39,6 +41,7 @@ import {
   ArrowRight,
   Filter,
   Sparkles,
+  HeartPulse,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -72,6 +75,7 @@ export type NavTab = "tempo-real" | "historico" | "verde" | "alertas" | "indice"
 function Dashboard() {
   const [selected, setSelected] = useState<Zone>(zones[1]!);
   const [activeTab, setActiveTab] = useState<NavTab>("tempo-real");
+  const [mapLayer, setMapLayer] = useState<"calor" | "vegetal" | "vulnerabilidade">("calor");
   const [alertsList, setAlertsList] = useState<AlertItem[]>(alerts);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -127,46 +131,83 @@ function Dashboard() {
     <div className="min-h-screen">
       <Header
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={(tab) => {
+          setActiveTab(tab);
+          if (tab === "tempo-real") setMapLayer("calor");
+        }}
         onOpenContactModal={() => setContactModalOpen(true)}
       />
       <main className="mx-auto grid max-w-[1500px] gap-4 px-4 pb-14 lg:grid-cols-12">
-        {/* Visualização Padrão: Operação em Tempo Real */}
+        {/* Visualização Padrão: Operação em Tempo Real (Mapa Térmico & Camadas) */}
         {activeTab === "tempo-real" && (
           <>
-            <div className="lg:col-span-8 space-y-4">
-              <Kpis />
-              <MapPanel
-                selected={selected}
-                onSelect={setSelected}
-                onOpenGreenDashboard={() => setActiveTab("verde")}
-              />
-              {/* Linha 1 abaixo do mapa térmico: Índice Térmico e Histórico de Temperatura */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <RatingPanel onSelect={setSelected} selected={selected} />
-                <HistoryPanel
-                  zone={selected}
-                  onOpenComparison={() => setActiveTab("historico")}
+            {mapLayer === "calor" && (
+              <>
+                <div className="lg:col-span-8 space-y-4">
+                  <Kpis />
+                  <MapPanel
+                    selected={selected}
+                    onSelect={setSelected}
+                    onOpenGreenDashboard={() => setActiveTab("verde")}
+                    activeLayer={mapLayer}
+                    onChangeLayer={setMapLayer}
+                  />
+                  {/* Linha 1 abaixo do mapa térmico: Índice Térmico e Histórico de Temperatura */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <RatingPanel onSelect={setSelected} selected={selected} />
+                    <HistoryPanel
+                      zone={selected}
+                      onOpenComparison={() => setActiveTab("historico")}
+                    />
+                  </div>
+                  {/* Linha 2 abaixo: Curva do Dia e Priorização de Infraestrutura Verde */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <HourlyPanel />
+                    <PriorityPanel onOpenGreenDashboard={() => setActiveTab("verde")} />
+                  </div>
+                </div>
+                <aside className="lg:col-span-4 space-y-4">
+                  <AlertsPanel
+                    alerts={alertsList}
+                    onOpenReportModal={() => setReportModalOpen(true)}
+                    onDispatchAlert={handleDispatchAlert}
+                  />
+                  <ZoneDetail
+                    zone={selected}
+                    onOpenComparison={() => setActiveTab("historico")}
+                    onOpenVegetalView={() => setMapLayer("vegetal")}
+                    onOpenVulnView={() => setMapLayer("vulnerabilidade")}
+                  />
+                  <InsightsPanel />
+                </aside>
+              </>
+            )}
+
+            {/* Visualização de Cobertura Vegetal integrada dentro do Mapa Térmico */}
+            {mapLayer === "vegetal" && (
+              <div className="lg:col-span-12">
+                <VegetationCoverView
+                  initialZone={selected}
+                  onSelectZone={setSelected}
+                  activeLayer={mapLayer}
+                  onChangeLayer={setMapLayer}
+                  onBackToThermalMap={() => setMapLayer("calor")}
                 />
               </div>
-              {/* Linha 2 abaixo: Curva do Dia e Priorização de Infraestrutura Verde */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <HourlyPanel />
-                <PriorityPanel onOpenGreenDashboard={() => setActiveTab("verde")} />
+            )}
+
+            {/* Visualização de Vulnerabilidade Social integrada dentro do Mapa Térmico */}
+            {mapLayer === "vulnerabilidade" && (
+              <div className="lg:col-span-12">
+                <SocialVulnerabilityView
+                  initialZone={selected}
+                  onSelectZone={setSelected}
+                  activeLayer={mapLayer}
+                  onChangeLayer={setMapLayer}
+                  onBackToThermalMap={() => setMapLayer("calor")}
+                />
               </div>
-            </div>
-            <aside className="lg:col-span-4 space-y-4">
-              <AlertsPanel
-                alerts={alertsList}
-                onOpenReportModal={() => setReportModalOpen(true)}
-                onDispatchAlert={handleDispatchAlert}
-              />
-              <ZoneDetail
-                zone={selected}
-                onOpenComparison={() => setActiveTab("historico")}
-              />
-              <InsightsPanel />
-            </aside>
+            )}
           </>
         )}
 
@@ -479,14 +520,15 @@ function MapPanel({
   selected,
   onSelect,
   onOpenGreenDashboard,
+  activeLayer = "calor",
+  onChangeLayer,
 }: {
   selected: Zone;
   onSelect: (z: Zone) => void;
   onOpenGreenDashboard?: () => void;
+  activeLayer: "calor" | "vegetal" | "vulnerabilidade";
+  onChangeLayer: (layer: "calor" | "vegetal" | "vulnerabilidade") => void;
 }) {
-  // Estado da camada ativa no Heatmap (Épico 1: Visualização de Zonas de Calor e Áreas Verdes)
-  const [activeLayer, setActiveLayer] = useState<"calor" | "vegetal" | "vulnerabilidade">("calor");
-
   const layers = [
     { id: "calor", label: "Calor" },
     { id: "vegetal", label: "Cobertura vegetal" },
@@ -557,12 +599,20 @@ function MapPanel({
               return (
                 <button
                   key={l.id}
-                  onClick={() => setActiveLayer(l.id)}
+                  id={`map-layer-btn-${l.id}`}
+                  onClick={() => onChangeLayer(l.id)}
                   className={
                     "rounded px-2.5 py-1 transition-colors cursor-pointer " +
                     (isActive
                       ? "bg-secondary text-foreground font-medium shadow-sm"
                       : "text-muted-foreground hover:text-foreground")
+                  }
+                  title={
+                    l.id === "vegetal"
+                      ? `Exibir Cobertura Vegetal para ${selected.name}`
+                      : l.id === "vulnerabilidade"
+                      ? `Exibir Vulnerabilidade Social & Saúde para ${selected.name}`
+                      : "Exibir camada de calor"
                   }
                 >
                   {l.label}
@@ -618,7 +668,7 @@ function MapPanel({
         })}
 
         {/* Legenda Dinâmica de Acordo com a Camada Ativa */}
-        <div className="absolute bottom-3 left-3 rounded-lg border border-border bg-background/85 p-3 backdrop-blur shadow-sm">
+        <div className="absolute bottom-3 left-3 rounded-lg border border-border bg-background/85 p-3 backdrop-blur shadow-sm max-w-xs">
           {activeLayer === "calor" && (
             <>
               <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -630,6 +680,20 @@ function MapPanel({
                 <span>34°</span>
                 <span>45°+</span>
               </div>
+              <div className="mt-2.5 pt-2 border-t border-border/50 flex flex-wrap items-center justify-between gap-2 text-[10px]">
+                <button
+                  onClick={() => onChangeLayer("vegetal")}
+                  className="text-canopy hover:underline font-medium cursor-pointer flex items-center gap-1"
+                >
+                  <span>🌿 Cobertura Vegetal ({selected.name}) →</span>
+                </button>
+                <button
+                  onClick={() => onChangeLayer("vulnerabilidade")}
+                  className="text-destructive hover:underline font-medium cursor-pointer flex items-center gap-1"
+                >
+                  <span>🏥 Vulnerabilidade →</span>
+                </button>
+              </div>
             </>
           )}
 
@@ -639,14 +703,12 @@ function MapPanel({
                 <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                   Cobertura arbórea (copa)
                 </p>
-                {onOpenGreenDashboard && (
-                  <button
-                    onClick={onOpenGreenDashboard}
-                    className="text-[10px] text-primary hover:underline ml-2 cursor-pointer"
-                  >
-                    Ver Dashboard Verde →
-                  </button>
-                )}
+                <button
+                  onClick={() => onChangeLayer("vegetal")}
+                  className="text-[10px] text-primary hover:underline ml-2 cursor-pointer font-semibold"
+                >
+                  Abrir Simulador Completo →
+                </button>
               </div>
               <div
                 className="h-2 w-52 rounded-full"
@@ -665,9 +727,17 @@ function MapPanel({
 
           {activeLayer === "vulnerabilidade" && (
             <>
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Índice de Vulnerabilidade Social (IVS)
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Índice de Vulnerabilidade Social (IVS)
+                </p>
+                <button
+                  onClick={() => onChangeLayer("vulnerabilidade")}
+                  className="text-[10px] text-destructive hover:underline ml-2 cursor-pointer font-semibold"
+                >
+                  Abrir Tela de Saúde →
+                </button>
+              </div>
               <div
                 className="h-2 w-52 rounded-full"
                 style={{
@@ -952,9 +1022,13 @@ function AlertsPanel({
 function ZoneDetail({
   zone,
   onOpenComparison,
+  onOpenVegetalView,
+  onOpenVulnView,
 }: {
   zone: Zone;
   onOpenComparison?: () => void;
+  onOpenVegetalView?: () => void;
+  onOpenVulnView?: () => void;
 }) {
   const [showRatingScale, setShowRatingScale] = useState(false);
 
@@ -1116,11 +1190,37 @@ function ZoneDetail({
         </div>
       </div>
 
+      {/* Ações de atalho direto para Cobertura Vegetal e Vulnerabilidade do Bairro */}
+      <div className="mt-3.5 grid grid-cols-2 gap-2">
+        {onOpenVegetalView && (
+          <button
+            id="zone-detail-vegetal-btn"
+            onClick={onOpenVegetalView}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-canopy/40 bg-canopy/10 py-2 px-2 text-xs font-semibold text-canopy hover:bg-canopy/20 transition-all cursor-pointer shadow-xs"
+            title={`Abrir Cobertura Vegetal e Simulador para ${zone.name}`}
+          >
+            <Trees className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Cobertura vegetal</span>
+          </button>
+        )}
+        {onOpenVulnView && (
+          <button
+            id="zone-detail-vuln-btn"
+            onClick={onOpenVulnView}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 py-2 px-2 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all cursor-pointer shadow-xs"
+            title={`Abrir Vulnerabilidade e Saúde para ${zone.name}`}
+          >
+            <HeartPulse className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Vulnerabilidade</span>
+          </button>
+        )}
+      </div>
+
       {/* Ação de atalho para comparação de bairros (Épico 1) */}
       {onOpenComparison && (
         <button
           onClick={onOpenComparison}
-          className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-md border border-border bg-card/60 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors cursor-pointer"
+          className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-md border border-border bg-card/60 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors cursor-pointer"
         >
           <ArrowLeftRight className="h-3.5 w-3.5" />
           <span>Comparar este bairro com outro</span>
