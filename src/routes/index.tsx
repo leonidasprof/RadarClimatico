@@ -1321,8 +1321,8 @@ function HistoryPanel({
                   <div
                     key={p.day}
                     className={`flex flex-col items-center py-1 px-0.5 rounded-md transition-all ${p.isPeak
-                        ? "bg-orange-500/10 ring-1 ring-orange-500/30 font-semibold"
-                        : "hover:bg-muted/30"
+                      ? "bg-orange-500/10 ring-1 ring-orange-500/30 font-semibold"
+                      : "hover:bg-muted/30"
                       }`}
                   >
                     <span

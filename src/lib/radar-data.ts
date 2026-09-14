@@ -332,6 +332,108 @@ export function zoneHistory(zone: Zone) {
   }));
 }
 
+// ─── Dados históricos para drill-down hierárquico (Ano → Mês → 7 dias) ───────
+
+export type MonthlyRecord = { month: string; monthIndex: number; avgMax: number };
+export type YearlyRecord = { year: number; avgMax: number };
+
+/**
+ * Gera histórico mensal sintético para uma zona (últimos 12 meses a partir de Ago/2026).
+ * A variação é baseada na sazonalidade típica do Recife e na temperatura base do bairro.
+ */
+const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+// Sazonalidade climática do Recife: modulação relativa por mês (°C em relação à média anual)
+const RECIFE_SEASONAL_OFFSET = [
+  1.8,  // Jan — verão, quente
+  1.4,  // Fev
+  0.6,  // Mar
+  -0.4, // Abr — início das chuvas
+  -1.6, // Mai — período úmido
+  -2.2, // Jun — mais fresco
+  -2.4, // Jul — mínima anual
+  -1.2, // Ago
+  0.3,  // Set — seco, aquecendo
+  1.2,  // Out
+  1.6,  // Nov
+  1.9,  // Dez
+];
+
+export function zoneMonthlyHistory(zone: Zone, year: number): MonthlyRecord[] {
+  // Ano de referência: 2026 = atual. Para anos anteriores, aplica leve tendência de aquecimento.
+  const yearDelta = (2026 - year) * 0.18; // bairros estavam ~0.18 °C mais frios por ano passado
+  const idSeed = zone.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 7;
+
+  return MONTH_NAMES.map((month, i) => ({
+    month,
+    monthIndex: i,
+    avgMax: Number(
+      (
+        zone.temp +
+        RECIFE_SEASONAL_OFFSET[i]! +
+        ((idSeed + i) % 5) * 0.12 - // variação determinística por bairro
+        yearDelta
+      ).toFixed(1)
+    ),
+  }));
+}
+
+export function zoneYearlyHistory(zone: Zone): YearlyRecord[] {
+  const years = [2022, 2023, 2024, 2025, 2026];
+  const idSeed = zone.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 5;
+  return years.map((year, i) => ({
+    year,
+    avgMax: Number(
+      (
+        zone.temp -
+        (2026 - year) * 0.18 + // tendência de aquecimento urbano
+        ((idSeed + i) % 3) * 0.08
+      ).toFixed(1)
+    ),
+  }));
+}
+
+export type DailyRecord = { day: string; date: string; t: number };
+
+/**
+ * Gera histórico diário de máximas para uma zona em um mês/ano específico.
+ * @param zone - A zona climática
+ * @param year - Ano (2022–2026)
+ * @param monthIndex - Índice do mês (0 = Jan, 11 = Dez)
+ * @param numDays - Número de dias a exibir (3, 7, 14 ou 30)
+ * @param startDay - Dia inicial (1-based)
+ */
+export function zoneDailyHistory(
+  zone: Zone,
+  year: number,
+  monthIndex: number,
+  numDays: number = 7,
+  startDay: number = 1
+): DailyRecord[] {
+  const monthNames = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const monthName = monthNames[monthIndex]!;
+  const yearDelta = (2026 - year) * 0.18;
+  const idSeed = zone.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const baseTemp = zone.temp + RECIFE_SEASONAL_OFFSET[monthIndex]! - yearDelta;
+
+  return Array.from({ length: numDays }, (_, i) => {
+    const dayNum = startDay + i;
+    // Variação diária determinística: combina seno para simular oscilação térmica semanal
+    const noise = Math.sin((dayNum + idSeed) * 1.7) * 1.2 + Math.cos((dayNum + idSeed) * 0.9) * 0.7;
+    return {
+      day: String(dayNum).padStart(2, "0"),
+      date: `${String(dayNum).padStart(2, "0")}/${String(monthIndex + 1).padStart(2, "0")}`,
+      t: Number((baseTemp + noise).toFixed(1)),
+    };
+  });
+}
+
+export const AVAILABLE_YEARS = [2022, 2023, 2024, 2025, 2026] as const;
+export const MONTH_NAMES_SHORT = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"] as const;
+export const MONTH_NAMES_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"] as const;
+export const DAY_RANGE_OPTIONS = [3, 7, 14, 30] as const;
+export type DayRange = typeof DAY_RANGE_OPTIONS[number];
+
 export const alerts = [
   {
     id: 1,
