@@ -1,18 +1,18 @@
-import { Flame, Trees, HeartPulse, Layers } from "lucide-react";
+import { Flame, Trees, HeartPulse } from "lucide-react";
 
 export type MapLayerType = "calor" | "vegetal" | "vulnerabilidade";
 
 interface MapLayerSwitcherProps {
   activeLayer: MapLayerType;
   onChangeLayer: (layer: MapLayerType) => void;
-  showLabel?: boolean;
+  excludeLayers?: MapLayerType[];
   className?: string;
 }
 
 export function MapLayerSwitcher({
   activeLayer,
   onChangeLayer,
-  showLabel = true,
+  excludeLayers = [],
   className = "",
 }: MapLayerSwitcherProps) {
   const layers = [
@@ -54,21 +54,17 @@ export function MapLayerSwitcher({
     },
   ];
 
+  const visibleLayers = layers.filter((l) => !excludeLayers.includes(l.id));
+
   return (
     <div
-      className={`relative inline-flex items-center gap-1.5 rounded-xl border-2 border-amber-500/90 bg-card/95 p-1 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/40 backdrop-blur-md transition-all ${className}`}
+      className={`relative inline-flex items-center gap-1 rounded-xl border border-amber-500/50 bg-card/95 p-1 shadow-md shadow-amber-500/5 ring-1 ring-amber-500/20 backdrop-blur-md transition-all ${className}`}
       role="tablist"
       aria-label="Seletor de Camadas do Mapa"
     >
-      {showLabel && (
-        <div className="hidden sm:flex items-center gap-1 px-1.5 text-[10px] font-mono uppercase tracking-wider text-amber-500 font-bold select-none border-r border-amber-500/30 mr-0.5">
-          <Layers className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
-          <span>Camadas</span>
-        </div>
-      )}
 
       <div className="flex items-center gap-1">
-        {layers.map((l) => {
+        {visibleLayers.map((l) => {
           const isActive = activeLayer === l.id;
           const Icon = l.icon;
 

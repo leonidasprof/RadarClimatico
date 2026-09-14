@@ -20,7 +20,6 @@ import {
   TrendingDown,
   Wind,
   CheckCircle2,
-  AlertTriangle,
   ArrowLeft,
   ArrowLeftRight,
   Filter,
@@ -78,6 +77,7 @@ export function VegetationCoverView({
     }
   };
 
+
   return (
     <div className="space-y-6">
       {/* Barra de Navegação Superior e Seletor de Camadas do Mapa */}
@@ -98,26 +98,118 @@ export function VegetationCoverView({
                 <Trees className="h-4 w-4" />
               </span>
               <h2 className="text-lg font-bold tracking-tight">
-                Cobertura Vegetal & Densidade Espectral (NDVI)
+                Cobertura Vegetal · <span className="text-canopy">{zoneA.name}</span>
               </h2>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Sensoriamento orbital por satélite, simulação de arrefecimento urbano e plano de plantio para o Recife.
+              Análise de cobertura arbórea, NDVI orbital e simulação de arrefecimento para o bairro selecionado.
             </p>
           </div>
         </div>
 
-        {/* Seletores de Camada e de Comparação Territorial no Mapa Térmico */}
+        {/* Seletor de Bairro Principal + Seletor de Camadas */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Seletor de Camadas Integrado do Mapa (Borda laranja e cores distintas) */}
-          <MapLayerSwitcher activeLayer={activeLayer} onChangeLayer={handleSwitchLayer} />
+          {/* Seletor do bairro foco */}
+          <div className="flex items-center gap-1.5 rounded-lg border border-canopy/40 bg-canopy/10 px-2.5 py-1 text-xs">
+            <span className="rounded bg-canopy/20 px-1.5 py-0.5 font-mono text-[10px] font-bold text-canopy shrink-0">
+              Bairro
+            </span>
+            <select
+              value={zoneA.id}
+              onChange={(e) => {
+                const found = zones.find((z) => z.id === e.target.value);
+                if (found) handleSelectPrimary(found);
+              }}
+              className="bg-transparent font-semibold text-foreground focus:outline-none cursor-pointer"
+            >
+              {zones.map((z) => (
+                <option key={`a-${z.id}`} value={z.id} className="bg-card text-foreground">
+                  {z.name} ({z.canopy}% copa)
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="h-5 w-px bg-border/60 hidden sm:block" />
 
-          {/* Seletores Territoriais de Comparação entre 2 Bairros (Sempre na mesma linha) */}
-          <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
+          {/* Seletor de Camadas – exclui "Vegetal" pois já estamos nessa página */}
+          <MapLayerSwitcher activeLayer={activeLayer} onChangeLayer={handleSwitchLayer} excludeLayers={["vegetal"]} />
+        </div>
+      </div>
+
+      {/* KPIs DO BAIRRO SELECIONADO */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="panel p-3.5 border-l-4 border-canopy">
+          <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <Trees className="h-3.5 w-3.5 text-canopy" />
+            Copa Arbórea · {zoneA.name}
+          </span>
+          <p className="mt-1.5 flex items-baseline gap-1 font-display text-2xl font-bold">
+            <span style={{ color: "var(--canopy)" }}>{zoneA.canopy}%</span>
+          </p>
+          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+            {zoneA.canopy >= 30 ? "✓ Meta OMS atingida" : `⚠️ Déficit de ${30 - zoneA.canopy}% (meta: 30%)`}
+          </p>
+        </div>
+
+        <div className="panel p-3.5 border-l-4 border-emerald-400">
+          <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+            Índice NDVI Orbital
+          </span>
+          <p className="mt-1.5 flex items-baseline gap-1 font-display text-2xl font-bold">
+            <span className="text-emerald-400">{zoneA.ndvi.toFixed(2)}</span>
+            <span className="text-xs font-normal text-muted-foreground">/ 1.0</span>
+          </p>
+          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+            {zoneA.ndvi >= 0.5 ? "Vegetação densa" : zoneA.ndvi >= 0.3 ? "Vegetação moderada" : "Vegetação esparsa"}
+          </p>
+        </div>
+
+        <div className="panel p-3.5 border-l-4 border-primary">
+          <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <TrendingDown className="h-3.5 w-3.5 text-primary" />
+            Temperatura de Superfície
+          </span>
+          <p className="mt-1.5 flex items-baseline gap-1 font-display text-2xl font-bold">
+            <span className="text-primary">{zoneA.temp.toFixed(1)}°C</span>
+          </p>
+          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+            Sensação: {zoneA.feels.toFixed(1)}°C
+          </p>
+        </div>
+
+        <div className="panel p-3.5 border-l-4 border-amber-500">
+          <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+            Mudas Necessárias
+          </span>
+          <p className="mt-1.5 flex items-baseline gap-1 font-display text-2xl font-bold">
+            <span className="text-amber-500">{zoneA.treesNeeded > 0 ? zoneA.treesNeeded.toLocaleString() : "0"}</span>
+          </p>
+          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+            {zoneA.treesNeeded > 0 ? `Para atingir 30% de copa` : "Meta municipal atingida ✓"}
+          </p>
+        </div>
+      </div>
+
+      {/* BLOCO DE COMPARAÇÃO ENTRE BAIRROS */}
+      <div className="panel p-4 border border-canopy/20 bg-canopy/5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3 pb-3 border-b border-border/60">
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-canopy/20 text-canopy">
+              <ArrowLeftRight className="h-3.5 w-3.5" />
+            </span>
+            <div>
+              <h3 className="text-sm font-bold text-foreground">Comparação de Cobertura Vegetal</h3>
+              <p className="text-[11px] text-muted-foreground">Compare a cobertura vegetal de dois ou mais bairros</p>
+            </div>
+          </div>
+
+          {/* Seletores de bairro para comparação */}
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-2.5 py-1 text-xs whitespace-nowrap">
-              <span className="rounded bg-primary/20 px-1.5 py-0.2 font-mono text-[10px] font-bold text-primary shrink-0">
+              <span className="rounded bg-primary/20 px-1.5 py-0.5 font-mono text-[10px] font-bold text-primary shrink-0">
                 Bairro A
               </span>
               <select
@@ -129,7 +221,7 @@ export function VegetationCoverView({
                 className="bg-transparent font-semibold text-foreground focus:outline-none cursor-pointer"
               >
                 {zones.map((z) => (
-                  <option key={`a-${z.id}`} value={z.id} className="bg-card text-foreground">
+                  <option key={`cmp-a-${z.id}`} value={z.id} className="bg-card text-foreground">
                     {z.name} ({z.canopy}% copa)
                   </option>
                 ))}
@@ -139,7 +231,7 @@ export function VegetationCoverView({
             <span className="text-xs font-mono text-muted-foreground shrink-0">vs</span>
 
             <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-2.5 py-1 text-xs whitespace-nowrap">
-              <span className="rounded bg-accent/20 px-1.5 py-0.2 font-mono text-[10px] font-bold text-accent shrink-0">
+              <span className="rounded bg-accent/20 px-1.5 py-0.5 font-mono text-[10px] font-bold text-accent shrink-0">
                 Bairro B
               </span>
               <select
@@ -151,7 +243,7 @@ export function VegetationCoverView({
                 className="bg-transparent font-semibold text-foreground focus:outline-none cursor-pointer"
               >
                 {zones.map((z) => (
-                  <option key={`b-${z.id}`} value={z.id} className="bg-card text-foreground">
+                  <option key={`cmp-b-${z.id}`} value={z.id} className="bg-card text-foreground">
                     {z.name} ({z.canopy}% copa)
                   </option>
                 ))}
@@ -159,67 +251,54 @@ export function VegetationCoverView({
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Faixa de Comparação Direta entre os 2 Bairros Selecionados */}
-      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <div className="panel p-3.5">
-          <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-            <Trees className="h-3.5 w-3.5 text-canopy" />
-            Diferença de Copa Arbórea
-          </span>
-          <p className="mt-1.5 flex items-baseline gap-1 font-display text-2xl font-bold">
-            <span style={{ color: deltaCanopy >= 0 ? "var(--canopy)" : "var(--destructive)" }}>
-              {deltaCanopy > 0 ? `+${deltaCanopy}%` : `${deltaCanopy}%`}
+        {/* Métricas comparativas */}
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-3">
+          <div className="rounded-lg bg-background/70 p-3 border border-border/60">
+            <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+              <Trees className="h-3 w-3 text-canopy" />
+              Diferença de Copa
             </span>
-          </p>
-          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-            {zoneA.name} ({zoneA.canopy}%) vs {zoneB.name} ({zoneB.canopy}%)
-          </p>
-        </div>
-
-        <div className="panel p-3.5">
-          <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-            Índice NDVI Relativo
-          </span>
-          <p className="mt-1.5 flex items-baseline gap-1 font-display text-2xl font-bold">
-            <span style={{ color: deltaNdvi >= 0 ? "var(--canopy)" : "var(--accent)" }}>
-              {deltaNdvi > 0 ? `+${deltaNdvi}` : deltaNdvi}
-            </span>
-            <span className="text-xs font-normal text-muted-foreground">escala orbital</span>
-          </p>
-          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-            {zoneA.ndvi.toFixed(2)} vs {zoneB.ndvi.toFixed(2)}
-          </p>
-        </div>
-
-        <div className="panel p-3.5">
-          <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-            <TrendingDown className="h-3.5 w-3.5 text-primary" />
-            Disparidade Térmica
-          </span>
-          <p className="mt-1.5 flex items-baseline gap-1 font-display text-2xl font-bold">
-            <span style={{ color: deltaTemp > 0 ? "var(--heat-5)" : "var(--canopy)" }}>
-              {deltaTemp > 0 ? `+${deltaTemp} °C` : `${deltaTemp} °C`}
-            </span>
-          </p>
-          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-            {deltaTemp > 0 ? `${zoneA.name} mais quente` : `${zoneB.name} mais quente`}
-          </p>
-        </div>
-
-        <div className="panel p-3.5 sm:col-span-3 lg:col-span-1">
-          <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-            Meta Municipal (OMS)
-          </span>
-          <div className="mt-1.5 flex items-baseline gap-1 font-display text-2xl font-bold text-foreground">
-            30% <span className="text-xs font-normal text-muted-foreground">de copa contínua</span>
+            <p className="mt-1 flex items-baseline gap-1 font-display text-xl font-bold">
+              <span style={{ color: deltaCanopy >= 0 ? "var(--canopy)" : "var(--destructive)" }}>
+                {deltaCanopy > 0 ? `+${deltaCanopy}%` : `${deltaCanopy}%`}
+              </span>
+            </p>
+            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+              {zoneA.name} ({zoneA.canopy}%) vs {zoneB.name} ({zoneB.canopy}%)
+            </p>
           </div>
-          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-            {zoneA.canopy >= 30 ? "✓ Bairro A em conformidade" : `⚠️ Déficit de ${30 - zoneA.canopy}% em ${zoneA.name}`}
-          </p>
+
+          <div className="rounded-lg bg-background/70 p-3 border border-border/60">
+            <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3 text-emerald-400" />
+              NDVI Relativo
+            </span>
+            <p className="mt-1 flex items-baseline gap-1 font-display text-xl font-bold">
+              <span style={{ color: deltaNdvi >= 0 ? "var(--canopy)" : "var(--accent)" }}>
+                {deltaNdvi > 0 ? `+${deltaNdvi}` : deltaNdvi}
+              </span>
+              <span className="text-xs font-normal text-muted-foreground">escala orbital</span>
+            </p>
+            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+              {zoneA.ndvi.toFixed(2)} vs {zoneB.ndvi.toFixed(2)}
+            </p>
+          </div>
+
+          <div className="rounded-lg bg-background/70 p-3 border border-border/60">
+            <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+              <TrendingDown className="h-3 w-3 text-primary" />
+              Disparidade Térmica
+            </span>
+            <p className="mt-1 flex items-baseline gap-1 font-display text-xl font-bold">
+              <span style={{ color: deltaTemp > 0 ? "var(--heat-5)" : "var(--canopy)" }}>
+                {deltaTemp > 0 ? `+${deltaTemp} °C` : `${deltaTemp} °C`}
+              </span>
+            </p>
+            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+              {deltaTemp > 0 ? `${zoneA.name} mais quente` : `${zoneB.name} mais quente`}
+            </p>
+          </div>
         </div>
       </div>
 

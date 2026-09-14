@@ -588,8 +588,8 @@ function MapPanel({
             </select>
           </div>
 
-          {/* Seletor de camadas com contorno laranja e botões com cores distintas */}
-          <MapLayerSwitcher activeLayer={activeLayer} onChangeLayer={onChangeLayer} />
+          {/* Seletor de camadas – exclui "Calor" pois já estamos nessa camada */}
+          <MapLayerSwitcher activeLayer={activeLayer} onChangeLayer={onChangeLayer} excludeLayers={["calor"]} />
         </div>
       </div>
 
@@ -649,20 +649,6 @@ function MapPanel({
                 <span>28°</span>
                 <span>34°</span>
                 <span>45°+</span>
-              </div>
-              <div className="mt-2.5 pt-2 border-t border-border/50 flex flex-wrap items-center justify-between gap-2 text-[10px]">
-                <button
-                  onClick={() => onChangeLayer("vegetal")}
-                  className="text-canopy hover:underline font-medium cursor-pointer flex items-center gap-1"
-                >
-                  <span>🌿 Cobertura Vegetal ({selected.name}) →</span>
-                </button>
-                <button
-                  onClick={() => onChangeLayer("vulnerabilidade")}
-                  className="text-destructive hover:underline font-medium cursor-pointer flex items-center gap-1"
-                >
-                  <span>🏥 Vulnerabilidade →</span>
-                </button>
               </div>
             </>
           )}
