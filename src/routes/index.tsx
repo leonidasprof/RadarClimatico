@@ -26,6 +26,7 @@ import { SocialVulnerabilityView } from "@/components/dashboard/SocialVulnerabil
 import { MapLayerSwitcher } from "@/components/dashboard/MapLayerSwitcher";
 import { LoginPage } from "./login";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Sun,
   Moon,
@@ -44,6 +45,8 @@ import {
   Filter,
   Sparkles,
   HeartPulse,
+  Globe,
+  ExternalLink,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -262,14 +265,33 @@ function Dashboard() {
           </div>
         )}
       </main>
-      <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
-        <div className="flex flex-col items-center">
+      <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground bg-card/20">
+        <div className="mx-auto max-w-4xl px-4 flex flex-col items-center gap-4">
           <img
             src={isDark ? "/logo-arboris.png" : "/logo-arboris2.png"}
             alt="Logo Arboris"
-            className="h-16 mb-2 object-contain"
+            className="h-16 object-contain"
           />
-          <p>
+          
+          <Button
+            asChild
+            variant="outline"
+            className="gap-2.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 shadow-sm transition-all duration-200 h-10 px-5 font-medium rounded-lg"
+          >
+            <a
+              href="https://radarclimatico.vercel.app/site_arboris/index.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Acessar o portal/site do Radar Climático Arboris"
+              id="btn-site-radarclimatico"
+            >
+              <Globe className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span>Acessar Portal Radar Climático</span>
+              <ExternalLink className="h-3.5 w-3.5 opacity-70 shrink-0" />
+            </a>
+          </Button>
+
+          <p className="text-muted-foreground/80">
             Radar Climático · Equipe Arboris · Mockup conceitual — dados ilustrativos
           </p>
         </div>
