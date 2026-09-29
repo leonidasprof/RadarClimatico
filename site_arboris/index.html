@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radar Climático | Inteligência B2G para Mitigação de Ilhas de Calor</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description"
+    content="Radar Climático: Sistema B2G pioneiro de monitoramento e alerta de ilhas de calor urbanas no Recife desenvolvido pela Equipe Arboris (CESAR/COP).">
+  <meta name="keywords"
+    content="Radar Climático, Recife, ilhas de calor, IoT, B2G, sustentabilidade, clima urbano, Arboris, CESAR">
+  <meta name="author" content="Equipe Arboris">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:title" content="Radar Climático | Inteligência B2G">
+  <meta property="og:description"
+    content="Monitorar hoje, proteger amanhã. Inteligência climática em tempo real para a cidade do Recife.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="icon.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+
+  <!-- Google Fonts: Montserrat (Headings & Impact) & Inter (Body & UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- ======================================================== -->
+  <!-- PRELOADER ANIMADO COM O CARANGUEJO DO RADAR CLIMÁTICO    -->
+  <!-- ======================================================== -->
+  <div id="preloader" class="preloader">
+    <div class="preloader-backdrop"></div>
+    <div class="preloader-container">
+      <div class="preloader-radar-wrapper">
+        <div class="radar-ping ring-1"></div>
+        <div class="radar-ping ring-2"></div>
+        <div class="radar-ping ring-3"></div>
+        <div class="radar-sweep-beam"></div>
+        <div class="preloader-icon-box">
+          <img src="icon.png" alt="Radar Climático Logo" class="preloader-crab-img">
+        </div>
+      </div>
+      <div class="preloader-brand">
+        <span class="preloader-title">RADAR <span class="highlight-cyan">CLIMÁTICO</span></span>
+        <span class="preloader-subtitle">INICIALIZANDO TELEMETRIA URBANA DO RECIFE...</span>
+      </div>
+      <div class="preloader-bar-bg">
+        <div class="preloader-bar-fill" id="preloaderBar"></div>
+      </div>
+      <div class="preloader-status-text" id="preloaderStatus">Carregando sensores IoT...</div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- NAVBAR / CABEÇALHO SUPERIOR FIXO                         -->
+  <!-- ======================================================== -->
+  <header class="navbar" id="navbar">
+    <div class="navbar-container">
+      <!-- Logo Dinâmica (Alterna fundo_escuro / fundo_claro conforme tema) -->
+      <a href="#inicio" class="nav-brand" aria-label="Ir para o início">
+        <img src="fundo_escuro.png" alt="Radar Climático - Prefeitura do Recife" id="navLogo" class="nav-logo-img">
+      </a>
+
+      <!-- Menu de Navegação Desktop -->
+      <nav class="nav-menu" id="navMenu">
+        <ul class="nav-links">
+          <li><a href="#inicio" class="nav-link active">Início</a></li>
+          <li><a href="#contexto" class="nav-link">Contexto</a></li>
+          <li><a href="#estrategia" class="nav-link">Estratégia</a></li>
+          <li><a href="#persona" class="nav-link">Persona</a></li>
+          <li><a href="#tecnologia" class="nav-link">Tecnologia</a></li>
+          <li><a href="#mvp" class="nav-link">MVP</a></li>
+          <li><a href="#transparencia" class="nav-link">Entregáveis</a></li>
+          <li><a href="#equipe" class="nav-link">Equipe</a></li>
+        </ul>
+      </nav>
+
+      <!-- Ações do Cabeçalho: Redes Sociais, Alertas e Seletor de Tema -->
+      <div class="nav-actions">
+        <!-- Social: WhatsApp Oficial -->
+        <a href="https://wa.me/5519999238795?text=Ol%C3%A1%2C%20gostaria%20de%20informa%C3%A7%C3%B5es%20sobre%20a%20ag%C3%AAncia"
+          target="_blank" rel="noopener noreferrer" class="social-nav-btn whatsapp" title="Falar no WhatsApp (Agência)"
+          aria-label="WhatsApp">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path
+              d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.599 2.679-.702c.971.554 1.77.85 2.78.851h.001c3.182 0 5.768-2.587 5.769-5.767 0-3.181-2.587-5.767-5.769-5.767zm3.366 8.172c-.141.396-.819.743-1.139.791-.32.048-.718.067-2.038-.479-1.62-.67-2.664-2.316-2.745-2.424-.081-.109-.652-.868-.652-1.652 0-.784.412-1.17.558-1.328.146-.159.32-.198.427-.198.106 0 .213.002.306.006.098.005.231-.037.36.274.14.338.479 1.17.521 1.256.042.086.07.186.012.301-.058.115-.088.187-.174.288-.086.101-.182.226-.26.304-.088.088-.179.183-.077.358.102.175.454.749.974 1.213.67.597 1.235.782 1.41.868.175.086.277.072.38-.044.103-.116.442-.514.56-.69.117-.175.234-.146.393-.087.159.058 1.01.476 1.184.563.175.087.291.13.334.204.043.073.043.424-.098.82zM12 2C6.477 2 2 6.477 2 12c0 1.891.526 3.662 1.439 5.176L2 22l4.981-1.39A9.957 9.957 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
+          </svg>
+        </a>
+
+        <!-- Social: Instagram -->
+        <a href="https://wa.me/5519999238795?text=Ol%C3%A1%2C%20gostaria%20de%20informa%C3%A7%C3%B5es%20sobre%20a%20ag%C3%AAncia"
+          target="_blank" rel="noopener noreferrer" class="social-nav-btn instagram" title="Instagram Radar Climático"
+          aria-label="Instagram">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+          </svg>
+        </a>
+
+        <!-- Botão Alertas Ativos (com pulso) -->
+        <button class="btn-alerts-badge" id="btnOpenAlerts" title="Ver Alertas Ativos">
+          <span class="beacon-dot"></span>
+          <span class="alerts-badge-text">ALERTAS ATIVOS</span>
+          <span class="alerts-count">3</span>
+        </button>
+
+        <!-- Toggle Modo Escuro / Claro -->
+        <button class="theme-toggle-btn" id="themeToggle" title="Alternar Modo Escuro / Claro"
+          aria-label="Alternar Tema">
+          <svg class="sun-icon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- Hamburger Mobile -->
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menu de navegação">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ======================================================== -->
+    <!-- SEÇÃO 1: HERO (INÍCIO) COM RADAR GRÁFICO DINÂMICO       -->
+    <!-- ======================================================== -->
+    <section id="inicio" class="hero-section">
+      <!-- Glows de Fundo Tecnológico -->
+      <div class="hero-glow glow-cyan"></div>
+      <div class="hero-glow glow-orange"></div>
+
+      <div class="hero-container">
+        <!-- Lado Esquerdo: Conteúdo Textual e Status Real -->
+        <div class="hero-content reveal-fade-up">
+          <div class="hero-chip">
+            <span class="chip-dot"></span>
+            <span class="chip-text">MONITORAMENTO TÉRMICO B2G • RECIFE</span>
+          </div>
+
+          <h1 class="hero-title">
+            MONITORAR HOJE,<br>
+            <span class="nowrap">
+              <span class="highlight-cyan">PROTEGER</span> <span class="highlight-orange">AMANHÃ.</span>
+            </span>
+          </h1>
+
+          <p class="hero-subtitle">
+            Conheça o <strong>Radar Climático</strong>: um projeto da equipe Arboris (CESAR/COP) focado em inteligência
+            climática B2G para mitigar ilhas de calor na cidade do Recife.
+          </p>
+
+          <!-- Grupo de Botões Principais -->
+          <div class="button-group">
+            <a href="#contexto" class="btn-solid-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z">
+                </path>
+                <path d="M9 21h6"></path>
+              </svg>
+              <span>ENTENDA O PROBLEMA</span>
+            </a>
+            <a href="#estrategia" class="btn-outline-cyan">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                <line x1="8" y1="2" x2="8" y2="18"></line>
+                <line x1="16" y1="6" x2="16" y2="22"></line>
+              </svg>
+              <span>VER MAPA AO VIVO</span>
+            </a>
+            <button class="btn-glass-alert" id="heroAlertsBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span>RECEBER ALERTAS</span>
+            </button>
+          </div>
+
+          <!-- Live Weather Status Cards (Fiel à imagem de referência projeto_site.png) -->
+          <div class="weather-telemetry-row">
+            <div class="weather-telemetry-card">
+              <div class="weather-icon-box cyan-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                </svg>
+              </div>
+              <div class="telemetry-data">
+                <span class="telemetry-label">TEMP. MÁXIMA HOJE</span>
+                <span class="telemetry-value val-cyan" id="liveTemp">34,2°C</span>
+              </div>
+            </div>
+
+            <div class="weather-telemetry-card">
+              <div class="weather-icon-box teal-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                </svg>
+              </div>
+              <div class="telemetry-data">
+                <span class="telemetry-label">UMIDADE RELATIVA</span>
+                <span class="telemetry-value val-teal" id="liveHumidity">45%</span>
+              </div>
+            </div>
+
+            <div class="weather-telemetry-card">
+              <div class="weather-icon-box orange-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                  </path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              </div>
+              <div class="telemetry-data">
+                <span class="telemetry-label">RISCO ATUAL</span>
+                <span class="telemetry-value val-danger">
+                  <span class="pulsing-mini-dot"></span> ALTO
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metadados do Projeto -->
+          <div class="status-bar">
+            <div class="status-item">
+              <div class="status-dot dot-cyan"></div>
+              <div>
+                <div class="status-label">Fase do Projeto</div>
+                <div class="status-value val-cyan">Prototipação (MVP)</div>
+              </div>
+            </div>
+            <div class="status-item">
+              <div class="status-dot dot-orange"></div>
+              <div>
+                <div class="status-label">Modelo de Negócio</div>
+                <div class="status-value val-orange">B2G (Governo)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lado Direito: Ilustração Tecnológica do Radar + Caranguejo Interativo -->
+        <div class="hero-visual-wrapper reveal-fade-in">
+          <div class="radar-disc-container">
+            <!-- Anéis Concêntricos do Radar -->
+            <div class="radar-ring ring-outer"></div>
+            <div class="radar-ring ring-mid"></div>
+            <div class="radar-ring ring-inner"></div>
+            <div class="radar-crosshair-h"></div>
+            <div class="radar-crosshair-v"></div>
+
+            <!-- Varredura Giratória do Radar -->
+            <div class="radar-rotating-beam"></div>
+
+            <!-- Efeito de Calor / Pontos de Ilha Térmica -->
+            <div class="thermal-hotspot spot-1" title="Boa Viagem: 34.2°C"></div>
+            <div class="thermal-hotspot spot-2" title="Imbiribeira: 33.8°C"></div>
+            <div class="thermal-hotspot spot-3" title="São José / Centro: 33.1°C"></div>
+
+            <!-- Emblema Principal: Caranguejo do Radar Climático -->
+            <div class="radar-crab-badge">
+              <img src="icon.png" alt="Radar Climático com Caranguejo" class="radar-crab-illustration">
+            </div>
+
+            <!-- Flutuantes de Dados em Tempo Real -->
+            <div class="floating-telemetry-badge f-top-right">
+              <span class="badge-icon">📍</span>
+              <div class="badge-info">
+                <strong>Boa Viagem</strong>
+                <span>Pico Térmico: 34.2°C</span>
+              </div>
+            </div>
+
+            <div class="floating-telemetry-badge f-bottom-left">
+              <span class="badge-icon">⚡</span>
+              <div class="badge-info">
+                <strong>Frota Conectada</strong>
+                <span>Dataloggers 100% Online</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divisor Curvo Tecnológico Fluido (Como no projeto_site.png) -->
+      <div class="tech-wave-divider">
+        <svg viewBox="0 0 1440 120" fill="none" preserveAspectRatio="none">
+          <path d="M0,0 C320,80 720,120 1440,40 L1440,120 L0,120 Z" fill="currentColor"></path>
+        </svg>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- SEÇÃO 2: CONTEXTO (PROBLEMA E SOLUÇÃO)                  -->
+    <!-- ======================================================== -->
+    <section id="contexto" class="section-contexto">
+      <div class="content-wrapper">
+
+        <!-- Bloco 1: O Problema das Ilhas de Calor -->
+        <div class="problem-container reveal-fade-up">
+          <span class="section-tag tag-problem">O CENÁRIO URBANO</span>
+          <h2 class="section-title">As Ilhas de Calor no Recife</h2>
+          <div class="problem-card-glow">
+            <p class="problem-text">
+              A cidade enfrenta um aumento crítico no calor extremo. Esse cenário invisível sobrecarrega o sistema de
+              saúde, afeta trabalhadores informais e pune a população que depende do transporte público. Hoje, a gestão
+              pública <strong>não possui dados precisos sobre a temperatura ao nível da rua</strong>, dependendo de
+              satélites ou estações fixas distantes, <span class="highlight-text">o que impede ações rápidas,
+                localizadas e eficientes para o plantio de infraestrutura verde.</span>
+            </p>
+
+            <div class="problem-highlights-grid">
+              <div class="problem-mini-box">
+                <div class="mini-box-icon">🌡️</div>
+                <div class="mini-box-content">
+                  <h4>Vulnerabilidade Térmica</h4>
+                  <p>Populações periféricas expostas a picos de até 6°C acima da média regional sem arborização
+                    protetora.</p>
+                </div>
+              </div>
+              <div class="problem-mini-box">
+                <div class="mini-box-icon">🚌</div>
+                <div class="mini-box-content">
+                  <h4>Impacto no Transporte</h4>
+                  <p>Pontos de parada e eixos de ônibus convertidos em verdadeiros corredores de calor crítico.</p>
+                </div>
+              </div>
+              <div class="problem-mini-box">
+                <div class="mini-box-icon">🏛️</div>
+                <div class="mini-box-content">
+                  <h4>Falta de Dados Hiperlocais</h4>
+                  <p>Satélites de baixa frequência temporal não revelam o microclima diurno sentido pelo cidadão no
+                    asfalto.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 2: A Nossa Solução (4 Cards Foco) -->
+        <div class="solution-container reveal-fade-up">
+          <div class="section-header">
+            <span class="section-tag tag-solution">PROPOSTA DE VALOR</span>
+            <h2 class="section-title">A Nossa Solução</h2>
+            <p class="section-intro">
+              Monitoramento inteligente: dados em tempo real, previsões precisas e alertas antecipados para o poder
+              público agir.
+            </p>
+          </div>
+
+          <div class="cards-grid">
+            <!-- Card 1: Coleta Inteligente -->
+            <div class="feature-card card-cyan">
+              <div class="card-glow-bg"></div>
+              <div class="icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                  <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                  <circle cx="12" cy="20" r="1"></circle>
+                </svg>
+              </div>
+              <div class="card-line line-cyan"></div>
+              <h3 class="card-title">Coleta Inteligente</h3>
+              <p class="card-text">
+                Dataloggers IoT embarcados na frota de ônibus, mapeando a cidade dinamicamente com redução de custos.
+              </p>
+            </div>
+
+            <!-- Card 2: Painel Gerencial -->
+            <div class="feature-card card-orange">
+              <div class="card-glow-bg"></div>
+              <div class="icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+              </div>
+              <div class="card-line line-orange"></div>
+              <h3 class="card-title">Painel Gerencial</h3>
+              <p class="card-text">
+                Interface centralizada que quebra silos de dados, entregando visão térmica em tempo real para o gestor.
+              </p>
+            </div>
+
+            <!-- Card 3: Foco na Persona -->
+            <div class="feature-card card-teal">
+              <div class="card-glow-bg"></div>
+              <div class="icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <div class="card-line line-teal"></div>
+              <h3 class="card-title">Foco na Persona</h3>
+              <p class="card-text">
+                Solução desenhada sob medida para as dores da Defesa Civil e EMLURB, otimizando o orçamento público.
+              </p>
+            </div>
+
+            <!-- Card 4: Impacto ESG -->
+            <div class="feature-card card-red">
+              <div class="card-glow-bg"></div>
+              <div class="icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+                  <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+                </svg>
+              </div>
+              <div class="card-line line-red"></div>
+              <h3 class="card-title">Impacto ESG</h3>
+              <p class="card-text">
+                Metodologia estruturada para validar o Recife como cidade-piloto e atrair fundos de inovação climática.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ribbon de Métricas (Inspirado no gradiente de projeto_site.png) -->
+        <div class="stats-gradient-ribbon reveal-fade-up">
+          <div class="stats-inner-container">
+            <div class="stat-item">
+              <div class="stat-icon-wrapper cyan">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <div class="stat-text-box">
+                <div class="stat-number val-cyan">6</div>
+                <div class="stat-label">Bairros no Piloto</div>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-icon-wrapper teal">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                  <polyline points="2 17 12 22 22 17"></polyline>
+                  <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+              </div>
+              <div class="stat-text-box">
+                <div class="stat-number">94</div>
+                <div class="stat-label">Bairros de Expansão</div>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-icon-wrapper orange">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+              </div>
+              <div class="stat-text-box">
+                <div class="stat-number val-orange">2</div>
+                <div class="stat-label">Tipos de Sensores IoT</div>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-icon-wrapper red">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              </div>
+              <div class="stat-text-box">
+                <div class="stat-number val-red">100%</div>
+                <div class="stat-label">Foco B2G (Gestão Pública)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- SEÇÃO 3: ESTRATÉGIA GEOGRÁFICA (BAIRROS & MAPA RECIFE)  -->
+    <!-- ======================================================== -->
+    <section id="estrategia" class="section-estrategia">
+      <div class="content-wrapper">
+        <div class="section-header reveal-fade-up">
+          <span class="section-tag tag-cyan">ESTRATÉGIA GEOGRÁFICA</span>
+          <h2 class="section-title">Por onde vamos começar?</h2>
+          <p class="scope-intro-text">
+            Selecionamos áreas do Recife que permitem comparar condições distintas de temperatura, cobertura vegetal e
+            densidade urbana, priorizando locais com grande circulação de pessoas e exposição crítica ao calor.
+          </p>
+        </div>
+
+        <!-- Showcase do Mapa Urbano Ampliado -->
+        <div class="map-large-showcase reveal-fade-up">
+          <div class="map-overlay-badge">
+            <span class="beacon-mini"></span> RECIFE • MAPEAMENTO TÉRMICO ESTRATÉGICO
+          </div>
+          <img src="https://clareia1.vercel.app/upscale_tenebroso.png"
+            alt="Recife - Mapa Estratégico de Microclima Urbano" class="map-image-zoomable" id="mapMainImage">
+          <div class="map-zoom-hint">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+            <span>Clique para expandir mapa em alta resolução</span>
+          </div>
+        </div>
+
+        <!-- Quadro de Ação: 6 Bairros Selecionados com Post-its e Alfinetes -->
+        <div class="action-board reveal-fade-up">
+          <div class="action-board-title">
+            <h3>📍 Bairros Piloto Selecionados</h3>
+            <span>Critérios técnicos de vulnerabilidade socioambiental e dinâmica urbana</span>
+          </div>
+
+          <div class="neighborhoods-grid">
+            <!-- #1 Boa Viagem -->
+            <div class="post-it-card c1">
+              <div class="pin"></div>
+              <div class="n-header">
+                <div class="n-number">#1</div>
+                <h4 class="n-name">Boa Viagem</h4>
+              </div>
+              <p class="n-text">
+                Área de referência obrigatória. Estudos anteriores com múltiplos pontos de medição apontam o bairro no
+                topo do ranking de calor urbano e forte incidência de ilhas de calor.
+              </p>
+              <div class="n-badge-tag">Zona Sul • Alta Densidade</div>
+            </div>
+
+            <!-- #2 Imbiribeira -->
+            <div class="post-it-card c2">
+              <div class="pin"></div>
+              <div class="n-header">
+                <div class="n-number">#2</div>
+                <h4 class="n-name">Imbiribeira</h4>
+              </div>
+              <p class="n-text">
+                Elevada intensidade térmica mapeada em diagnósticos anteriores. Permite comparar uma região próxima a
+                Boa Viagem, mas com configuração urbana totalmente distinta.
+              </p>
+              <div class="n-badge-tag">Eixo Comercial • Tráfego Pesado</div>
+            </div>
+
+            <!-- #3 São José / Centro -->
+            <div class="post-it-card c3">
+              <div class="pin"></div>
+              <div class="n-header">
+                <div class="n-number">#3</div>
+                <h4 class="n-name">São José / Centro</h4>
+              </div>
+              <p class="n-text">
+                Garante que o projeto não se concentre apenas na Zona Sul. Identifica picos de calor em zonas comerciais
+                tradicionais e no entorno da Av. Conde da Boa Vista.
+              </p>
+              <div class="n-badge-tag">Polo Central • Grande Fluxo</div>
+            </div>
+
+            <!-- #4 Madalena / Torre -->
+            <div class="post-it-card c4">
+              <div class="pin"></div>
+              <div class="n-header">
+                <div class="n-number">#4</div>
+                <h4 class="n-name">Madalena / Torre</h4>
+              </div>
+              <p class="n-text">
+                Contraste estratégico: avalia o impacto direto do Rio Capibaribe no microclima local, testando como a
+                umidade e a ventilação fluvial alteram as temperaturas diurnas e noturnas.
+              </p>
+              <div class="n-badge-tag">Eixo Fluvial • Capibaribe</div>
+            </div>
+
+            <!-- #5 Várzea -->
+            <div class="post-it-card c5">
+              <div class="pin"></div>
+              <div class="n-header">
+                <div class="n-number">#5</div>
+                <h4 class="n-name">Várzea</h4>
+              </div>
+              <p class="n-text">
+                Área de contraste verde e continental. Densidade média de 31,24 hab/hectare, combinando trechos de
+                vegetação preservada com o leito do Rio Capibaribe.
+              </p>
+              <div class="n-badge-tag">Zona Oeste • Cobertura Verde</div>
+            </div>
+
+            <!-- #6 Ibura -->
+            <div class="post-it-card c6">
+              <div class="pin"></div>
+              <div class="n-header">
+                <div class="n-number">#6</div>
+                <h4 class="n-name">Ibura</h4>
+              </div>
+              <p class="n-text">
+                Representa o eixo de maior vulnerabilidade socioambiental. Essencial para contrapor a exposição ao calor
+                em contextos periféricos e socioeconômicos distintos da cidade.
+              </p>
+              <div class="n-badge-tag">Periferia • Alta Vulnerabilidade</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- SEÇÃO 4: PERSONA (QUEM ESTAMOS AJUDANDO)                -->
+    <!-- ======================================================== -->
+    <section id="persona" class="section-persona">
+      <div class="content-wrapper">
+        <div class="section-header reveal-fade-up">
+          <span class="section-tag tag-cyan">DESAFIO DO GESTOR PÚBLICO</span>
+          <h2 class="section-title">Quem estamos ajudando</h2>
+          <p class="section-intro">
+            Desenvolvido para suprir as lacunas diárias de inteligência operacional de quem toma decisões críticas pela
+            segurança do Recife.
+          </p>
+        </div>
+
+        <div class="persona-card reveal-fade-up">
+          <!-- Coluna Perfil -->
+          <div class="profile-col">
+            <div class="profile-avatar-wrapper">
+              <img
+                src="https://img.magnific.com/fotos-gratis/retrato-de-homem-negro-isolado_53876-40305.jpg?semt=ais_hybrid&w=740&q=80"
+                alt="Jorge Gonçalves - Gestor da Defesa Civil" class="profile-img">
+              <div class="avatar-badge-icon" title="Servidor Público Municipal">🏛️</div>
+            </div>
+            <h3 class="profile-name">Jorge Gonçalves</h3>
+            <div class="profile-role">Defesa Civil • 57 anos</div>
+            <p class="profile-bio">
+              Funcionário público, residente do Recife, deseja monitorar e antecipar zonas de calor extremo na cidade.
+            </p>
+
+            <div class="skills-container">
+              <span class="skills-label">Formação</span>
+              <div class="tech-tags">
+                <span class="tag tag-cyan">Sistemas de Informação</span>
+              </div>
+              <span class="skills-label">Habilidades</span>
+              <div class="tech-tags">
+                <span class="tag tag-orange">Análise de Dados</span>
+                <span class="tag tag-orange">SQL</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coluna Dados e Dores -->
+          <div class="data-col">
+            <!-- Dificuldades no Trabalho -->
+            <div class="info-group group-pink">
+              <div class="group-title">
+                <div class="icon-dot dot-pink"></div>
+                <h4>Dificuldades no Trabalho</h4>
+              </div>
+              <ul class="custom-list">
+                <li>Enfrenta a falta de ferramentas, <span class="highlight">dados precisos e insights</span> em nível
+                  de bairro.</li>
+                <li>Possui baixa perspectiva de avanço estrutural no assunto climático dentro das ferramentas atuais
+                  legadas.</li>
+              </ul>
+            </div>
+
+            <!-- Barreiras do Sistema -->
+            <div class="info-group group-orange">
+              <div class="group-title">
+                <div class="icon-dot dot-orange"></div>
+                <h4>Barreiras do Sistema</h4>
+              </div>
+              <ul class="custom-list">
+                <li><span class="highlight">Silos de informações</span> não integradas entre as diferentes secretarias
+                  municipais (Saúde, Mobilidade, Meio Ambiente).</li>
+                <li>Lentidão burocrática crônica para a adoção de novas tecnologias na prefeitura.</li>
+              </ul>
+            </div>
+
+            <!-- Objetivos de Gestão -->
+            <div class="info-group group-cyan full-width">
+              <div class="group-title">
+                <div class="icon-dot dot-cyan"></div>
+                <h4>Objetivos de Gestão</h4>
+              </div>
+              <div class="goals-split">
+                <div class="goal-item">
+                  <span class="goal-tag tag-cyan">Curto Prazo</span>
+                  <p>Cruzar os dados de ilhas de calor com a densidade populacional para identificar zonas críticas de
+                    vulnerabilidade imediata.</p>
+                </div>
+                <div class="goal-item">
+                  <span class="goal-tag tag-orange">Longo Prazo</span>
+                  <p>Otimizar o orçamento municipal, direcionando verbas para arborização e infraestrutura verde com
+                    precisão baseada em dados reais.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- SEÇÃO 5: TECNOLOGIA & HARDWARE IOT                       -->
+    <!-- ======================================================== -->
+    <section id="tecnologia" class="section-hardware">
+      <div class="content-wrapper">
+        <div class="section-header reveal-fade-up">
+          <span class="section-tag tag-cyan">ENGENHARIA IOT</span>
+          <h2 class="section-title">Coleta Inteligente de Dados</h2>
+          <p class="section-desc">
+            Para garantir alta cobertura espacial, utilizamos a frota de ônibus do Recife como <strong>plataformas
+              móveis de monitoramento</strong>, além de bases fixas estratégicas. Isso permite coletar dados extensos de
+            forma otimizada.
+          </p>
+        </div>
+
+        <div class="hardware-grid">
+          <!-- Card 1: Ônibus / Plataforma Móvel -->
+          <div class="hw-card reveal-fade-up">
+            <div class="hw-card-top">
+              <div class="hw-badge badge-mobile">Plataforma Móvel (Ônibus)</div>
+              <span class="hw-spec-chip">Monitoramento Dinâmico</span>
+            </div>
+
+            <div class="hw-images-row">
+              <div class="hw-img-box">
+                <img
+                  src="https://images.tcdn.com.br/img/img_prod/1248315/datalogger_wifi_temperatura_e_umidade_monitoramento_online_com_alertas_via_app_1111_1_00a9d62d25d5135092008da097016ee2_20251020103214.png"
+                  alt="Datalogger TDE">
+                <span class="img-label">O Hardware</span>
+              </div>
+              <div class="hw-img-box">
+                <img src="https://clareia1.vercel.app/onibus_IOT.png" alt="Aplicação no Ônibus">
+                <span class="img-label label-orange">Aplicação Prática</span>
+              </div>
+            </div>
+
+            <h3 class="hw-title">Datalogger de Temperatura</h3>
+            <span class="hw-model">RCW-800W TDE WiFi (2 Sensores)</span>
+            <p class="hw-desc">
+              Monitoramento de temperatura em ambientes externos, inclusive em locais sujeitos à exposição às condições
+              climáticas severas, como a rota de ônibus.
+            </p>
+
+            <div class="hw-features-list">
+              <span>✓ Duplo sensor de alta precisão</span>
+              <span>✓ Amostragem contínua por GPS</span>
+              <span>✓ Baixo consumo energético</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Ponto Fixo (Estático) -->
+          <div class="hw-card reveal-fade-up">
+            <div class="hw-card-top">
+              <div class="hw-badge badge-fixed">Ponto Fixo (Estático)</div>
+              <span class="hw-spec-chip">Referência Microlocal</span>
+            </div>
+
+            <div class="hw-images-row">
+              <div class="hw-img-box">
+                <img
+                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkQ0zvb2IGrsdMrb5ousB-kpP_B-67Wc37IZKZ81Deg3B4JZiE8GDxIhN_&s=10"
+                  alt="Datalogger THE">
+                <span class="img-label">O Hardware</span>
+              </div>
+              <div class="hw-img-box">
+                <img src="https://clareia1.vercel.app/parada_iot.png" alt="Aplicação na Parada">
+                <span class="img-label label-orange">Aplicação Prática</span>
+              </div>
+            </div>
+
+            <h3 class="hw-title">Datalogger Temp/Umidade</h3>
+            <span class="hw-model">RCW-800W THE WiFi</span>
+            <p class="hw-desc">
+              Monitoramento simultâneo de temperatura e umidade em pontos protegidos da chuva e da exposição direta à
+              água.
+            </p>
+
+            <div class="hw-features-list">
+              <span>✓ Calibração certificada</span>
+              <span>✓ Transmissão via telemetria WiFi</span>
+              <span>✓ Instalação ágil em paradas</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- SEÇÃO 6: MVP / EXPLORE O PAINEL GERENCIAL                -->
+    <!-- ======================================================== -->
+    <section id="mvp" class="section-mvp">
+      <div class="content-wrapper">
+        <div class="mvp-cta-card reveal-fade-up">
+          <div class="mvp-bg-glow"></div>
+          <span class="section-tag tag-cyan">DEMONSTRAÇÃO PRÁTICA</span>
+          <h2 class="section-title">Explore o Painel Gerencial (MVP)</h2>
+
+          <!-- Imagem Preview do Dashboard -->
+          <div class="dashboard-preview-container">
+            <img src="https://clareia1.vercel.app/dash_radar.png" alt="Dashboard do Radar Climático Interativo"
+              class="dashboard-preview-img" id="dashPreviewImg">
+            <div class="dash-floating-tag">
+              <span class="dash-tag-status"></span>
+              <span>SISTEMA DE TELEMETRIA AO VIVO v1.2</span>
+            </div>
+          </div>
+
+          <p class="section-desc mvp-desc">
+            Acesse a nossa interface desenvolvida para a gestão pública. Visualize o cruzamento de dados térmicos em
+            tempo real, simule alertas e entenda como entregamos inteligência acionável para a Defesa Civil.
+          </p>
+
+          <div class="mvp-cta-actions">
+            <a href="https://radarclimatico.vercel.app/" target="_blank" rel="noopener noreferrer"
+              class="btn-mvp-action">
+              <span>ACESSAR O PROTÓTIPO INTERATIVO</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+            <a href="#transparencia" class="btn-mvp-secondary">
+              <span>CONSULTAR DOCUMENTAÇÃO</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- SEÇÃO 7: TRANSPARÊNCIA & PAINEL DE ENTREGÁVEIS           -->
+    <!-- ======================================================== -->
+    <section id="transparencia" class="section-deliverables">
+      <div class="content-wrapper">
+        <div class="section-header reveal-fade-up">
+          <span class="section-tag tag-cyan">GOVERNANÇA & TRANSPARÊNCIA</span>
+          <h2 class="section-title">Painel de Entregáveis</h2>
+          <p class="section-desc">
+            Acesse diretamente os ambientes de trabalho da equipe Arboris. Todo o nosso código, planejamento ágil,
+            ideação e documentação técnica estão disponíveis para consulta.
+          </p>
+        </div>
+
+        <div class="deliv-grid">
+          <!-- Trello -->
+          <a href="https://trello.com/invite/b/6a89c894cdccb08300063b81/ATTI1a1657322e0cfb09f7d2a86c66bb61aa5800717F/projeto-arboris-%F0%9F%8 domestic-recife"
+            target="_blank" rel="noopener noreferrer" class="deliv-card card-trello reveal-fade-up">
+            <div class="icon-box">
+              <img src="https://images.icon-icons.com/3053/PNG/512/trello_macos_bigsur_icon_189616.png" alt="Trello">
+            </div>
+            <h3 class="deliv-name">Trello</h3>
+            <p class="deliv-text">Quadro Kanban e gestão de tarefas ágeis do projeto.</p>
+            <div class="deliv-action-link">
+              <span>Abrir Quadro</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </div>
+          </a>
+
+          <!-- Google Drive -->
+          <a href="https://drive.google.com/drive/u/1/folders/1hShpJPtTgRN8nanPOXNYqc3ppXvUSd8f" target="_blank"
+            rel="noopener noreferrer" class="deliv-card card-drive reveal-fade-up">
+            <div class="icon-box">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Google_Drive_icon_%282026%29.svg/960px-Google_Drive_icon_%282026%29.svg.png?utm_source=pt.wikipedia.org&utm_campaign=index&utm_content=thumbnail"
+                alt="Google Drive">
+            </div>
+            <h3 class="deliv-name">Google Drive</h3>
+            <p class="deliv-text">Repositório central de documentos e relatórios técnicos.</p>
+            <div class="deliv-action-link">
+              <span>Acessar Pastas</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </div>
+          </a>
+
+          <!-- GitHub -->
+          <a href="https://github.com/leoaureliano/Arboris" target="_blank" rel="noopener noreferrer"
+            class="deliv-card card-github reveal-fade-up">
+            <div class="icon-box">
+              <img src="https://images.icon-icons.com/3685/PNG/512/github_logo_icon_229278.png" alt="GitHub">
+            </div>
+            <h3 class="deliv-name">GitHub</h3>
+            <p class="deliv-text">Versionamento de código fonte e arquitetura da solução.</p>
+            <div class="deliv-action-link">
+              <span>Ver Repositório</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </div>
+          </a>
+
+          <!-- Miro -->
+          <a href="https://miro.com/app/board/uXjVHvBkq68=/" target="_blank" rel="noopener noreferrer"
+            class="deliv-card card-miro reveal-fade-up">
+            <div class="icon-box">
+              <img src="https://static.cdnlogo.com/logos/m/32/miro.svg" alt="Miro">
+            </div>
+            <h3 class="deliv-name">Miro</h3>
+            <p class="deliv-text">Whiteboard de ideação, fluxogramas e matrizes visuais.</p>
+            <div class="deliv-action-link">
+              <span>Ver Ideação</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- SEÇÃO 8: EQUIPE ARBORIS                                 -->
+    <!-- ======================================================== -->
+    <section id="equipe" class="section-team">
+      <div class="content-wrapper">
+        <div class="section-header reveal-fade-up">
+          <span class="section-tag tag-cyan">O ESQUADRÃO</span>
+          <h2 class="section-title">Equipe Arboris</h2>
+          <p class="section-desc">
+            Time multidisciplinar unindo ciência de dados, design, engenharia de software e gestão para resolver os
+            desafios climáticos do Recife.
+          </p>
+        </div>
+
+        <div class="team-grid">
+          <!-- Odir -->
+          <div class="team-member-card reveal-fade-up">
+            <span class="doodle doodle-1">+</span>
+            <div class="shape-bg color-1">
+              <div class="photo-container">
+                <img src="https://clareia1.vercel.app/odir.png" alt="Odir - Gestor de Projetos">
+              </div>
+            </div>
+            <h3 class="member-name">Odir</h3>
+            <p class="member-role">Gestor de Projetos</p>
+          </div>
+
+          <!-- Leonardo -->
+          <div class="team-member-card reveal-fade-up">
+            <span class="doodle doodle-2">{ }</span>
+            <div class="shape-bg color-2">
+              <div class="photo-container">
+                <img src="https://clareia1.vercel.app/leonardo.png" alt="Leonardo - Analista de Requisitos • Dados">
+              </div>
+            </div>
+            <h3 class="member-name">Leonardo</h3>
+            <p class="member-role">Analista de Requisitos • Dados</p>
+          </div>
+
+          <!-- Patrick -->
+          <div class="team-member-card reveal-fade-up">
+            <span class="doodle doodle-1">/</span>
+            <div class="shape-bg color-3">
+              <div class="photo-container">
+                <img src="https://clareia1.vercel.app/patrick.png" alt="Patrick - Designer">
+              </div>
+            </div>
+            <h3 class="member-name">Patrick</h3>
+            <p class="member-role">Designer UI/UX</p>
+          </div>
+
+          <!-- Leônidas -->
+          <div class="team-member-card reveal-fade-up">
+            <span class="doodle doodle-2">#</span>
+            <div class="shape-bg color-4">
+              <div class="photo-container">
+                <img src="https://clareia1.vercel.app/leonidas.png" alt="Leônidas - Desenvolvedor">
+              </div>
+            </div>
+            <h3 class="member-name">Leônidas</h3>
+            <p class="member-role">Desenvolvedor Full Stack</p>
+          </div>
+
+          <!-- Ariely -->
+          <div class="team-member-card reveal-fade-up">
+            <span class="doodle doodle-1">&lt;&gt;</span>
+            <div class="shape-bg color-5">
+              <div class="photo-container">
+                <img src="https://clareia1.vercel.app/thays.png" alt="Ariely - Analista Financeira">
+              </div>
+            </div>
+            <h3 class="member-name">Ariely</h3>
+            <p class="member-role">Analista Financeira</p>
+          </div>
+
+          <!-- Thaís -->
+          <div class="team-member-card reveal-fade-up">
+            <span class="doodle doodle-2">*</span>
+            <div class="shape-bg color-6">
+              <div class="photo-container">
+                <img src="https://clareia1.vercel.app/ariely.png" alt="Thaís - Pesquisadora">
+              </div>
+            </div>
+            <h3 class="member-name">Thaís</h3>
+            <p class="member-role">Pesquisadora Climática</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- SEÇÃO 9: NOTÍCIAS & ATUALIZAÇÕES (LAYOUT projeto_site.png) -->
+    <!-- ======================================================== -->
+    <section id="noticias" class="section-news">
+      <div class="content-wrapper">
+        <div class="news-header-row reveal-fade-up">
+          <div>
+            <span class="section-tag tag-orange">INFORMAÇÃO EM TEMPO REAL</span>
+            <h2 class="section-title">Últimas Notícias</h2>
+          </div>
+          <a href="#inicio" class="view-all-link">
+            <span>VER TODAS</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </div>
+
+        <div class="news-grid">
+          <!-- Notícia 1: Alerta -->
+          <article class="news-card reveal-fade-up">
+            <div class="news-img-box">
+              <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=700&q=80"
+                alt="Recife em atenção">
+              <span class="news-badge badge-alerta">ALERTA</span>
+            </div>
+            <div class="news-body">
+              <h3 class="news-title">Recife em atenção para onda de calor</h3>
+              <p class="news-summary">Temperaturas acima da média histórica devem persistir nos próximos dias nas zonas
+                críticas.</p>
+              <div class="news-footer">
+                <span class="news-date">10 MAI 2024</span>
+                <span class="news-read-more">Ler mais →</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Notícia 2: Dados -->
+          <article class="news-card reveal-fade-up">
+            <div class="news-img-box">
+              <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=700&q=80"
+                alt="Médias históricas de calor">
+              <span class="news-badge badge-dados">DADOS</span>
+            </div>
+            <div class="news-body">
+              <h3 class="news-title">Maio registra temperaturas acima da média</h3>
+              <p class="news-summary">Dados dos sensores IoT indicam aumento significativo de 2,4°C nos índices de calor
+                urbano.</p>
+              <div class="news-footer">
+                <span class="news-date">08 MAI 2024</span>
+                <span class="news-read-more">Ler mais →</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Notícia 3: Ações -->
+          <article class="news-card reveal-fade-up">
+            <div class="news-img-box">
+              <img src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=700&q=80"
+                alt="Prefeitura intensifica ações">
+              <span class="news-badge badge-acoes">AÇÕES</span>
+            </div>
+            <div class="news-body">
+              <h3 class="news-title">Prefeitura intensifica ações de hidratação</h3>
+              <p class="news-summary">Pontos de apoio e distribuição de água são ampliados em áreas comerciais do Centro
+                e Boa Viagem.</p>
+              <div class="news-footer">
+                <span class="news-date">06 MAI 2024</span>
+                <span class="news-read-more">Ler mais →</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Notícia 4: Previsão -->
+          <article class="news-card reveal-fade-up">
+            <div class="news-img-box">
+              <img src="https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=700&q=80"
+                alt="Previsão para os próximos 7 dias">
+              <span class="news-badge badge-previsao">PREVISÃO</span>
+            </div>
+            <div class="news-body">
+              <h3 class="news-title">Previsão para os próximos 7 dias</h3>
+              <p class="news-summary">Confira a tendência térmica e os índices de insolação modelados para as 6
+                microrregiões piloto.</p>
+              <div class="news-footer">
+                <span class="news-date">05 MAI 2024</span>
+                <span class="news-read-more">Ler mais →</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Banner de Inscrição / Alertas (Fiel ao design de projeto_site.png) -->
+        <div class="newsletter-gradient-card reveal-fade-up">
+          <div class="newsletter-icon-circle">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+          <div class="newsletter-info">
+            <h3 class="newsletter-title">RECEBA ALERTAS E RECOMENDAÇÕES</h3>
+            <p class="newsletter-sub">Cadastre seu e-mail ou WhatsApp para receber comunicados prévios de ondas de calor
+              no Recife.</p>
+          </div>
+          <form class="newsletter-form" id="newsletterForm">
+            <input type="text" placeholder="Seu melhor e-mail ou WhatsApp" class="newsletter-input" required
+              id="newsletterInput">
+            <button type="submit" class="newsletter-submit-btn">
+              <span>CADASTRAR</span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- MODAL INTERATIVO: ALERTAS ATIVOS E TELEMETRIA URBANA     -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="alertsModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <span class="beacon-dot"></span>
+          <h3>Alertas Ativos de Calor Urbano</h3>
+        </div>
+        <button class="modal-close-btn" id="closeAlertsModal" aria-label="Fechar janela de alertas">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-subtitle">Sensores IoT indicam áreas sob limiar crítico de estresse térmico hoje no Recife:</p>
+
+        <div class="modal-alert-list">
+          <div class="modal-alert-item alert-high">
+            <div class="alert-item-header">
+              <span class="alert-zone">Zona Sul • Boa Viagem</span>
+              <span class="alert-status">ALTO RISCO (34.2°C)</span>
+            </div>
+            <p class="alert-desc">Forte retenção térmica em corredores de concreto e asfalto com baixa ventilação
+              marítima interior.</p>
+            <div class="alert-actions-chips">
+              <span>💧 Pontos de Hidratação Ativos</span>
+              <span>🌳 Recomendação: Arborização Imediata</span>
+            </div>
+          </div>
+
+          <div class="modal-alert-item alert-medium">
+            <div class="alert-item-header">
+              <span class="alert-zone">Centro • São José & Av. Conde da Boa Vista</span>
+              <span class="alert-status">ATENÇÃO ELEVADA (33.1°C)</span>
+            </div>
+            <p class="alert-desc">Grande concentração de pedestres e trabalhadores informais expostos à radiação solar
+              direta.</p>
+          </div>
+
+          <div class="modal-alert-item alert-info">
+            <div class="alert-item-header">
+              <span class="alert-zone">Zona Oeste • Ibura</span>
+              <span class="alert-status">MONITORAMENTO CONTÍNUO</span>
+            </div>
+            <p class="alert-desc">Plataforma móvel em trânsito pela Av. Dois Rios aferindo dados de umidade e
+              temperatura local.</p>
+          </div>
+        </div>
+
+        <div class="modal-footer-cta">
+          <a href="https://radarclimatico.vercel.app/" target="_blank" rel="noopener noreferrer"
+            class="btn-solid-primary full-width">
+            <span>ABRIR PAINEL COMPLETO NO MVP</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL DE ZOOM PARA O MAPA ESTRATÉGICO                    -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="mapZoomModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <span class="beacon-mini"></span>
+          <h3>Recife • Mapa Estratégico de Microclima Urbano</h3>
+        </div>
+        <button class="modal-close-btn" id="closeMapZoomModal">&times;</button>
+      </div>
+      <div class="modal-body-scrollable">
+        <img src="https://clareia1.vercel.app/upscale_tenebroso.png" alt="Mapa Estratégico em Alta Resolução"
+          class="map-zoomed-view">
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- BOTÃO FLUTUANTE DE WHATSAPP (ACOMPANHA TODAS AS SEÇÕES)  -->
+  <!-- Número: +55 81 99695-5519                                -->
+  <!-- ======================================================== -->
+  <div class="whatsapp-floating-container" id="whatsappFloating">
+    <div class="floating-tooltip">Fale com nossa equipe no WhatsApp</div>
+    <a href="https://wa.me/5581996955519?text=Ol%C3%A1%2C%20gostaria%20de%20informa%C3%A7%C3%B5es%20sobre%20o%20Radar%20Clim%C3%A1tico"
+      target="_blank" rel="noopener noreferrer" class="whatsapp-floating-btn" aria-label="Falar no WhatsApp">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
+        <path
+          d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.599 2.679-.702c.971.554 1.77.85 2.78.851h.001c3.182 0 5.768-2.587 5.769-5.767 0-3.181-2.587-5.767-5.769-5.767zm3.366 8.172c-.141.396-.819.743-1.139.791-.32.048-.718.067-2.038-.479-1.62-.67-2.664-2.316-2.745-2.424-.081-.109-.652-.868-.652-1.652 0-.784.412-1.17.558-1.328.146-.159.32-.198.427-.198.106 0 .213.002.306.006.098.005.231-.037.36.274.14.338.479 1.17.521 1.256.042.086.07.186.012.301-.058.115-.088.187-.174.288-.086.101-.182.226-.26.304-.088.088-.179.183-.077.358.102.175.454.749.974 1.213.67.597 1.235.782 1.41.868.175.086.277.072.38-.044.103-.116.442-.514.56-.69.117-.175.234-.146.393-.087.159.058 1.01.476 1.184.563.175.087.291.13.334.204.043.073.043.424-.098.82zM12 2C6.477 2 2 6.477 2 12c0 1.891.526 3.662 1.439 5.176L2 22l4.981-1.39A9.957 9.957 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
+      </svg>
+      <span class="floating-pulse-ring"></span>
+    </a>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 12. RODAPÉ (FOOTER) REFINADO COM PARCEIROS E CONTATOS    -->
+  <!-- ======================================================== -->
+  <footer class="site-footer">
+    <div class="footer-wrapper">
+      <div class="footer-top-grid">
+        <!-- Coluna 1: Marca & Apresentação -->
+        <div class="footer-col-brand">
+          <div class="footer-brand-logo">
+            <img src="fundo_escuro.png" alt="Radar Climático" class="footer-logo-img" id="footerLogo">
+          </div>
+          <p class="footer-mission-text">
+            Solução de tecnologia climática e sensoriamento IoT para a gestão pública municipal do Recife. Desenvolvido
+            pela Equipe Arboris.
+          </p>
+          <div class="footer-social-links">
+            <a href="https://wa.me/5581996955519" target="_blank" rel="noopener noreferrer" title="WhatsApp Equipe"
+              aria-label="WhatsApp">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path
+                  d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.599 2.679-.702c.971.554 1.77.85 2.78.851h.001c3.182 0 5.768-2.587 5.769-5.767 0-3.181-2.587-5.767-5.769-5.767zm3.366 8.172c-.141.396-.819.743-1.139.791-.32.048-.718.067-2.038-.479-1.62-.67-2.664-2.316-2.745-2.424-.081-.109-.652-.868-.652-1.652 0-.784.412-1.17.558-1.328.146-.159.32-.198.427-.198.106 0 .213.002.306.006.098.005.231-.037.36.274.14.338.479 1.17.521 1.256.042.086.07.186.012.301-.058.115-.088.187-.174.288-.086.101-.182.226-.26.304-.088.088-.179.183-.077.358.102.175.454.749.974 1.213.67.597 1.235.782 1.41.868.175.086.277.072.38-.044.103-.116.442-.514.56-.69.117-.175.234-.146.393-.087.159.058 1.01.476 1.184.563.175.087.291.13.334.204.043.073.043.424-.098.82zM12 2C6.477 2 2 6.477 2 12c0 1.891.526 3.662 1.439 5.176L2 22l4.981-1.39A9.957 9.957 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
+              </svg>
+            </a>
+            <a href="https://github.com/leoaureliano/Arboris" target="_blank" rel="noopener noreferrer"
+              title="GitHub Repositório" aria-label="GitHub">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path
+                  d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Coluna 2: Navegação -->
+        <div class="footer-col-links">
+          <h4 class="footer-heading">Navegação</h4>
+          <ul class="footer-nav-list">
+            <li><a href="#inicio">Início</a></li>
+            <li><a href="#contexto">Contexto & Solução</a></li>
+            <li><a href="#estrategia">Estratégia Geográfica</a></li>
+            <li><a href="#persona">Persona Defesa Civil</a></li>
+            <li><a href="#tecnologia">Hardware & Sensores</a></li>
+            <li><a href="#mvp">Protótipo MVP</a></li>
+            <li><a href="#transparencia">Entregáveis do Projeto</a></li>
+            <li><a href="#equipe">Equipe Arboris</a></li>
+          </ul>
+        </div>
+
+        <!-- Coluna 3: Contato & Localização -->
+        <div class="footer-col-contact">
+          <h4 class="footer-heading">Contato Institucional</h4>
+          <ul class="footer-contact-list">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <span>radarclimatico@recife.pe.gov.br</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                </path>
+              </svg>
+              <span>+55 (81) 99695-5519</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span>Av. Cais do Apolo, 925 - Bairro do Recife, PE</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Coluna 4: Parceiros & Ecossistema -->
+        <div class="footer-col-partners">
+          <h4 class="footer-heading">Parceiros & Ecossistema</h4>
+          <div class="partners-logos-grid">
+            <div class="partner-card" title="CESAR School">
+              <img src="https://www.cesar.school/wp-content/themes/alfama/assets/img/logo_cesar.png" alt="CESAR">
+            </div>
+            <div class="partner-card" title="Prefeitura do Recife">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Brasao_do_Recife.svg/960px-Brasao_do_Recife.svg.png?utm_source=pt.wikipedia.org&utm_campaign=index&utm_content=thumbnail"
+                alt="Prefeitura do Recife">
+            </div>
+            <div class="partner-card" title="COP Recife">
+              <img
+                src="https://cop.recife.pe.gov.br/portal/sharing/rest/content/items/816e44228a954f5eb4372c238d33ab63/resources/images/widget_730/1721998007624.png"
+                alt="COP Recife">
+            </div>
+            <div class="partner-card partner-circle" title="Inovação Urbana">
+              <img
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGjYgbLp-muH9KYadFImtw477JbH6TCln360u_MMphQ4Dc1EaP-2mkQmM&s=10"
+                alt="Inovação Urbana">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Copyright e Assinatura -->
+      <div class="footer-bottom-bar">
+        <div class="footer-copy-text">
+          © 2024–2026 Radar Climático • Equipe Arboris (CESAR / COP). Desenvolvido como projeto de inovação em
+          inteligência climática urbana (B2G). Todos os direitos reservados.
+        </div>
+        <div class="footer-status-pill">
+          <span class="beacon-mini"></span> Recife Resiliente
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+</body>
+
+</html>
