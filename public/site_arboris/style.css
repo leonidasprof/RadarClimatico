@@ -804,7 +804,18 @@ button {
 }
 .val-cyan { color: var(--color-cyan); }
 .val-teal { color: var(--color-teal); }
+.val-warning { color: #FF9500; }
 .val-danger { color: #FF3B30; }
+.val-safe { color: #34C759; }
+
+.amber-icon {
+  background: rgba(255, 149, 0, 0.15);
+  color: #FF9500;
+}
+.green-icon {
+  background: rgba(52, 199, 89, 0.15);
+  color: #34C759;
+}
 
 .pulsing-mini-dot {
   width: 8px;
@@ -812,6 +823,22 @@ button {
   border-radius: 50%;
   background: #FF3B30;
   animation: pulseBeacon 1s infinite;
+}
+.pulsing-mini-dot.dot-danger {
+  background: #FF3B30;
+  box-shadow: 0 0 8px rgba(255, 59, 48, 0.6);
+}
+.pulsing-mini-dot.dot-warning {
+  background: #FF9500;
+  box-shadow: 0 0 8px rgba(255, 149, 0, 0.6);
+}
+.pulsing-mini-dot.dot-safe {
+  background: #34C759;
+  box-shadow: 0 0 8px rgba(52, 199, 89, 0.6);
+}
+.pulsing-mini-dot.dot-teal {
+  background: var(--color-cyan);
+  box-shadow: 0 0 8px rgba(16, 187, 195, 0.6);
 }
 
 /* Status Bar do Projeto */
@@ -1016,6 +1043,233 @@ button {
 .badge-info span {
   color: var(--color-cyan);
   font-size: 0.72rem;
+}
+
+/* ==========================================================================
+   Seletor Interativo de Bairros Piloto no Badge Flutuante (Hero)
+   ========================================================================== */
+.interactive-neighborhood-badge {
+  position: absolute;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.interactive-neighborhood-badge.dropdown-active {
+  animation-play-state: paused;
+  z-index: 50;
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 25px rgba(16, 187, 195, 0.35);
+}
+
+.bairro-dropdown-trigger {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: left;
+  transition: color 0.2s ease;
+}
+
+.bairro-dropdown-trigger:hover,
+.bairro-dropdown-trigger:focus-visible {
+  color: var(--color-cyan);
+  outline: none;
+}
+
+.bairro-current-name {
+  pointer-events: none;
+}
+
+.bairro-chevron-icon {
+  color: var(--color-cyan);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.interactive-neighborhood-badge.dropdown-active .bairro-chevron-icon {
+  transform: rotate(180deg);
+}
+
+.badge-peak-label {
+  color: var(--color-cyan);
+  font-size: 0.72rem;
+  display: block;
+}
+
+.badge-peak-label strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* Dropdown Menu Glassmorphism de Bairros */
+.bairros-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 290px;
+  background: rgba(10, 25, 47, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(16, 187, 195, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 25px rgba(16, 187, 195, 0.2);
+  padding: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.22s;
+  z-index: 60;
+}
+
+[data-theme="light"] .bairros-dropdown-menu {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(6, 129, 135, 0.3);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15), 0 0 25px rgba(6, 129, 135, 0.12);
+}
+
+.interactive-neighborhood-badge.dropdown-active .bairros-dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px 8px 6px;
+  border-bottom: 1px solid var(--border-glass);
+  margin-bottom: 6px;
+}
+
+.dropdown-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-cyan);
+}
+
+.dropdown-tag {
+  font-size: 0.65rem;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: rgba(16, 187, 195, 0.14);
+  color: var(--color-cyan);
+  font-weight: 600;
+}
+
+.bairros-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.bairros-list::-webkit-scrollbar {
+  width: 4px;
+}
+.bairros-list::-webkit-scrollbar-thumb {
+  background: rgba(16, 187, 195, 0.3);
+  border-radius: 4px;
+}
+
+.bairro-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+}
+
+.bairro-dropdown-item:hover,
+.bairro-dropdown-item:focus-visible {
+  background: rgba(16, 187, 195, 0.12);
+  border-color: rgba(16, 187, 195, 0.28);
+  transform: translateX(2px);
+  outline: none;
+}
+
+.bairro-dropdown-item.active {
+  background: rgba(16, 187, 195, 0.18);
+  border-color: var(--color-cyan);
+}
+
+.bairro-item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bairro-item-name {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.bairro-item-zone {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}
+
+.bairro-item-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bairro-item-temp {
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-cyan);
+}
+
+.bairro-item-check {
+  width: 13px;
+  height: 13px;
+  color: var(--color-cyan);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.18s ease;
+}
+
+.bairro-dropdown-item.active .bairro-item-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Efeito de flash suave na atualização dos KPIs */
+@keyframes telemetryFlashGlow {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.06); filter: brightness(1.4) drop-shadow(0 0 12px rgba(16, 187, 195, 0.8)); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.flash-update {
+  animation: telemetryFlashGlow 0.45s ease-out;
 }
 
 /* Divisor Tecnológico Curvo (Transição fluida) */
@@ -2652,28 +2906,68 @@ button {
   margin-bottom: 20px;
 }
 
-.footer-social-links {
-  display: flex;
-  gap: 12px;
+.footer-social-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-glass);
 }
 
-.footer-social-links a {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+.footer-subheading {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.footer-social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.social-footer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
   background: var(--bg-card);
   border: 1px solid var(--border-glass);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: var(--font-heading);
+  text-decoration: none;
   transition: all var(--transition-fast);
 }
 
-.footer-social-links a:hover {
-  background: var(--color-cyan);
-  color: #051A2D;
+.social-footer-btn svg {
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.social-footer-btn:hover {
+  color: #FFFFFF;
   transform: translateY(-2px);
+}
+
+.social-footer-btn:hover svg {
+  transform: scale(1.1);
+}
+
+.social-footer-btn.whatsapp:hover {
+  background: #25D366;
+  border-color: #25D366;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4);
+}
+
+.social-footer-btn.instagram:hover {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+  border-color: #d6249f;
+  box-shadow: 0 4px 14px rgba(214, 36, 159, 0.4);
 }
 
 .footer-heading {
@@ -2903,8 +3197,19 @@ button {
     width: 220px;
     height: 220px;
   }
-  .floating-telemetry-badge {
+  .floating-telemetry-badge.f-bottom-left {
     display: none;
+  }
+  .floating-telemetry-badge.f-top-right {
+    display: flex;
+    top: -12px;
+    right: 0px;
+    padding: 7px 12px;
+    font-size: 0.75rem;
+  }
+  .bairros-dropdown-menu {
+    width: 260px;
+    right: -10px;
   }
   .section-title {
     font-size: 1.85rem;

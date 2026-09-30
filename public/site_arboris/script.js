@@ -251,23 +251,206 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /* ==========================================================================
-     07. SIMULAÇÃO DE TELEMETRIA AO VIVO (MICROCROSSING EM TEMPO REAL)
+     07. SELETOR INTERATIVO DE BAIRROS PILOTO & TELEMETRIA DA HERO
      ========================================================================== */
+  const PILOT_NEIGHBORHOODS = {
+    'boa-viagem': {
+      name: 'Boa Viagem',
+      peak: '34.2°C',
+      temp: '34,2°C',
+      baseTemp: 34.2,
+      humidity: '45%',
+      baseHum: 45,
+      risk: 'ALTO',
+      riskClass: 'val-danger',
+      dotClass: 'dot-danger',
+      iconBoxClass: 'orange-icon'
+    },
+    'imbiribeira': {
+      name: 'Imbiribeira',
+      peak: '33.8°C',
+      temp: '33,8°C',
+      baseTemp: 33.8,
+      humidity: '48%',
+      baseHum: 48,
+      risk: 'ALTO',
+      riskClass: 'val-danger',
+      dotClass: 'dot-danger',
+      iconBoxClass: 'orange-icon'
+    },
+    'sao-jose': {
+      name: 'São José / Centro',
+      peak: '33.1°C',
+      temp: '33,1°C',
+      baseTemp: 33.1,
+      humidity: '52%',
+      baseHum: 52,
+      risk: 'ATENÇÃO',
+      riskClass: 'val-warning',
+      dotClass: 'dot-warning',
+      iconBoxClass: 'amber-icon'
+    },
+    'madalena': {
+      name: 'Madalena / Torre',
+      peak: '31.6°C',
+      temp: '31,6°C',
+      baseTemp: 31.6,
+      humidity: '64%',
+      baseHum: 64,
+      risk: 'MODERADO',
+      riskClass: 'val-teal',
+      dotClass: 'dot-teal',
+      iconBoxClass: 'teal-icon'
+    },
+    'varzea': {
+      name: 'Várzea',
+      peak: '29.8°C',
+      temp: '29,8°C',
+      baseTemp: 29.8,
+      humidity: '71%',
+      baseHum: 71,
+      risk: 'BAIXO',
+      riskClass: 'val-safe',
+      dotClass: 'dot-safe',
+      iconBoxClass: 'green-icon'
+    },
+    'ibura': {
+      name: 'Ibura',
+      peak: '33.5°C',
+      temp: '33,5°C',
+      baseTemp: 33.5,
+      humidity: '50%',
+      baseHum: 50,
+      risk: 'ALTO',
+      riskClass: 'val-danger',
+      dotClass: 'dot-danger',
+      iconBoxClass: 'orange-icon'
+    }
+  };
+
+  const heroBairroBadge = document.getElementById('heroBairroBadge');
+  const bairroDropdownTrigger = document.getElementById('bairroDropdownTrigger');
+  const bairrosDropdownMenu = document.getElementById('bairrosDropdownMenu');
+  const heroBairroName = document.getElementById('heroBairroName');
+  const heroPeakTemp = document.getElementById('heroPeakTemp');
+
   const liveTemp = document.getElementById('liveTemp');
   const liveHumidity = document.getElementById('liveHumidity');
+  const liveRiskValue = document.getElementById('liveRiskValue');
+  const liveRiskText = document.getElementById('liveRiskText');
+  const liveRiskDot = document.getElementById('liveRiskDot');
+  const liveRiskIconBox = document.getElementById('liveRiskIconBox');
+  const bairroDropdownItems = document.querySelectorAll('.bairro-dropdown-item');
 
+  let activeBaseTemp = 34.2;
+  let activeBaseHum = 45;
+
+  function setDropdownOpen(open) {
+    if (!heroBairroBadge) return;
+    if (open) {
+      heroBairroBadge.classList.add('dropdown-active');
+      if (bairroDropdownTrigger) bairroDropdownTrigger.setAttribute('aria-expanded', 'true');
+    } else {
+      heroBairroBadge.classList.remove('dropdown-active');
+      if (bairroDropdownTrigger) bairroDropdownTrigger.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  function triggerTelemetryFlash() {
+    const elementsToFlash = [heroPeakTemp, liveTemp, liveHumidity, liveRiskValue];
+    elementsToFlash.forEach(el => {
+      if (el) {
+        el.classList.remove('flash-update');
+        void el.offsetWidth; // Force reflow
+        el.classList.add('flash-update');
+      }
+    });
+  }
+
+  function selectNeighborhood(key) {
+    const data = PILOT_NEIGHBORHOODS[key];
+    if (!data) return;
+
+    // Atualiza o card flutuante na Hero
+    if (heroBairroName) heroBairroName.textContent = data.name;
+    if (heroPeakTemp) heroPeakTemp.textContent = data.peak;
+
+    // Atualiza os KPIs na Hero
+    if (liveTemp) liveTemp.textContent = data.temp;
+    if (liveHumidity) liveHumidity.textContent = data.humidity;
+    if (liveRiskText) liveRiskText.textContent = data.risk;
+
+    if (liveRiskValue) {
+      liveRiskValue.className = `telemetry-value ${data.riskClass}`;
+    }
+    if (liveRiskDot) {
+      liveRiskDot.className = `pulsing-mini-dot ${data.dotClass}`;
+    }
+    if (liveRiskIconBox) {
+      liveRiskIconBox.className = `weather-icon-box ${data.iconBoxClass}`;
+    }
+
+    // Efeito visual sutil de atualização
+    triggerTelemetryFlash();
+
+    // Sincroniza estado ativo nos botões do dropdown
+    bairroDropdownItems.forEach(item => {
+      const isSelected = item.getAttribute('data-bairro') === key;
+      item.classList.toggle('active', isSelected);
+      item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+    });
+
+    // Atualiza os valores base da simulação periódica
+    activeBaseTemp = data.baseTemp;
+    activeBaseHum = data.baseHum;
+
+    // Fecha o dropdown com suavidade
+    setDropdownOpen(false);
+  }
+
+  // Evento de clique para abrir/fechar o dropdown
+  if (bairroDropdownTrigger && heroBairroBadge) {
+    bairroDropdownTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = heroBairroBadge.classList.contains('dropdown-active');
+      setDropdownOpen(!isOpen);
+    });
+
+    // Clique nas opções de bairros
+    bairroDropdownItems.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const bairroKey = btn.getAttribute('data-bairro');
+        if (bairroKey) {
+          selectNeighborhood(bairroKey);
+        }
+      });
+    });
+
+    // Fechar ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (!heroBairroBadge.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    });
+
+    // Fechar com a tecla ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        setDropdownOpen(false);
+      }
+    });
+  }
+
+  // Simulação contínua com oscilação calibrada em torno do bairro selecionado
   if (liveTemp && liveHumidity) {
     setInterval(() => {
-      // Pequena oscilação realista nos décimos de temperatura
-      const baseTemp = 34.2;
       const variation = (Math.random() * 0.4 - 0.2).toFixed(1);
-      const newTemp = (baseTemp + parseFloat(variation)).toFixed(1).replace('.', ',');
+      const newTemp = (activeBaseTemp + parseFloat(variation)).toFixed(1).replace('.', ',');
       liveTemp.textContent = `${newTemp}°C`;
 
-      // Pequena oscilação de umidade
-      const baseHum = 45;
       const humVariation = Math.floor(Math.random() * 3) - 1;
-      liveHumidity.textContent = `${baseHum + humVariation}%`;
+      liveHumidity.textContent = `${activeBaseHum + humVariation}%`;
     }, 6000);
   }
 
