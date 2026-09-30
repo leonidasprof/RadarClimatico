@@ -272,7 +272,7 @@ function Dashboard() {
             alt="Logo Arboris"
             className="h-16 object-contain"
           />
-          
+
           <Button
             asChild
             variant="outline"
