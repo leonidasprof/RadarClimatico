@@ -182,9 +182,9 @@ Projeto acadêmico multidisciplinar de Inovação Urbana e Governança Climátic
 * **Odir Gonçalves de Albuquerque Filho** (Gestor de Projetos • GTI) – `ogaf@cesar.school`
 * **Leonardo Maranhão Aureliano** (Tech Líder / Dev • GTI) – `lma@cesar.school`
 * **Leônidas Leandro** (Designer / Dev • GTI) – `lls@cesar.school`
-* **Thais Soares** (Designer / Dev • GTI) – `tsbs@cesar.school`
-* **Patrick Cruz** (Dados • Banco de Dados) – `pjmc@cesar.school`
-* **Ariely Dias** (Designer • GTI) – `adt@cesar.school`
+* **Thais Soares** (Analista Financeira • GTI) – `tsbs@cesar.school`
+* **Patrick Cruz** (Social Media e Dados) – `pjmc@cesar.school`
+* **Ariely Dias** (Pesquisadora • GTI) – `adt@cesar.school`
 
 <br>
 
