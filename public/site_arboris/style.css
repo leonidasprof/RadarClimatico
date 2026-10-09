@@ -2228,96 +2228,276 @@ button {
 }
 
 /* --------------------------------------------------------------------------
-   11. SEÇÃO 7: TRANSPARÊNCIA & PAINEL DE ENTREGÁVEIS
+   11. SEÇÃO 7: COMUNIDADE & FÓRUM DE SUGESTÕES (FIDER)
    -------------------------------------------------------------------------- */
-.section-deliverables {
+.section-community {
   padding: 100px 0;
   background: var(--bg-main);
-}
-
-.deliv-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 26px;
-}
-
-.deliv-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--border-radius-lg);
-  padding: 35px 25px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  transition: all var(--transition-bounce);
-  box-shadow: var(--shadow-subtle);
   position: relative;
 }
 
-.deliv-card:hover {
+.anchor-compat {
+  position: absolute;
+  top: -90px;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 26px;
+  margin-bottom: 40px;
+}
+
+.community-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--border-radius-lg);
+  padding: 36px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: all var(--transition-bounce);
+  box-shadow: var(--shadow-subtle);
+  position: relative;
+  overflow: hidden;
+}
+
+.community-card:hover {
   transform: translateY(-8px);
 }
 
-.deliv-card .icon-box {
-  width: 68px;
-  height: 68px;
-  background: var(--bg-surface);
+.community-card.card-ideias:hover {
+  border-color: var(--color-cyan);
+  box-shadow: 0 14px 35px rgba(16, 187, 195, 0.22);
+}
+
+.community-card.card-bugs:hover {
+  border-color: var(--color-orange);
+  box-shadow: 0 14px 35px rgba(254, 162, 79, 0.22);
+}
+
+.community-card.card-votos:hover {
+  border-color: #26c6da;
+  box-shadow: 0 14px 35px rgba(38, 198, 218, 0.22);
+}
+
+.community-icon-box {
+  width: 60px;
+  height: 60px;
   border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
   border: 1px solid var(--border-glass);
   transition: transform var(--transition-fast);
 }
 
-.deliv-card:hover .icon-box {
-  transform: scale(1.12);
+.community-card:hover .community-icon-box {
+  transform: scale(1.1);
 }
 
-.deliv-card .icon-box img {
-  width: 38px;
-  height: 38px;
-  object-fit: contain;
+.card-ideias .community-icon-box {
+  background: rgba(16, 187, 195, 0.12);
+  color: var(--color-cyan);
+  border-color: rgba(16, 187, 195, 0.25);
 }
 
-.deliv-name {
+.card-bugs .community-icon-box {
+  background: rgba(254, 162, 79, 0.12);
+  color: var(--color-orange);
+  border-color: rgba(254, 162, 79, 0.25);
+}
+
+.card-votos .community-icon-box {
+  background: rgba(6, 129, 135, 0.16);
+  color: #1fd6de;
+  border-color: rgba(6, 129, 135, 0.35);
+}
+
+.community-card-name {
   font-family: var(--font-heading);
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
-.deliv-text {
-  font-size: 0.88rem;
+.community-card-text {
+  font-size: 0.92rem;
   color: var(--text-secondary);
-  line-height: 1.5;
-  margin-bottom: 20px;
+  line-height: 1.6;
+  margin-bottom: 22px;
+  flex-grow: 1;
 }
 
-.deliv-action-link {
-  margin-top: auto;
+.community-card-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border: 1px solid var(--border-glass);
+}
+
+/* Hero Banner Central da Comunidade */
+.community-hero-banner {
+  background: linear-gradient(135deg, rgba(16, 187, 195, 0.08) 0%, rgba(6, 129, 135, 0.04) 50%, rgba(5, 26, 45, 0.75) 100%);
+  border: 1px solid rgba(16, 187, 195, 0.28);
+  border-radius: var(--border-radius-xl);
+  padding: 48px 36px;
+  text-align: center;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="light"] .community-hero-banner {
+  background: linear-gradient(135deg, rgba(16, 187, 195, 0.12) 0%, rgba(6, 129, 135, 0.06) 50%, rgba(240, 246, 252, 0.95) 100%);
+  border-color: rgba(6, 129, 135, 0.25);
+  box-shadow: 0 16px 40px rgba(5, 26, 45, 0.08);
+}
+
+.community-banner-content {
+  position: relative;
+  z-index: 2;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* Badge sutil do Fider (menos expressivo, discreto e elegante) */
+.community-fider-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-glass);
+  margin-bottom: 22px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  letter-spacing: 0.02em;
+}
+
+[data-theme="light"] .community-fider-pill {
+  background: rgba(5, 26, 45, 0.05);
+  border-color: rgba(5, 26, 45, 0.1);
+  color: var(--text-secondary);
+}
+
+.fider-mini-logo {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.community-banner-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.2rem, 2.2vw, 1.85rem);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.community-banner-desc {
+  font-size: 0.98rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin-bottom: 30px;
+}
+
+.community-banner-cta-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.btn-community-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--grad-primary);
+  color: #FFFFFF;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 16px 36px;
+  border-radius: 34px;
+  box-shadow: 0 8px 25px rgba(16, 187, 195, 0.4);
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.btn-community-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 34px rgba(16, 187, 195, 0.6);
+  filter: brightness(1.1);
+}
+
+.community-banner-perks {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  font-family: var(--font-heading);
-  color: var(--text-muted);
-  transition: color var(--transition-fast);
+  justify-content: center;
+  gap: 28px;
+  flex-wrap: wrap;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-glass);
 }
 
-.deliv-card:hover .deliv-action-link {
-  color: var(--text-primary);
+.banner-perk {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
-/* Hover temático por ferramenta */
-.card-trello:hover { border-color: #0079BF; box-shadow: 0 12px 30px rgba(0, 121, 191, 0.25); }
-.card-drive:hover { border-color: #0F9D58; box-shadow: 0 12px 30px rgba(15, 157, 88, 0.25); }
-.card-github:hover { border-color: #FFFFFF; box-shadow: 0 12px 30px rgba(255, 255, 255, 0.2); }
-.card-miro:hover { border-color: #FFD02F; box-shadow: 0 12px 30px rgba(255, 208, 47, 0.25); }
+.banner-perk svg {
+  color: var(--color-cyan);
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .community-hero-banner {
+    padding: 34px 20px;
+  }
+
+  .community-banner-title {
+    white-space: normal;
+    font-size: 1.35rem;
+  }
+
+  .btn-community-primary {
+    width: 100%;
+    justify-content: center;
+    padding: 15px 24px;
+    font-size: 0.88rem;
+  }
+
+  .community-banner-perks {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+}
 
 /* --------------------------------------------------------------------------
    12. SEÇÃO 8: EQUIPE ARBORIS
