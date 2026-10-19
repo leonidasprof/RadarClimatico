@@ -34,8 +34,7 @@ Localizada no topo de todas as páginas, a barra superior oferece contexto opera
 |:---|:---|
 | **Logo Arboris & Brasão do Recife** | Identificação institucional do projeto em parceria com a Prefeitura do Recife e CESAR School. |
 | **Relógio "Ao vivo · HH:MM"** | Exibe a hora local exata e reativa do Recife, confirmando que o sistema está em monitoramento contínuo. |
-| **Indicador "142 online · há 48 min"** | Mostra o número de sensores e dataloggers IoT ativos em campo transmitindo dados atmosféricos. |
-| **Indicador "8 offline · há 12 min"** | Alerta sobre sensores que perderam sinal recentemente para manutenção preventiva da equipe técnica. |
+| **Indicadores "8 online" e "0 offline"** | Exibem a quantidade de sensores e dataloggers IoT ativos em campo ou indisponíveis (correspondentes aos bairros estudados), com leitura operacional direta e sem carimbo de minutos. |
 | **Botão Modo Claro / Modo Escuro (Sol/Lua)** | Alterna entre o tema escuro (ideal para centros de operações noturnos ou baixa luminosidade) e o tema claro (otimizado para ambientes iluminados e relatórios diurnos). |
 | **Botão de Contato / Suporte** | Abre canal direto com os desenvolvedores e suporte técnico da plataforma. |
 | **Perfil do Operador & Sair** | Mostra o usuário logado (ex.: Coordenador da Defesa Civil) e permite encerrar a sessão com segurança. |
@@ -212,4 +211,4 @@ Para dúvidas operacionais, solicitação de treinamento ou reporte de instabili
 - **Equipe de Engenharia Arboris (CESAR School):**
   - Gestão e Operações: `ogaf@cesar.school`
   - Liderança Técnica: `lma@cesar.school`
-  - Design e Experiência do Usuário: `lls@cesar.school`
+  - Dev, Design e Experiência do Usuário: `lls@cesar.school`

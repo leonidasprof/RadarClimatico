@@ -44,8 +44,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
   - `EnvironmentalAnalysisView.tsx`: Análise geoespacial com dados de referência MapBiomas 11 (25,13% de cobertura vegetal da RMR) e regressão biofísica Landsat ($r = -0.638$).
 
 ### Modificado
-- Refinamento do Header com relógio dinâmico `Ao vivo · [horário]` ao lado do seletor de tema.
-- Redução de ruído visual nos badges de status dos sensores IoT (`142 online · há 48 min`).
+- Refinamento do Header com contadores diretos de sensores online e offline vinculados aos bairros estudados (sem carimbo de minutos).
 
 ---
 

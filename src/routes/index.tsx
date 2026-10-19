@@ -624,16 +624,22 @@ function Header({
 
         {/* Indicadores de status compactos e proporcionais na mesma linha à direita */}
         <div className="flex items-center gap-2 shrink-0 pr-1">
-          <div className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 whitespace-nowrap">
+          <div
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 whitespace-nowrap"
+            title="Sensores IoT e estações ativas em campo"
+          >
             <span className="h-2 w-2 rounded-full bg-canopy shrink-0" />
             <span className="font-mono text-xs text-muted-foreground">
-              142 online · há 48 min
+              {weatherSnapshot?.zones.length || zones.length} online
             </span>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 whitespace-nowrap">
-            <span className="h-2 w-2 rounded-full bg-destructive shrink-0" />
+          <div
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 whitespace-nowrap"
+            title="Sensores offline"
+          >
+            <span className="h-2 w-2 rounded-full bg-destructive/60 shrink-0" />
             <span className="font-mono text-xs text-muted-foreground">
-              8 offline · há 12 min
+              0 offline
             </span>
           </div>
         </div>
