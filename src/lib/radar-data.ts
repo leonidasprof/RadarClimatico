@@ -432,38 +432,6 @@ export const AVAILABLE_YEARS = [2022, 2023, 2024, 2025, 2026] as const;
 export const MONTH_NAMES_SHORT = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"] as const;
 export const MONTH_NAMES_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"] as const;
 export const DAY_RANGE_OPTIONS = [3, 7, 14, 30] as const;
-export type DayRange = typeof DAY_RANGE_OPTIONS[number];
-
-export const alerts = [
-  {
-    id: 1,
-    level: "critico" as const,
-    zone: "Santo Amaro",
-    title: "Onda de calor prevista",
-    detail: "Sensação térmica de 44 °C prevista para as próximas 3 h. Aglomeração de ambulantes e ponto de ônibus sem sombreamento.",
-    time: "há 4 min",
-    eta: "13h20 – 16h00",
-  },
-  {
-    id: 2,
-    level: "alto" as const,
-    zone: "Boa Vista",
-    title: "Anomalia térmica detectada",
-    detail: "Sensores da frota de ônibus registraram +4,1 °C acima da média histórica do trecho da Av. Conde da Boa Vista.",
-    time: "há 18 min",
-    eta: "12h50 – 15h10",
-  },
-  {
-    id: 3,
-    level: "moderado" as const,
-    zone: "Imbiribeira",
-    title: "Rota crítica sem sombra",
-    detail: "Trecho de 1,4 km com índice de sombreamento abaixo de 0,2 em horário de pico de deslocamento a pé.",
-    time: "há 42 min",
-    eta: "14h00 – 17h00",
-  },
-];
-
 export const hourly = [
   { h: "06h", t: 26.1 },
   { h: "08h", t: 28.4 },
@@ -499,10 +467,143 @@ export type AlertItem = {
   zone: string;
   title: string;
   detail: string;
-  time: string;
+  time: string; // Ex: "Hoje às 11:20" ou "19/10 às 14:35"
+  date?: string; // Ex: "19/10/2026"
   eta: string;
-  notified?: boolean;
+  notified?: boolean; // Se foi despachado / arquivado no histórico
+  recordedTemp?: number; // Temperatura registrada no momento exato em que o alerta foi gerado
+  recordedFeels?: number; // Sensação térmica no momento do disparo
+  currentTemp?: number; // Temperatura atual do bairro para detecção de mudança brusca
+  conditionShift?: string; // Mensagem informativa caso o tempo mude após o alerta
+  isDynamic?: boolean; // Gerado automaticamente pela regra de negócio das APIs
 };
+
+/**
+ * Alertas iniciais pré-armazenados no Histórico de Alertas.
+ * Representam as ocorrências geradas nos horários anteriores do dia (pico matutino)
+ * para auditoria e prestação de contas, já despachadas às equipes de campo.
+ */
+export const alerts: AlertItem[] = [
+  {
+    id: "hist-1",
+    level: "critico",
+    zone: "Santo Amaro",
+    title: "Pico de Onda de Calor (Matutino)",
+    detail: "Sensação térmica atingiu 44.2 °C no período matutino com aglomeração em pontos de ônibus sem sombreamento.",
+    date: "19/10/2026",
+    time: "Hoje às 11:20",
+    eta: "Janela matutina (11h20 – 14h00)",
+    recordedTemp: 36.8,
+    recordedFeels: 44.2,
+    currentTemp: 31.8,
+    notified: true,
+  },
+  {
+    id: "hist-2",
+    level: "alto",
+    zone: "Boa Vista",
+    title: "Anomalia Térmica em Corredor de Transporte",
+    detail: "Sensores móveis registraram anomalia de +4,1 °C acima da média na Av. Conde da Boa Vista no início da manhã.",
+    date: "19/10/2026",
+    time: "Hoje às 09:45",
+    eta: "Janela 09h45 – 12h10",
+    recordedTemp: 34.9,
+    recordedFeels: 39.8,
+    currentTemp: 31.2,
+    notified: true,
+  },
+  {
+    id: "hist-3",
+    level: "moderado",
+    zone: "Imbiribeira",
+    title: "Rota Crítica com Déficit de Sombra",
+    detail: "Sobrecarga de radiação solar em trecho de 1,4 km de deslocamento de pedestres registrado nas primeiras horas do dia.",
+    date: "19/10/2026",
+    time: "Hoje às 08:30",
+    eta: "Janela 08h30 – 11h00",
+    recordedTemp: 32.4,
+    recordedFeels: 36.2,
+    currentTemp: 30.5,
+    notified: true,
+  },
+];
+
+/**
+ * REGRA DE NEGÓCIO OFICIAL DO ARBORIS:
+ * Avalia as temperaturas em tempo real dos bairros e gera alertas dinâmicos
+ * apenas se os limiares térmicos forem ultrapassados, carimbando dia e horário de geração.
+ * Se o tempo mudar bruscamente (ex: queda acentuada de temperatura), registra a mudança.
+ */
+export function evaluateWeatherAlerts(
+  zonesList: Zone[],
+  currentAlerts: AlertItem[]
+): AlertItem[] {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const dateStr = now.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+  const updatedAlerts = [...currentAlerts];
+
+  zonesList.forEach((zone) => {
+    const isCritical = zone.feels >= 41.0 || zone.temp >= 36.0;
+    const isHigh = (zone.feels >= 38.0 && zone.feels < 41.0) || (zone.temp >= 34.5 && zone.temp < 36.0);
+    const isModerate = zone.feels >= 36.0 && zone.humidity >= 65;
+
+    // Procura se já existe alerta ativo para esse bairro
+    const activeIndex = updatedAlerts.findIndex((a) => !a.notified && a.zone === zone.name);
+
+    if (isCritical || isHigh || isModerate) {
+      const level: AlertLevel = isCritical ? "critico" : isHigh ? "alto" : "moderado";
+
+      if (activeIndex === -1) {
+        // Gera novo alerta ativo com dia e horário exato
+        updatedAlerts.unshift({
+          id: `dyn-${zone.id}-${Date.now()}`,
+          level,
+          zone: zone.name,
+          title: isCritical
+            ? `Onda de Calor Extrema: ${zone.name}`
+            : isHigh
+            ? `Anomalia Térmica Elevada: ${zone.name}`
+            : `Alerta Preventivo: Sobrecarga Térmica em ${zone.name}`,
+          detail: `Detectado em tempo real às ${timeStr}: Temperatura de ${zone.temp.toFixed(1)} °C e sensação térmica de ${zone.feels.toFixed(1)} °C. Limiar de risco operacional ultrapassado.`,
+          date: dateStr,
+          time: `Hoje às ${timeStr}`,
+          recordedTemp: zone.temp,
+          recordedFeels: zone.feels,
+          currentTemp: zone.temp,
+          eta: `Próximas 3 horas (até ${(now.getHours() + 3) % 24}h00)`,
+          notified: false,
+          isDynamic: true,
+        });
+      } else {
+        // Atualiza a temperatura atual no alerta existente e detecta mudanças bruscas
+        const existing = updatedAlerts[activeIndex]!;
+        const tempDrop = (existing.recordedTemp || zone.temp) - zone.temp;
+        updatedAlerts[activeIndex] = {
+          ...existing,
+          currentTemp: zone.temp,
+          conditionShift:
+            tempDrop >= 2.0
+              ? `Atenção: A temperatura caiu ${tempDrop.toFixed(1)} °C desde o momento de geração deste alerta.`
+              : undefined,
+        };
+      }
+    } else if (activeIndex !== -1) {
+      // Se a temperatura do bairro caiu e saiu dos limiares de risco (tempo mudou bruscamente)
+      const existing = updatedAlerts[activeIndex]!;
+      updatedAlerts[activeIndex] = {
+        ...existing,
+        notified: true, // Arquiva no histórico
+        currentTemp: zone.temp,
+        conditionShift: `O tempo mudou: temperatura normalizou para ${zone.temp.toFixed(1)} °C após o alerta gerado às ${existing.time}.`,
+        detail: `${existing.detail} [Condição normalizada: temperatura baixou para ${zone.temp.toFixed(1)} °C às ${timeStr}].`,
+      };
+    }
+  });
+
+  return updatedAlerts;
+}
 
 /**
  * Retorna tonalidade verde proporcional à densidade arbórea.

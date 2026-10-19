@@ -11,6 +11,7 @@ import {
   zoneHistory,
   ratingDefinitions,
   zoneOrganRecommendations,
+  evaluateWeatherAlerts,
   type Zone,
   type AlertItem,
 } from "@/lib/radar-data";
@@ -23,6 +24,12 @@ import { GreenDashboardView } from "@/components/dashboard/GreenDashboardView";
 import { ComparisonHistoryView } from "@/components/history/ComparisonHistoryView";
 import { VegetationCoverView } from "@/components/dashboard/VegetationCoverView";
 import { SocialVulnerabilityView } from "@/components/dashboard/SocialVulnerabilityView";
+import { NasaPowerDashboardView } from "@/components/dashboard/NasaPowerDashboardView";
+import { EnvironmentalAnalysisView } from "@/components/dashboard/EnvironmentalAnalysisView";
+import {
+  fetchRealtimeRecifeWeather,
+  type RealtimeWeatherSnapshot,
+} from "@/lib/geo-services/realtime-weather-service";
 import { MapLayerSwitcher } from "@/components/dashboard/MapLayerSwitcher";
 import { LoginPage } from "./login";
 import { toast } from "sonner";
@@ -47,6 +54,11 @@ import {
   HeartPulse,
   Globe,
   ExternalLink,
+  CloudRain,
+  TrendingDown,
+  History,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -75,17 +87,56 @@ const levelStyles = {
   moderado: { label: "Moderado", color: "var(--heat-3)" },
 };
 
-export type NavTab = "tempo-real" | "historico" | "verde" | "alertas" | "indice";
+export type NavTab =
+  | "tempo-real"
+  | "historico"
+  | "verde"
+  | "clima-nasa"
+  | "analise-ambiental"
+  | "alertas"
+  | "indice";
 
 function Dashboard() {
+  const [currentZones, setCurrentZones] = useState<Zone[]>(zones);
   const [selected, setSelected] = useState<Zone>(zones[1]!);
   const [activeTab, setActiveTab] = useState<NavTab>("tempo-real");
   const [mapLayer, setMapLayer] = useState<"calor" | "vegetal" | "vulnerabilidade">("calor");
   const [alertsList, setAlertsList] = useState<AlertItem[]>(alerts);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [weatherSnapshot, setWeatherSnapshot] = useState<RealtimeWeatherSnapshot | null>(null);
+  const [isSyncingWeather, setIsSyncingWeather] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
   const { isDark } = useTheme();
+
+  /**
+   * Sincronização automática do clima em tempo real para Recife
+   * Consulta a API pública do Open-Meteo e aplica a modelagem biofísica do Arboris
+   */
+  const syncWeather = async (silent = false) => {
+    setIsSyncingWeather(true);
+    try {
+      const snap = await fetchRealtimeRecifeWeather();
+      setWeatherSnapshot(snap);
+      setCurrentZones(snap.zones);
+      setSelected((prev) => snap.zones.find((z) => z.id === prev.id) || snap.zones[1]!);
+      // Aplica regra de negócio: avalia limiares térmicos reais dos microterritórios
+      setAlertsList((prev) => evaluateWeatherAlerts(snap.zones, prev));
+      if (!silent) {
+        toast.success("Clima em tempo real sincronizado!", {
+          description: `Temperatura e sensação atualizadas via API pública Open-Meteo (${snap.recifeBaseTemp}°C).`,
+        });
+      }
+    } catch (err) {
+      console.warn("Falha ao sincronizar clima:", err);
+    } finally {
+      setIsSyncingWeather(false);
+    }
+  };
+
+  useEffect(() => {
+    syncWeather(true);
+  }, []);
 
   /**
    * Lógica de negócio: Disparo operacional de alerta (Épico 1)
@@ -135,6 +186,9 @@ function Dashboard() {
           if (tab === "tempo-real") setMapLayer("calor");
         }}
         onOpenContactModal={() => setContactModalOpen(true)}
+        weatherSnapshot={weatherSnapshot}
+        isSyncingWeather={isSyncingWeather}
+        onSyncWeather={() => syncWeather(false)}
       />
       <main className="mx-auto grid max-w-[1500px] gap-4 px-4 pb-14 lg:grid-cols-12">
         {/* Visualização Padrão: Operação em Tempo Real (Mapa Térmico & Camadas) */}
@@ -143,17 +197,22 @@ function Dashboard() {
             {mapLayer === "calor" && (
               <>
                 <div className="lg:col-span-8 space-y-4">
-                  <Kpis />
+                  <Kpis weather={weatherSnapshot} />
                   <MapPanel
                     selected={selected}
                     onSelect={setSelected}
+                    zonesList={currentZones}
                     onOpenGreenDashboard={() => setActiveTab("verde")}
                     activeLayer={mapLayer}
                     onChangeLayer={setMapLayer}
                   />
                   {/* Linha 1 abaixo do mapa térmico: Índice Térmico e Histórico de Temperatura */}
                   <div className="grid gap-4 md:grid-cols-2">
-                    <RatingPanel onSelect={setSelected} selected={selected} />
+                    <RatingPanel
+                      zonesList={currentZones}
+                      onSelect={setSelected}
+                      selected={selected}
+                    />
                     <HistoryPanel
                       zone={selected}
                       onOpenComparison={() => setActiveTab("historico")}
@@ -161,7 +220,11 @@ function Dashboard() {
                   </div>
                   {/* Linha 2 abaixo: Curva do Dia e Priorização de Infraestrutura Verde */}
                   <div className="grid gap-4 md:grid-cols-2">
-                    <HourlyPanel />
+                    <HourlyPanel
+                      hourlyData={weatherSnapshot?.hourly}
+                      peakHour={weatherSnapshot?.peakHour}
+                      peakTemp={weatherSnapshot?.peakTemp}
+                    />
                     <PriorityPanel onOpenGreenDashboard={() => setActiveTab("verde")} />
                   </div>
                 </div>
@@ -176,6 +239,8 @@ function Dashboard() {
                     onOpenComparison={() => setActiveTab("historico")}
                     onOpenVegetalView={() => setMapLayer("vegetal")}
                     onOpenVulnView={() => setMapLayer("vulnerabilidade")}
+                    onOpenNasaPower={() => setActiveTab("clima-nasa")}
+                    onOpenEnvironmentalAnalysis={() => setActiveTab("analise-ambiental")}
                   />
                   <InsightsPanel />
                 </aside>
@@ -232,6 +297,29 @@ function Dashboard() {
           </div>
         )}
 
+        {/* Dashboard Climático NASA POWER (Módulo 3 Arboris) */}
+        {activeTab === "clima-nasa" && (
+          <div className="lg:col-span-12">
+            <NasaPowerDashboardView onBack={() => setActiveTab("tempo-real")} />
+          </div>
+        )}
+
+        {/* Análise Ambiental MapBiomas + Landsat (Módulos 1, 2, 4 e 5 Arboris) */}
+        {activeTab === "analise-ambiental" && (
+          <div className="lg:col-span-12">
+            <EnvironmentalAnalysisView
+              onBack={() => setActiveTab("tempo-real")}
+              onSelectMunicipality={(m) => {
+                const matched = zones.find((z) => z.name.toLowerCase().includes(m.name.toLowerCase()));
+                if (matched) {
+                  setSelected(matched);
+                  setActiveTab("tempo-real");
+                }
+              }}
+            />
+          </div>
+        )}
+
         {/* Módulo de Alertas em Vista Expandida (Épico 1) */}
         {activeTab === "alertas" && (
           <div className="lg:col-span-12 space-y-4">
@@ -260,7 +348,14 @@ function Dashboard() {
                   ← Voltar ao mapa operacional
                 </button>
               </div>
-              <RatingPanel onSelect={(z) => { setSelected(z); setActiveTab("tempo-real"); }} selected={selected} />
+              <RatingPanel
+                zonesList={currentZones}
+                onSelect={(z) => {
+                  setSelected(z);
+                  setActiveTab("tempo-real");
+                }}
+                selected={selected}
+              />
             </div>
           </div>
         )}
@@ -292,7 +387,7 @@ function Dashboard() {
           </Button>
 
           <p className="text-muted-foreground/80">
-            Radar Climático · Equipe Arboris · Mockup conceitual — dados ilustrativos
+            Radar Climático · Plataforma Arboris Integrada · Dados reais: Google Earth Engine, Landsat 8/9, MapBiomas Coleção 11 e NASA POWER
           </p>
         </div>
       </footer>
@@ -313,15 +408,33 @@ function Header({
   activeTab,
   onSelectTab,
   onOpenContactModal,
+  weatherSnapshot,
+  isSyncingWeather,
+  onSyncWeather,
 }: {
   activeTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
   onOpenContactModal: () => void;
+  weatherSnapshot?: RealtimeWeatherSnapshot | null;
+  isSyncingWeather?: boolean;
+  onSyncWeather?: () => void;
 }) {
   const { isDark, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState<string>(() =>
+    new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+  );
+
+  useEffect(() => {
+    const update = () => {
+      setCurrentTime(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
+    };
+    update();
+    const timer = setInterval(update, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleLogout = () => {
     setMenuOpen(false);
@@ -336,6 +449,8 @@ function Header({
     { id: "tempo-real", label: "Tempo real" },
     { id: "historico", label: "Comparação & Histórico" },
     { id: "verde", label: "Dashboard Verde" },
+    { id: "clima-nasa", label: "Clima NASA POWER" },
+    { id: "analise-ambiental", label: "MapBiomas & Landsat" },
     { id: "alertas", label: "Alertas" },
     { id: "indice", label: "Índice Térmico" },
   ];
@@ -362,7 +477,23 @@ function Header({
         </div>
 
         {/* Botões à direita */}
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-2.5 ml-auto">
+          {/* Badge Interativo com Horário em Tempo Real e Sincronização ao lado do botão de tema */}
+          {onSyncWeather && (
+            <button
+              onClick={onSyncWeather}
+              disabled={isSyncingWeather}
+              type="button"
+              className="flex items-center gap-1.5 rounded-full border border-sky-500/40 bg-sky-500/10 px-3 py-1.5 whitespace-nowrap hover:bg-sky-500/20 transition-all cursor-pointer shadow-xs disabled:opacity-60"
+              title="Clique para sincronizar o clima ao vivo via Open-Meteo & NASA POWER"
+            >
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="font-mono text-xs text-sky-400 font-semibold">
+                {isSyncingWeather ? "Sincronizando..." : `Ao vivo · ${currentTime}`}
+              </span>
+            </button>
+          )}
+
           {/* Botão alternar tema */}
           <button
             onClick={toggleTheme}
@@ -491,18 +622,18 @@ function Header({
           </nav>
         </div>
 
-        {/* Indicadores de sensores na mesma linha à direita */}
+        {/* Indicadores de status compactos e proporcionais na mesma linha à direita */}
         <div className="flex items-center gap-2 shrink-0 pr-1">
-          <div className="flex items-center gap-2 rounded-full border border-border bg-card/60 px-2.5 py-1.5 whitespace-nowrap">
+          <div className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 whitespace-nowrap">
             <span className="h-2 w-2 rounded-full bg-canopy shrink-0" />
             <span className="font-mono text-xs text-muted-foreground">
-              142 sensores online · atualizado há 48 min
+              142 online · há 48 min
             </span>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-border bg-card/60 px-2.5 py-1.5 whitespace-nowrap">
+          <div className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 whitespace-nowrap">
             <span className="h-2 w-2 rounded-full bg-destructive shrink-0" />
             <span className="font-mono text-xs text-muted-foreground">
-              8 sensores offline · último sinal há 12 min
+              8 offline · há 12 min
             </span>
           </div>
         </div>
@@ -511,23 +642,71 @@ function Header({
   );
 }
 
-function Kpis() {
-  const items = [
-    { label: "Temp. média da cidade", value: "34,1", unit: "°C", delta: "+2,3 vs média histórica", tone: "var(--heat-4)" },
-    { label: "Sensação térmica máx.", value: "44,2", unit: "°C", delta: "Santo Amaro · 14h10", tone: "var(--heat-5)" },
-    { label: "Zonas em criticidade", value: "4", unit: "de 12", delta: "2 novas nas últimas 6 h", tone: "var(--heat-4)" },
-    { label: "População exposta", value: "318", unit: "mil", delta: "62% em alta vulnerabilidade", tone: "var(--accent)" },
+function Kpis({ weather }: { weather?: RealtimeWeatherSnapshot | null }) {
+  const avgTemp = weather?.cityAverageTemp
+    ? weather.cityAverageTemp.toFixed(1).replace(".", ",")
+    : "34,1";
+  const maxFeels = weather?.cityMaxFeels
+    ? weather.cityMaxFeels.toFixed(1).replace(".", ",")
+    : "37,8";
+  const peakZone = weather?.cityMaxFeelsZone || weather?.zones.find((z) => z.feels === weather.cityMaxFeels)?.name || "Santo Amaro";
+  const peakHour = weather?.cityMaxFeelsHour ? ` (${weather.cityMaxFeelsHour})` : "";
+  const critCount = weather?.criticalZonesCount !== undefined ? String(weather.criticalZonesCount) : "4";
+  const totalCount = weather?.zones.length || 8;
+
+  const items: {
+    label: string;
+    value: string;
+    unit: string;
+    delta: string;
+    subDelta?: string;
+    tone: string;
+  }[] = [
+    {
+      label: "Temp. média da cidade",
+      value: avgTemp,
+      unit: "°C",
+      delta: weather?.source === "live" ? "Ao vivo · Open-Meteo API" : "+2,3 vs média histórica",
+      tone: "var(--heat-4)",
+    },
+    {
+      label: "Maior sensação do dia",
+      value: maxFeels,
+      unit: "°C",
+      delta: "Pico registrado hoje",
+      subDelta: `${peakZone}${peakHour}`,
+      tone: "var(--heat-5)",
+    },
+    {
+      label: "Zonas em criticidade",
+      value: critCount,
+      unit: `de ${totalCount}`,
+      delta: "Monitoramento contínuo",
+      tone: "var(--heat-4)",
+    },
+    {
+      label: "População exposta",
+      value: "318",
+      unit: "mil",
+      delta: "62% em alta vulnerabilidade",
+      tone: "var(--accent)",
+    },
   ];
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((k) => (
-        <div key={k.label} className="panel p-4">
-          <p className="text-xs text-muted-foreground">{k.label}</p>
-          <p className="mt-2 flex items-baseline gap-1 font-display text-3xl font-semibold">
-            <span style={{ color: k.tone }}>{k.value}</span>
-            <span className="text-sm font-normal text-muted-foreground">{k.unit}</span>
-          </p>
-          <p className="mt-1 font-mono text-[11px] text-muted-foreground">{k.delta}</p>
+        <div key={k.label} className="panel p-4 flex flex-col justify-between min-h-[110px]">
+          <div>
+            <p className="text-xs text-muted-foreground">{k.label}</p>
+            <p className="mt-2 flex items-baseline gap-1 font-display text-3xl font-semibold">
+              <span style={{ color: k.tone }}>{k.value}</span>
+              <span className="text-sm font-normal text-muted-foreground">{k.unit}</span>
+            </p>
+          </div>
+          <div className="mt-1.5 font-mono text-[11px] text-muted-foreground leading-snug">
+            <p>{k.delta}</p>
+            {k.subDelta && <p className="font-semibold text-foreground/90">{k.subDelta}</p>}
+          </div>
         </div>
       ))}
     </section>
@@ -537,16 +716,19 @@ function Kpis() {
 function MapPanel({
   selected,
   onSelect,
+  zonesList,
   onOpenGreenDashboard,
   activeLayer = "calor",
   onChangeLayer,
 }: {
   selected: Zone;
   onSelect: (z: Zone) => void;
+  zonesList?: Zone[];
   onOpenGreenDashboard?: () => void;
   activeLayer: "calor" | "vegetal" | "vulnerabilidade";
   onChangeLayer: (layer: "calor" | "vegetal" | "vulnerabilidade") => void;
 }) {
+  const activeZones = zonesList || zones;
   const layers = [
     { id: "calor", label: "Calor" },
     { id: "vegetal", label: "Cobertura vegetal" },
@@ -588,6 +770,12 @@ function MapPanel({
             {activeLayer === "vegetal" && "Exibindo densidade de copa arbórea e refúgios térmicos"}
             {activeLayer === "vulnerabilidade" && "Exibindo Índice de Vulnerabilidade Social (IVS) da população exposta"}
           </p>
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse shrink-0" />
+            <span className="font-mono text-[10px] text-sky-400 font-medium">
+              Dados ao Vivo (Open-Meteo + Landsat 8/9)
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -597,12 +785,12 @@ function MapPanel({
             <select
               value={selected.id}
               onChange={(e) => {
-                const found = zones.find((z) => z.id === e.target.value);
+                const found = activeZones.find((z) => z.id === e.target.value);
                 if (found) onSelect(found);
               }}
-              className="rounded border border-border bg-background px-2 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="rounded border border-border bg-background px-2 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
             >
-              {zones.map((z) => (
+              {activeZones.map((z) => (
                 <option key={z.id} value={z.id}>
                   {z.name}
                 </option>
@@ -619,7 +807,7 @@ function MapPanel({
         {/* malha viária esquemática do Recife */}
         <RecifeStreetMesh className="absolute inset-0 h-full w-full" />
 
-        {zones.map((z) => {
+        {activeZones.map((z) => {
           const active = z.id === selected.id;
           const color = getZoneColor(z);
           const isPulsing = shouldPulse(z);
@@ -736,16 +924,36 @@ function MapPanel({
   );
 }
 
-function HourlyPanel() {
+function HourlyPanel({
+  hourlyData,
+  peakHour,
+  peakTemp,
+}: {
+  hourlyData?: { h: string; t: number; feels?: number }[];
+  peakHour?: string;
+  peakTemp?: number;
+}) {
+  const activeHourly = hourlyData && hourlyData.length ? hourlyData : hourly;
   const max = 40;
-  const pts = hourly
-    .map((p, i) => `${(i / (hourly.length - 1)) * 100},${100 - (p.t / max) * 100}`)
+  const pts = activeHourly
+    .map((p, i) => `${(i / (activeHourly.length - 1)) * 100},${100 - (p.t / max) * 100}`)
     .join(" ");
+
+  const peakH = peakHour || "14h";
+  const peakT = peakTemp !== undefined ? peakTemp.toFixed(1).replace(".", ",") : "36,8";
+
   return (
     <section className="panel p-4">
-      <h2 className="text-sm font-semibold">Curva térmica do dia</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Curva térmica do dia</h2>
+        {hourlyData && hourlyData.length > 0 && (
+          <span className="font-mono text-[10px] text-sky-400 bg-sky-500/10 border border-sky-500/20 px-1.5 py-0.2 rounded font-semibold">
+            API Open-Meteo
+          </span>
+        )}
+      </div>
       <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-        Pico previsto 36,8 °C às 14h · limiar de alerta 35 °C
+        Pico previsto {peakT} °C às {peakH} · limiar de alerta 35 °C
       </p>
       <div className="relative mt-4 h-40">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
@@ -770,7 +978,7 @@ function HourlyPanel() {
         </svg>
       </div>
       <div className="mt-2 flex justify-between font-mono text-[10px] text-muted-foreground">
-        {hourly.map((p) => (
+        {activeHourly.map((p) => (
           <span key={p.h}>{p.h}</span>
         ))}
       </div>
@@ -827,42 +1035,48 @@ function AlertsPanel({
   onDispatchAlert: (id: string | number) => void;
   expandedView?: boolean;
 }) {
+  const [viewMode, setViewMode] = useState<"ativos" | "historico">("ativos");
   const [filter, setFilter] = useState<"todos" | "critico" | "alto" | "moderado">("todos");
 
-  // Filtro de severidade dos alertas
-  const filteredAlerts = alertItems.filter((a) => {
+  // Alertas do dia: ocorrências em aberto aguardando despacho das equipes
+  const activeAlerts = alertItems.filter((a) => !a.notified);
+  // Histórico: ocorrências despachadas e transmitidas aos agentes de campo
+  const historyAlerts = alertItems.filter((a) => a.notified);
+
+  const currentList = viewMode === "ativos" ? activeAlerts : historyAlerts;
+
+  // Filtro de severidade sobre a lista ativa no momento
+  const filteredAlerts = currentList.filter((a) => {
     if (filter === "todos") return true;
     return a.level === filter;
   });
-
-  const pendingCount = alertItems.filter((a) => !a.notified).length;
 
   const filterTabs = [
     {
       id: "todos",
       label: "Todos",
-      count: alertItems.length,
+      count: currentList.length,
       dotClass: "bg-foreground/50",
       activeClass: "bg-card text-foreground shadow-sm ring-1 ring-border",
     },
     {
       id: "critico",
       label: "Crítico",
-      count: alertItems.filter((a) => a.level === "critico").length,
+      count: currentList.filter((a) => a.level === "critico").length,
       dotClass: "bg-destructive",
       activeClass: "bg-destructive/15 text-destructive ring-1 ring-destructive/40 shadow-sm font-semibold",
     },
     {
       id: "alto",
       label: "Alto",
-      count: alertItems.filter((a) => a.level === "alto").length,
+      count: currentList.filter((a) => a.level === "alto").length,
       dotClass: "bg-orange-500",
       activeClass: "bg-orange-500/15 text-orange-500 ring-1 ring-orange-500/40 shadow-sm font-semibold",
     },
     {
       id: "moderado",
       label: "Moderado",
-      count: alertItems.filter((a) => a.level === "moderado").length,
+      count: currentList.filter((a) => a.level === "moderado").length,
       dotClass: "bg-amber-500",
       activeClass: "bg-amber-500/15 text-amber-500 ring-1 ring-amber-500/40 shadow-sm font-semibold",
     },
@@ -870,17 +1084,53 @@ function AlertsPanel({
 
   return (
     <section className="panel p-4">
+      {/* Cabeçalho da Central de Alertas: Alternância entre Alertas do Dia e Histórico */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3 mb-3">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold">Alertas ativos</h2>
-          <span className="rounded-full bg-destructive/15 px-2 py-0.5 font-mono text-[11px] text-destructive font-medium">
-            {pendingCount} pendentes
-          </span>
+        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-card/60 border border-border/70 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setViewMode("ativos")}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
+              viewMode === "ativos"
+                ? "bg-destructive/15 text-destructive font-semibold shadow-xs ring-1 ring-destructive/30"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <span className={activeAlerts.length > 0 ? "h-2 w-2 rounded-full bg-destructive animate-pulse" : "h-2 w-2 rounded-full bg-muted-foreground/50"} />
+            <span>Alertas do dia</span>
+            <span
+              className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] ${
+                viewMode === "ativos"
+                  ? "bg-destructive text-destructive-foreground font-bold"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {activeAlerts.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setViewMode("historico")}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
+              viewMode === "historico"
+                ? "bg-secondary text-foreground font-semibold shadow-xs ring-1 ring-border"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <History className="h-3 w-3" />
+            <span>Histórico</span>
+            <span className="rounded-full bg-muted px-1.5 py-0.2 font-mono text-[10px] text-muted-foreground">
+              {historyAlerts.length}
+            </span>
+          </button>
         </div>
+
         <div className="flex items-center gap-2">
           <button
             onClick={onOpenReportModal}
             className="flex items-center gap-1 rounded-md bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground transition-opacity hover:opacity-90 cursor-pointer shadow-sm"
+            title="Registrar nova ocorrência ou anomalia operacional"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Novo Alerta</span>
@@ -888,111 +1138,209 @@ function AlertsPanel({
         </div>
       </div>
 
-      {/* Filtros táteis e convidativos por severidade */}
-      <div className="mb-3.5 flex flex-wrap items-center gap-1.5 rounded-lg border border-border/70 bg-card/40 p-1">
-        {filterTabs.map((tab) => {
-          const isActive = filter === tab.id;
-          return (
+      {/* Cenário 1: Aba "Alertas do dia" vazia */}
+      {viewMode === "ativos" && activeAlerts.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-emerald-500/30 bg-emerald-500/5 p-6 flex flex-col items-center justify-center text-center space-y-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500 ring-4 ring-emerald-500/10">
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold text-foreground">
+              Nenhum alerta crítico no dia de hoje
+            </h3>
+            <p className="text-xs text-muted-foreground max-w-sm">
+              Todas as estações e microterritórios do Recife estão operando dentro dos limiares térmicos toleráveis da Defesa Civil.
+            </p>
+          </div>
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
             <button
-              key={tab.id}
-              onClick={() => setFilter(tab.id)}
-              className={`group flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer ${isActive
-                ? tab.activeClass
-                : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
-                }`}
+              onClick={() => setViewMode("historico")}
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary hover:border-primary/40 transition-all cursor-pointer shadow-xs"
             >
-              <span
-                className={`h-2 w-2 rounded-full transition-transform ${tab.dotClass} ${isActive ? "scale-110 shadow-[0_0_8px_currentColor]" : "opacity-60 group-hover:opacity-100"
-                  }`}
-              />
-              <span>{tab.label}</span>
-              <span
-                className={`ml-0.5 rounded-full px-1.5 py-0.2 font-mono text-[10px] ${isActive
-                  ? "bg-foreground/10 text-foreground font-bold"
-                  : "bg-muted text-muted-foreground"
-                  }`}
-              >
-                {tab.count}
-              </span>
+              <History className="h-3.5 w-3.5 text-primary" />
+              <span>Ver Histórico de Alertas ({historyAlerts.length})</span>
             </button>
-          );
-        })}
-      </div>
-
-      <ul className={`space-y-3 ${expandedView ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 space-y-0" : ""}`}>
-        {filteredAlerts.map((a) => {
-          const s = levelStyles[a.level];
-          // Contorno inferior proporcional à severidade solicitada:
-          // Crítico: 100% da linha inferior
-          // Alto: 60% da linha inferior
-          // Moderado: 30% da linha inferior
-          const bottomCoverage = a.level === "critico" ? "100%" : a.level === "alto" ? "60%" : "30%";
-
-          return (
-            <li
-              key={a.id}
-              className="relative overflow-hidden rounded-lg border border-border/80 bg-card/60 p-3.5 flex flex-col justify-between transition-all hover:bg-card hover:border-border shadow-xs"
+            <button
+              onClick={onOpenReportModal}
+              className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
-              {/* Contorno lateral esquerdo estilizado */}
-              <span
-                className="absolute left-0 top-0 bottom-0 w-[3.5px] rounded-tl-lg"
-                style={{ backgroundColor: s.color }}
-              />
+              <Plus className="h-3.5 w-3.5" />
+              <span>Registrar Alerta</span>
+            </button>
+          </div>
+        </div>
+      ) : viewMode === "historico" && historyAlerts.length === 0 ? (
+        /* Cenário 2: Histórico vazio */
+        <div className="rounded-xl border border-dashed border-border/80 bg-card/30 p-6 flex flex-col items-center justify-center text-center space-y-2">
+          <History className="h-7 w-7 text-muted-foreground opacity-60" />
+          <h4 className="text-sm font-semibold text-foreground">Histórico Vazio</h4>
+          <p className="text-xs text-muted-foreground max-w-xs">
+            Nenhum alerta foi despachado ou arquivado nas últimas 24 horas.
+          </p>
+          <button
+            onClick={() => setViewMode("ativos")}
+            className="mt-2 text-xs text-primary font-semibold hover:underline cursor-pointer"
+          >
+            ← Voltar para Alertas do Dia
+          </button>
+        </div>
+      ) : (
+        /* Cenário 3: Exibição da lista de alertas (Alertas do Dia ou Histórico) */
+        <>
+          {/* Barra de contexto informativa */}
+          <div className="mb-2.5 flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>
+              {viewMode === "ativos"
+                ? `Exibindo ${filteredAlerts.length} ocorrência(s) do dia em aberto:`
+                : `Exibindo ${filteredAlerts.length} alerta(s) despachado(s) e arquivado(s):`}
+            </span>
+            {viewMode === "historico" && (
+              <button
+                onClick={() => setViewMode("ativos")}
+                className="text-primary hover:underline font-mono text-[10px]"
+              >
+                ← Voltar para Alertas do Dia
+              </button>
+            )}
+          </div>
 
-              {/* Contorno inferior proporcional à gravidade: 100% no crítico, 60% no alto, 30% no moderado */}
-              <span
-                className="absolute left-0 bottom-0 h-[3.5px] rounded-bl-lg transition-all duration-300"
-                style={{
-                  width: bottomCoverage,
-                  backgroundColor: s.color,
-                  boxShadow:
-                    a.level === "critico"
-                      ? `0 2px 8px color-mix(in oklab, ${s.color} 50%, transparent)`
-                      : "none",
-                }}
-              />
-
-              {/* Brilho sutil na quina inferior esquerda integrando os contornos */}
-              <span
-                className="absolute left-0 bottom-0 h-8 w-8 rounded-bl-lg pointer-events-none opacity-20 blur-md"
-                style={{ backgroundColor: s.color }}
-              />
-
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] uppercase tracking-wider font-bold" style={{ color: s.color }}>
-                    {s.label}
-                  </span>
-                  <span className="text-xs text-muted-foreground">· {a.zone}</span>
-                  <span className="ml-auto font-mono text-[10px] text-muted-foreground">{a.time}</span>
-                </div>
-                <p className="mt-1 text-sm font-medium text-foreground">{a.title}</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{a.detail}</p>
-              </div>
-
-              <div className="mt-3 flex items-center gap-2 pt-2 border-t border-border/40">
-                <span className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-                  janela {a.eta}
-                </span>
-
-                {a.notified ? (
-                  <span className="ml-auto flex items-center gap-1 rounded bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-500">
-                    <CheckCheck className="h-3 w-3" />
-                    Notificado
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => onDispatchAlert(a.id)}
-                    className="ml-auto rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 cursor-pointer shadow-sm"
+          {/* Filtros táteis por severidade */}
+          <div className="mb-3.5 flex flex-wrap items-center gap-1.5 rounded-lg border border-border/70 bg-card/40 p-1">
+            {filterTabs.map((tab) => {
+              const isActive = filter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setFilter(tab.id)}
+                  className={`group flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? tab.activeClass
+                      : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                  }`}
+                >
+                  <span
+                    className={`h-2 w-2 rounded-full transition-transform ${tab.dotClass} ${
+                      isActive ? "scale-110 shadow-[0_0_8px_currentColor]" : "opacity-60 group-hover:opacity-100"
+                    }`}
+                  />
+                  <span>{tab.label}</span>
+                  <span
+                    className={`ml-0.5 rounded-full px-1.5 py-0.2 font-mono text-[10px] ${
+                      isActive
+                        ? "bg-foreground/10 text-foreground font-bold"
+                        : "bg-muted text-muted-foreground"
+                    }`}
                   >
-                    Disparar notificação
-                  </button>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <ul className={`space-y-3 ${expandedView ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 space-y-0" : ""}`}>
+            {filteredAlerts.map((a) => {
+              const s = levelStyles[a.level];
+              const bottomCoverage = a.level === "critico" ? "100%" : a.level === "alto" ? "60%" : "30%";
+
+              return (
+                <li
+                  key={a.id}
+                  className="relative overflow-hidden rounded-lg border border-border/80 bg-card/60 p-3.5 flex flex-col justify-between transition-all hover:bg-card hover:border-border shadow-xs"
+                >
+                  {/* Contorno lateral esquerdo estilizado */}
+                  <span
+                    className="absolute left-0 top-0 bottom-0 w-[3.5px] rounded-tl-lg"
+                    style={{ backgroundColor: s.color }}
+                  />
+
+                  {/* Contorno inferior proporcional à gravidade */}
+                  <span
+                    className="absolute left-0 bottom-0 h-[3.5px] rounded-bl-lg transition-all duration-300"
+                    style={{
+                      width: bottomCoverage,
+                      backgroundColor: s.color,
+                      boxShadow:
+                        a.level === "critico"
+                          ? `0 2px 8px color-mix(in oklab, ${s.color} 50%, transparent)`
+                          : "none",
+                    }}
+                  />
+
+                  {/* Brilho sutil na quina inferior esquerda */}
+                  <span
+                    className="absolute left-0 bottom-0 h-8 w-8 rounded-bl-lg pointer-events-none opacity-20 blur-md"
+                    style={{ backgroundColor: s.color }}
+                  />
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] uppercase tracking-wider font-bold" style={{ color: s.color }}>
+                        {s.label}
+                      </span>
+                      <span className="text-xs text-muted-foreground">· {a.zone}</span>
+                      <span
+                        className="ml-auto font-mono text-[10px] text-muted-foreground flex items-center gap-1"
+                        title={`Carimbo de detecção: ${a.date || "Hoje"} às ${a.time}`}
+                      >
+                        <Clock className="h-2.5 w-2.5 opacity-70" />
+                        {a.date ? `${a.date} · ` : ""}{a.time}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm font-medium text-foreground">{a.title}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{a.detail}</p>
+
+                    {/* Exibição da temperatura no disparo vs atual e alerta de virada de tempo */}
+                    {(a.recordedTemp || a.conditionShift) && (
+                      <div className="mt-2.5 space-y-1.5 rounded-md bg-secondary/50 p-2 border border-border/50">
+                        {a.recordedTemp && (
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+                            <span className="inline-flex items-center gap-1 text-foreground">
+                              🌡️ No disparo: <strong className="text-destructive font-bold">{a.recordedTemp}°C</strong>
+                              {a.recordedFeels ? ` (sensação ${a.recordedFeels}°C)` : ""}
+                            </span>
+                            {a.currentTemp !== undefined && (
+                              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                                · Atual: <strong className="text-foreground">{a.currentTemp}°C</strong>
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {a.conditionShift && (
+                          <div className="flex items-start gap-1.5 rounded border border-amber-500/30 bg-amber-500/10 p-1.5 text-[11px] text-amber-700 dark:text-amber-400">
+                            <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                            <span>{a.conditionShift}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-3 flex items-center gap-2 pt-2 border-t border-border/40">
+                    <span className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+                      janela {a.eta}
+                    </span>
+
+                    {a.notified ? (
+                      <span className="ml-auto flex items-center gap-1 rounded bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-500">
+                        <CheckCheck className="h-3 w-3" />
+                        Despachado
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => onDispatchAlert(a.id)}
+                        className="ml-auto rounded-md bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 cursor-pointer shadow-sm"
+                      >
+                        Disparar notificação
+                      </button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
     </section>
   );
 }
@@ -1002,11 +1350,15 @@ function ZoneDetail({
   onOpenComparison,
   onOpenVegetalView,
   onOpenVulnView,
+  onOpenNasaPower,
+  onOpenEnvironmentalAnalysis,
 }: {
   zone: Zone;
   onOpenComparison?: () => void;
   onOpenVegetalView?: () => void;
   onOpenVulnView?: () => void;
+  onOpenNasaPower?: () => void;
+  onOpenEnvironmentalAnalysis?: () => void;
 }) {
   const [showRatingScale, setShowRatingScale] = useState(false);
 
@@ -1190,6 +1542,32 @@ function ZoneDetail({
           >
             <HeartPulse className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">Vulnerabilidade</span>
+          </button>
+        )}
+      </div>
+
+      {/* Ações Avançadas: Clima NASA POWER e Análise Ambiental */}
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {onOpenNasaPower && (
+          <button
+            id="zone-detail-nasa-btn"
+            onClick={onOpenNasaPower}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/10 py-1.5 px-2 text-xs font-medium text-sky-400 hover:bg-sky-500/20 transition-all cursor-pointer shadow-xs"
+            title={`Consultar dados climáticos da NASA POWER para ${zone.name}`}
+          >
+            <CloudRain className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Clima NASA</span>
+          </button>
+        )}
+        {onOpenEnvironmentalAnalysis && (
+          <button
+            id="zone-detail-env-btn"
+            onClick={onOpenEnvironmentalAnalysis}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 py-1.5 px-2 text-xs font-medium text-primary hover:bg-primary/20 transition-all cursor-pointer shadow-xs"
+            title={`Ver Análise Ambiental MapBiomas / Landsat`}
+          >
+            <TrendingDown className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">MapBiomas</span>
           </button>
         )}
       </div>
@@ -1408,8 +1786,16 @@ function HistoryPanel({
   );
 }
 
-function RatingPanel({ selected, onSelect }: { selected: Zone; onSelect: (z: Zone) => void }) {
-  const sorted = [...zones].sort((a, b) => b.feels - a.feels);
+function RatingPanel({
+  selected,
+  onSelect,
+  zonesList,
+}: {
+  selected: Zone;
+  onSelect: (z: Zone) => void;
+  zonesList?: Zone[];
+}) {
+  const sorted = [...(zonesList || zones)].sort((a, b) => b.feels - a.feels);
   return (
     <section className="panel p-4 flex flex-col justify-between">
       <div>

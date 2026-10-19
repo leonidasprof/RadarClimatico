@@ -25,6 +25,21 @@ Você pode interagir e testar a interface operacional do nosso painel de control
 
 ---
 
+## 📚 Documentação Enterprise & Engenharia
+
+A engenharia e a governança de dados do Radar Climático Arboris seguem padrões corporativos alinhados às melhores práticas de empresas de tecnologia (Google, Microsoft, Stripe, Cloudflare):
+
+| Documento | Descrição e Finalidade | Audiência Primária |
+|:---|:---|:---|
+| 📘 **[`/docs/MANUAL_DO_USUARIO.md`](docs/MANUAL_DO_USUARIO.md)** | **Manual do Usuário:** Guia oficial de operação para gestores públicos, Defesa Civil e técnicos sobre cada menu, mapa e função do sistema. | Gestores Públicos, Defesa Civil, Agentes de Saúde |
+| 📖 **[`/docs/API_CATALOG.md`](docs/API_CATALOG.md)** | **Catálogo de APIs:** Especificação exaustiva de todas as APIs externas (Open-Meteo, NASA POWER, Landsat, Sentinel, MapBiomas, IBGE) com 27 parâmetros técnicos. | Desenvolvedores, Arquitetos, DevOps |
+| 🛰️ **[`/docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md)** | **Fontes de Dados:** Documentação detalhada dos fluxos orbitais (Landsat 8/9, Sentinel-2, GEE), bases censitárias (IBGE) e séries biofísicas. | Cientistas de Dados, Engenheiros Geoespaciais |
+| 🗺️ **[`/docs/DEPENDENCY_MAP.md`](docs/DEPENDENCY_MAP.md)** | **Mapa de Dependências:** Rastreabilidade ponta a ponta (Serviço → API → Módulo → Dashboard → Usuário) com fluxograma Mermaid. | Arquitetos, DevOps, Gestores de Mudança |
+| 🧠 **[`/docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md)** | **Memória do Projeto:** Registros de Decisões Arquiteturais (ADRs 001 a 005), formulações biofísicas e regras de negócio. | Novos Integrantes (Onboarding), Tech Leads |
+| 📜 **[`CHANGELOG.md`](CHANGELOG.md)** | **Histórico de Versões:** Registro contínuo de lançamentos, adições e correções no padrão *Keep a Changelog*. | Toda a equipe, Gestores, Investidores |
+
+---
+
 ## 🎯 O Desafio Urbano
 
 Recife é uma das capitais mais vulneráveis do Brasil a eventos climáticos extremos e picos de estresse térmico. A carência de sistemas integrados de monitoramento microclimático de alta granularidade prejudica a saúde pública gerando desidratação, internações e sobrecarga nas Unidades de Pronto Atendimento (UPAs), além de dificultar o direcionamento assertivo de recursos para arborização urbana e infraestrutura verde resiliente.
@@ -98,26 +113,34 @@ O projeto adota uma stack moderna, full-stack e de alta performance:
 
 ```text
 Arboris/
+├── docs/                   # Documentação Corporativa Enterprise
+│   ├── MANUAL_DO_USUARIO.md# Guia Oficial de Operação e Uso do Sistema para Gestores e Usuários
+│   ├── API_CATALOG.md      # Catálogo exaustivo de APIs (Open-Meteo, NASA POWER, Landsat, etc.)
+│   ├── DATA_SOURCES.md     # Documentação detalhada das fontes orbitais, biofísicas e censitárias
+│   ├── DEPENDENCY_MAP.md   # Mapeamento Serviço → API → Módulo → Dashboard → Usuário (Mermaid)
+│   └── PROJECT_MEMORY.md   # Memória do projeto, ADRs (001 a 005) e regras de negócio biofísicas
 ├── public/                 # Ativos estáticos e logotipos do Radar Climático
 ├── src/
 │   ├── components/
 │   │   ├── alerts/         # Modais de reporte e envio operacional de alertas
 │   │   ├── auth/           # Modais de perfil e contato institucional
-│   │   ├── dashboard/      # Telas de Cobertura Vegetal, Vulnerabilidade, Mapa de Satélite e Dashboard Verde
+│   │   ├── dashboard/      # Telas de Cobertura Vegetal, Vulnerabilidade, NASA POWER e Análise Ambiental
 │   │   ├── history/        # Telas de Comparação Territorial A x B
 │   │   ├── ui/             # Componentes reutilizáveis baseados em Radix UI
 │   │   └── RecifeStreetMesh.tsx # Malha esquemática de vias e hidrografia do Recife
 │   ├── context/            # Provedores de Autenticação e Tema (Dark/Light)
 │   ├── lib/
+│   │   ├── geo-services/   # Serviços de APIs (Open-Meteo, NASA POWER, biofísica e analytics)
 │   │   ├── radar-data.ts   # Modelagem de dados, séries de sensores, IVS, NDVI e funções de simulação
 │   │   └── utils.ts        # Utilitários de classes e cálculos
 │   ├── routes/
 │   │   ├── __root.tsx      # Layout mestre global
-│   │   ├── index.tsx       # Dashboard principal (Tempo Real, Histórico, Verde, Alertas e Índice)
+│   │   ├── index.tsx       # Dashboard principal (Tempo Real, Histórico, Verde, NASA, Ambiental, etc.)
 │   │   └── login.tsx       # Tela de autenticação institucional
 │   ├── router.tsx          # Inicialização do TanStack Router
 │   ├── server.ts           # Configuração do handler SSR TanStack Start
 │   └── styles.css          # Design tokens, paletas térmicas e utilitários globais
+├── CHANGELOG.md            # Histórico de lançamentos e versões no padrão Keep a Changelog
 ├── package.json            # Dependências e scripts de execução
 ├── tsconfig.json           # Configurações do compilador TypeScript
 └── vite.config.ts          # Configuração de build Vite com plugins TanStack e Tailwind

@@ -9,6 +9,7 @@ interface RecifeSatelliteMapProps {
   onSelectZone: (zone: Zone) => void;
   onSelectComparisonZone?: (zone: Zone) => void;
   additionalTreesPct?: number; // Para refletir visualmente no simulador
+  hideInlineLegend?: boolean;
   className?: string;
 }
 
@@ -22,7 +23,9 @@ export function RecifeSatelliteMap({
   selectedZoneA,
   selectedZoneB,
   onSelectZone,
+  onSelectComparisonZone,
   additionalTreesPct = 0,
+  hideInlineLegend = false,
   className = "",
 }: RecifeSatelliteMapProps) {
   // Coordenadas esquemáticas das vias arteriais e hidrografia
@@ -185,18 +188,41 @@ export function RecifeSatelliteMap({
           </g>
         )}
 
-        {/* Conexão Visual de Comparação entre Zona A e Zona B (quando ambas selecionadas) */}
+        {/* Conexão Visual de Comparação entre Zona A (Fixado) e Zona B (Comparação) */}
         {selectedZoneB && (
-          <line
-            x1={selectedZoneA.x}
-            y1={selectedZoneA.y}
-            x2={selectedZoneB.x}
-            y2={selectedZoneB.y}
-            stroke="var(--foreground)"
-            strokeOpacity="0.35"
-            strokeWidth="0.9"
-            strokeDasharray="2 2"
-          />
+          <g id="comparison-line-group">
+            {/* Halo de contraste ao redor da linha */}
+            <line
+              x1={selectedZoneA.x}
+              y1={selectedZoneA.y}
+              x2={selectedZoneB.x}
+              y2={selectedZoneB.y}
+              stroke="#0f172a"
+              strokeOpacity="0.8"
+              strokeWidth="3.2"
+              strokeLinecap="round"
+            />
+            {/* Traço pontilhado saindo estritamente do bairro fixado (A) para o bairro comparado (B) */}
+            <line
+              x1={selectedZoneA.x}
+              y1={selectedZoneA.y}
+              x2={selectedZoneB.x}
+              y2={selectedZoneB.y}
+              stroke="#38bdf8"
+              strokeOpacity="0.95"
+              strokeWidth="1.6"
+              strokeDasharray="2.5 2.5"
+              strokeLinecap="round"
+            />
+            {/* Ponto luminoso pulsante no centro do vetor de comparação */}
+            <circle
+              cx={(selectedZoneA.x + selectedZoneB.x) / 2}
+              cy={(selectedZoneA.y + selectedZoneB.y) / 2}
+              r="1.8"
+              fill="#38bdf8"
+              className="animate-pulse"
+            />
+          </g>
         )}
       </svg>
 
@@ -215,29 +241,50 @@ export function RecifeSatelliteMap({
         return (
           <button
             key={z.id}
-            onClick={() => onSelectZone(z)}
+            onClick={() => {
+              if (mode === "vuln" && onSelectComparisonZone) {
+                // Se clicou no bairro já fixado, mantém fixo
+                if (z.id === selectedZoneA.id) return;
+                // Se clicou em outro bairro no mapa, projeta a comparação para ele (B)
+                onSelectComparisonZone(z);
+              } else {
+                onSelectZone(z);
+              }
+            }}
             className="group absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer focus:outline-none transition-transform hover:scale-110"
             style={{ left: `${z.x}%`, top: `${z.y}%` }}
-            title={`${z.name} · ${mode === "ndvi" ? `NDVI ${z.ndvi.toFixed(2)} (${z.canopy}% copa)` : `IVS ${z.vuln}/100`}`}
+            title={
+              mode === "vuln"
+                ? isA
+                  ? `${z.name} · Bairro Fixado (Origem da Comparação) · IVS ${z.vuln}`
+                  : isB
+                  ? `${z.name} · Bairro Comparado (Destino da Linha) · IVS ${z.vuln}`
+                  : `${z.name} · Clique para comparar com ${selectedZoneA.name} · IVS ${z.vuln}`
+                : `${z.name} · NDVI ${z.ndvi.toFixed(2)} (${z.canopy}% copa)`
+            }
           >
             {/* Halo de pulso em bairros sob intervenção ou selecionados */}
             {isSelected && (
               <span
                 className="absolute -inset-3 rounded-full animate-ping opacity-60 pointer-events-none"
-                style={{ background: color }}
+                style={{ background: isA ? "var(--destructive)" : isB ? "var(--accent)" : color }}
               />
             )}
 
             {/* Círculo do Marcador */}
             <div
               className={`relative flex items-center justify-center rounded-full transition-all duration-300 ${
-                isSelected
+                isA
+                  ? "h-8 w-8 ring-2 ring-destructive shadow-[0_0_18px_rgba(239,68,68,0.7)] bg-destructive"
+                  : isB
+                  ? "h-8 w-8 ring-2 ring-accent shadow-[0_0_18px_rgba(56,189,248,0.7)] bg-accent"
+                  : isSelected
                   ? "h-8 w-8 ring-2 ring-white shadow-lg"
                   : "h-5 w-5 ring-1 ring-border/80 opacity-85 group-hover:opacity-100"
               }`}
               style={{
-                background: color,
-                boxShadow: isSelected ? `0 0 16px ${color}` : undefined,
+                background: isA ? undefined : isB ? undefined : color,
+                boxShadow: !isA && !isB && isSelected ? `0 0 16px ${color}` : undefined,
               }}
             >
               {isA && (
@@ -258,14 +305,20 @@ export function RecifeSatelliteMap({
             {/* Tag Flutuante com Nome e Métrica */}
             <div
               className={`absolute left-1/2 top-full -translate-x-1/2 mt-1.5 whitespace-nowrap rounded-md px-2 py-0.5 text-[10px] font-mono shadow-md backdrop-blur border transition-all ${
-                isSelected
+                isA
+                  ? "bg-destructive/95 border-destructive text-white font-bold ring-2 ring-destructive/40 z-30"
+                  : isB
+                  ? "bg-sky-600/95 border-sky-400 text-white font-bold ring-2 ring-sky-400/40 z-30"
+                  : isSelected
                   ? "bg-background/95 border-white text-foreground font-bold ring-1 ring-white/30 z-20"
                   : "bg-background/80 border-border/60 text-muted-foreground group-hover:text-foreground z-10"
               }`}
             >
               <div className="flex items-center gap-1">
+                {isA && <span className="text-[9px] uppercase tracking-wide opacity-90">[Fixado]</span>}
+                {isB && <span className="text-[9px] uppercase tracking-wide opacity-90">[Comparação]</span>}
                 <span>{z.name}</span>
-                <span className="font-semibold" style={{ color }}>
+                <span className="font-semibold" style={{ color: isA || isB ? "#ffffff" : color }}>
                   {mode === "ndvi" ? `${z.canopy}%` : `IVS ${z.vuln}`}
                 </span>
               </div>
@@ -274,72 +327,78 @@ export function RecifeSatelliteMap({
         );
       })}
 
-      {/* Legenda Espectral de Satélite no Canto Inferior Esquerdo */}
-      <div className="absolute bottom-3 left-3 rounded-lg border border-border/80 bg-background/90 p-3 backdrop-blur shadow-xl text-xs max-w-xs z-20">
-        {mode === "ndvi" ? (
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-1.5">
-              <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-canopy" />
-                Índice NDVI (Densidade de Copa)
-              </span>
-              <span className="font-mono text-[10px] text-emerald-400 font-semibold">Satélite Sentinel</span>
-            </div>
-            <div
-              className="h-2 w-48 rounded-full"
-              style={{
-                background:
-                  "linear-gradient(90deg, oklch(0.68 0.18 45) 0%, oklch(0.78 0.12 85) 25%, oklch(0.76 0.14 115) 50%, var(--canopy) 100%)",
-              }}
-            />
-            <div className="mt-1 flex justify-between font-mono text-[9px] text-muted-foreground">
-              <span>0.10 (Asfalto)</span>
-              <span>0.30 (OMS)</span>
-              <span>0.80 (Refúgio)</span>
-            </div>
-            {additionalTreesPct > 0 && (
-              <div className="mt-2 pt-1.5 border-t border-border/50 flex items-center gap-1.5 text-[10px] text-emerald-400 font-mono">
-                <Crosshair className="h-3 w-3" />
-                <span>Simulação ativa: +{additionalTreesPct}% copa em {selectedZoneA.name}</span>
+      {/* Legenda Espectral de Satélite no Canto Inferior Esquerdo (renderizada se hideInlineLegend for false) */}
+      {!hideInlineLegend && (
+        <div className="absolute bottom-3 left-3 rounded-lg border border-border/80 bg-background/90 p-3 backdrop-blur shadow-xl text-xs max-w-xs z-20">
+          {mode === "ndvi" ? (
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-canopy" />
+                  Índice NDVI (Densidade de Copa)
+                </span>
+                <span className="font-mono text-[10px] text-emerald-400 font-semibold">Satélite Sentinel</span>
               </div>
-            )}
-          </div>
-        ) : (
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-1.5">
-              <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-destructive" />
-                Vulnerabilidade Social (IVS)
-              </span>
-              <span className="font-mono text-[10px] text-amber-400 font-semibold">Censo & Saúde</span>
+              <div
+                className="h-2 w-48 rounded-full"
+                style={{
+                  background:
+                    "linear-gradient(90deg, oklch(0.68 0.18 45) 0%, oklch(0.78 0.12 85) 25%, oklch(0.76 0.14 115) 50%, var(--canopy) 100%)",
+                }}
+              />
+              <div className="mt-1 flex justify-between font-mono text-[9px] text-muted-foreground">
+                <span>0.10 (Asfalto)</span>
+                <span>0.30 (OMS)</span>
+                <span>0.80 (Refúgio)</span>
+              </div>
+              {additionalTreesPct > 0 && (
+                <div className="mt-2 pt-1.5 border-t border-border/50 flex items-center gap-1.5 text-[10px] text-emerald-400 font-mono">
+                  <Crosshair className="h-3 w-3" />
+                  <span>Simulação ativa: +{additionalTreesPct}% copa em {selectedZoneA.name}</span>
+                </div>
+              )}
             </div>
-            <div
-              className="h-2 w-48 rounded-full"
-              style={{
-                background:
-                  "linear-gradient(90deg, var(--accent) 0%, var(--heat-3) 45%, var(--heat-5) 100%)",
-              }}
-            />
-            <div className="mt-1 flex justify-between font-mono text-[9px] text-muted-foreground">
-              <span>0 (Seguro)</span>
-              <span>50 (Moderado)</span>
-              <span>100 (Crítico)</span>
+          ) : (
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-destructive" />
+                  Vulnerabilidade Social (IVS)
+                </span>
+                <span className="font-mono text-[10px] text-amber-400 font-semibold">Censo & Saúde</span>
+              </div>
+              <div
+                className="h-2 w-48 rounded-full"
+                style={{
+                  background:
+                    "linear-gradient(90deg, var(--accent) 0%, var(--heat-3) 45%, var(--heat-5) 100%)",
+                }}
+              />
+              <div className="mt-1 flex justify-between font-mono text-[9px] text-muted-foreground">
+                <span>0 (Seguro)</span>
+                <span>50 (Moderado)</span>
+                <span>100 (Crítico)</span>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Indicador de Comparação Territorial Ativa (Canto Superior Direito) */}
       {selectedZoneB && (
         <div className="absolute top-3 right-3 rounded-lg border border-border/80 bg-background/90 px-3 py-1.5 backdrop-blur shadow-md text-xs z-20 flex items-center gap-2">
           <div className="flex items-center gap-1 font-mono text-[11px]">
-            <span className="rounded bg-primary/20 px-1.5 py-0.2 font-bold text-primary">A</span>
-            <span className="font-medium text-foreground">{selectedZoneA.name}</span>
+            <span className="rounded bg-destructive/20 px-1.5 py-0.5 font-bold text-destructive flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+              A · {selectedZoneA.name}
+            </span>
           </div>
-          <span className="text-muted-foreground font-mono">vs</span>
+          <span className="text-muted-foreground font-mono text-xs">─┄┄→</span>
           <div className="flex items-center gap-1 font-mono text-[11px]">
-            <span className="rounded bg-accent/20 px-1.5 py-0.2 font-bold text-accent">B</span>
-            <span className="font-medium text-foreground">{selectedZoneB.name}</span>
+            <span className="rounded bg-sky-500/20 px-1.5 py-0.5 font-bold text-sky-400 flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+              B · {selectedZoneB.name}
+            </span>
           </div>
         </div>
       )}
