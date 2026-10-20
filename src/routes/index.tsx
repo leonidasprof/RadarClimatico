@@ -651,13 +651,30 @@ function Header({
 function Kpis({ weather }: { weather?: RealtimeWeatherSnapshot | null }) {
   const avgTemp = weather?.cityAverageTemp
     ? weather.cityAverageTemp.toFixed(1).replace(".", ",")
-    : "34,1";
-  const maxFeels = weather?.cityMaxFeels
+    : "27,0";
+
+  // 1. Regra de Negócio: Maior temperatura do dia
+  // Durante as 24 horas do dia, este bloco informa a temperatura mais alta registrada na cidade até o momento
+  const maxTempNum = weather?.cityMaxTemp !== undefined
+    ? weather.cityMaxTemp
+    : (weather?.cityAverageTemp ? Number((weather.cityAverageTemp + 2.4).toFixed(1)) : 29.4);
+
+  const maxTempFormatted = maxTempNum.toFixed(1).replace(".", ",");
+  const maxTempZone = weather?.cityMaxTempZone || "Santo Amaro";
+  const maxTempHour = weather?.cityMaxTempHour ? ` (${weather.cityMaxTempHour})` : "";
+
+  // 2. Regra de Negócio: Só usar o termo "Pico" se for alta (>= 32 °C)
+  // Pela manhã ou em horários moderados (< 32 °C), NÃO usa o termo pico, exibindo "Máxima até o momento".
+  const isHighTemp = maxTempNum >= 32.0;
+  const tempStatus = isHighTemp ? "Pico registrado hoje" : "Máxima até o momento";
+  const tempTone = isHighTemp ? "var(--heat-5)" : "var(--heat-4)";
+
+  // Sensação térmica correspondente para contexto complementar
+  const maxFeelsFormatted = weather?.cityMaxFeels
     ? weather.cityMaxFeels.toFixed(1).replace(".", ",")
-    : "37,8";
-  const peakZone = weather?.cityMaxFeelsZone || weather?.zones.find((z) => z.feels === weather.cityMaxFeels)?.name || "Santo Amaro";
-  const peakHour = weather?.cityMaxFeelsHour ? ` (${weather.cityMaxFeelsHour})` : "";
-  const critCount = weather?.criticalZonesCount !== undefined ? String(weather.criticalZonesCount) : "4";
+    : undefined;
+
+  const critCount = weather?.criticalZonesCount !== undefined ? String(weather.criticalZonesCount) : "0";
   const totalCount = weather?.zones.length || 8;
 
   const items: {
@@ -665,7 +682,8 @@ function Kpis({ weather }: { weather?: RealtimeWeatherSnapshot | null }) {
     value: string;
     unit: string;
     delta: string;
-    subDelta?: string;
+    subDelta?: string | undefined;
+    tooltip?: string | undefined;
     tone: string;
   }[] = [
     {
@@ -676,12 +694,15 @@ function Kpis({ weather }: { weather?: RealtimeWeatherSnapshot | null }) {
       tone: "var(--heat-4)",
     },
     {
-      label: "Maior sensação do dia",
-      value: maxFeels,
+      label: "Maior temperatura do dia",
+      value: maxTempFormatted,
       unit: "°C",
-      delta: "Pico registrado hoje",
-      subDelta: `${peakZone}${peakHour}`,
-      tone: "var(--heat-5)",
+      delta: tempStatus,
+      subDelta: `${maxTempZone}${maxTempHour}`,
+      tooltip: maxFeelsFormatted
+        ? `Temperatura máx: ${maxTempFormatted}°C em ${maxTempZone}${maxTempHour} · Sensação térmica: ${maxFeelsFormatted}°C`
+        : undefined,
+      tone: tempTone,
     },
     {
       label: "Zonas em criticidade",
@@ -701,7 +722,7 @@ function Kpis({ weather }: { weather?: RealtimeWeatherSnapshot | null }) {
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((k) => (
-        <div key={k.label} className="panel p-4 flex flex-col justify-between min-h-[110px]">
+        <div key={k.label} title={k.tooltip} className="panel p-4 flex flex-col justify-between min-h-[110px]">
           <div>
             <p className="text-xs text-muted-foreground">{k.label}</p>
             <p className="mt-2 flex items-baseline gap-1 font-display text-3xl font-semibold">
@@ -935,9 +956,9 @@ function HourlyPanel({
   peakHour,
   peakTemp,
 }: {
-  hourlyData?: { h: string; t: number; feels?: number }[];
-  peakHour?: string;
-  peakTemp?: number;
+  hourlyData?: { h: string; t: number; feels?: number | undefined }[] | undefined;
+  peakHour?: string | undefined;
+  peakTemp?: number | undefined;
 }) {
   const activeHourly = hourlyData && hourlyData.length ? hourlyData : hourly;
   const max = 40;
@@ -1096,20 +1117,18 @@ function AlertsPanel({
           <button
             type="button"
             onClick={() => setViewMode("ativos")}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
-              viewMode === "ativos"
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${viewMode === "ativos"
                 ? "bg-destructive/15 text-destructive font-semibold shadow-xs ring-1 ring-destructive/30"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             <span className={activeAlerts.length > 0 ? "h-2 w-2 rounded-full bg-destructive animate-pulse" : "h-2 w-2 rounded-full bg-muted-foreground/50"} />
             <span>Alertas do dia</span>
             <span
-              className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] ${
-                viewMode === "ativos"
+              className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] ${viewMode === "ativos"
                   ? "bg-destructive text-destructive-foreground font-bold"
                   : "bg-muted text-muted-foreground"
-              }`}
+                }`}
             >
               {activeAlerts.length}
             </span>
@@ -1118,11 +1137,10 @@ function AlertsPanel({
           <button
             type="button"
             onClick={() => setViewMode("historico")}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
-              viewMode === "historico"
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${viewMode === "historico"
                 ? "bg-secondary text-foreground font-semibold shadow-xs ring-1 ring-border"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             <History className="h-3 w-3" />
             <span>Histórico</span>
@@ -1218,24 +1236,21 @@ function AlertsPanel({
                 <button
                   key={tab.id}
                   onClick={() => setFilter(tab.id)}
-                  className={`group flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer ${
-                    isActive
+                  className={`group flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer ${isActive
                       ? tab.activeClass
                       : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   <span
-                    className={`h-2 w-2 rounded-full transition-transform ${tab.dotClass} ${
-                      isActive ? "scale-110 shadow-[0_0_8px_currentColor]" : "opacity-60 group-hover:opacity-100"
-                    }`}
+                    className={`h-2 w-2 rounded-full transition-transform ${tab.dotClass} ${isActive ? "scale-110 shadow-[0_0_8px_currentColor]" : "opacity-60 group-hover:opacity-100"
+                      }`}
                   />
                   <span>{tab.label}</span>
                   <span
-                    className={`ml-0.5 rounded-full px-1.5 py-0.2 font-mono text-[10px] ${
-                      isActive
+                    className={`ml-0.5 rounded-full px-1.5 py-0.2 font-mono text-[10px] ${isActive
                         ? "bg-foreground/10 text-foreground font-bold"
                         : "bg-muted text-muted-foreground"
-                    }`}
+                      }`}
                   >
                     {tab.count}
                   </span>
