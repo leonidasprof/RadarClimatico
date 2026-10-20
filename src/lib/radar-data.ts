@@ -332,14 +332,47 @@ export function zoneHistory(zone: Zone) {
   }));
 }
 
-// ─── Dados históricos para drill-down hierárquico (Ano → Mês → 7 dias) ───────
-
-export type MonthlyRecord = { month: string; monthIndex: number; avgMax: number };
-export type YearlyRecord = { year: number; avgMax: number };
+// ─── Dados históricos para drill-down hierárquico (Ano → Mês → Dias) ───────
 
 /**
- * Gera histórico mensal sintético para uma zona (últimos 12 meses a partir de Ago/2026).
- * A variação é baseada na sazonalidade típica do Recife e na temperatura base do bairro.
+ * Data de referência corrente do sistema: 20 de Outubro de 2026.
+ * Meses posteriores (Novembro e Dezembro de 2026) e dias posteriores a 20/10/2026
+ * ainda não transcorreram e não possuem dados meteorológicos consolidados.
+ */
+export const CURRENT_DATE_REFERENCE = {
+  year: 2026,
+  monthIndex: 9, // 0 = Jan, 9 = Outubro, 10 = Nov, 11 = Dez
+  day: 20,
+} as const;
+
+/**
+ * Verifica se um determinado mês/ano já possui dados consolidados (já ocorreu ou é o mês corrente).
+ */
+export function isMonthAvailable(year: number, monthIndex: number): boolean {
+  if (year < CURRENT_DATE_REFERENCE.year) return true;
+  if (year > CURRENT_DATE_REFERENCE.year) return false;
+  return monthIndex <= CURRENT_DATE_REFERENCE.monthIndex;
+}
+
+/**
+ * Retorna o total de dias disponíveis com dados consolidados para o mês/ano.
+ * Em Outubro/2026 (mês corrente), os dados vão até o dia 20.
+ */
+export function getMaxAvailableDaysInMonth(year: number, monthIndex: number): number {
+  const daysInMonthTable = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const standardDays = daysInMonthTable[monthIndex] ?? 30;
+
+  if (year === CURRENT_DATE_REFERENCE.year && monthIndex === CURRENT_DATE_REFERENCE.monthIndex) {
+    return CURRENT_DATE_REFERENCE.day; // 20 dias consolidados até hoje
+  }
+  return standardDays;
+}
+
+export type MonthlyRecord = { month: string; monthIndex: number; avgMax: number; isPartial?: boolean };
+export type YearlyRecord = { year: number; avgMax: number; isCurrentYear?: boolean };
+
+/**
+ * Nomes abreviados dos meses.
  */
 const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -359,19 +392,29 @@ const RECIFE_SEASONAL_OFFSET = [
   1.9,  // Dez
 ];
 
+/**
+ * Gera histórico mensal para uma zona.
+ * Para o ano corrente (2026), retorna EXCLUSIVAMENTE os meses já transcorridos (Janeiro a Outubro).
+ * Novembro e Dezembro de 2026 não são incluídos pois ainda não existem dados.
+ */
 export function zoneMonthlyHistory(zone: Zone, year: number): MonthlyRecord[] {
   // Ano de referência: 2026 = atual. Para anos anteriores, aplica leve tendência de aquecimento.
-  const yearDelta = (2026 - year) * 0.18; // bairros estavam ~0.18 °C mais frios por ano passado
+  const yearDelta = (CURRENT_DATE_REFERENCE.year - year) * 0.18;
   const idSeed = zone.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 7;
 
-  return MONTH_NAMES.map((month, i) => ({
+  // Limita até o mês atual para o ano de 2026 (máximo índice 9 = Outubro)
+  const maxMonthIdx = year === CURRENT_DATE_REFERENCE.year ? CURRENT_DATE_REFERENCE.monthIndex : 11;
+  const availableMonths = MONTH_NAMES.slice(0, maxMonthIdx + 1);
+
+  return availableMonths.map((month, i) => ({
     month,
     monthIndex: i,
+    isPartial: year === CURRENT_DATE_REFERENCE.year && i === CURRENT_DATE_REFERENCE.monthIndex,
     avgMax: Number(
       (
         zone.temp +
         RECIFE_SEASONAL_OFFSET[i]! +
-        ((idSeed + i) % 5) * 0.12 - // variação determinística por bairro
+        ((idSeed + i) % 5) * 0.12 -
         yearDelta
       ).toFixed(1)
     ),
@@ -381,27 +424,37 @@ export function zoneMonthlyHistory(zone: Zone, year: number): MonthlyRecord[] {
 export function zoneYearlyHistory(zone: Zone): YearlyRecord[] {
   const years = [2022, 2023, 2024, 2025, 2026];
   const idSeed = zone.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 5;
-  return years.map((year, i) => ({
-    year,
-    avgMax: Number(
-      (
-        zone.temp -
-        (2026 - year) * 0.18 + // tendência de aquecimento urbano
-        ((idSeed + i) % 3) * 0.08
-      ).toFixed(1)
-    ),
-  }));
+  return years.map((year, i) => {
+    // Para o ano de 2026 (ano corrente), calculamos a média das máximas com base nos meses já decorridos (Jan a Out)
+    if (year === CURRENT_DATE_REFERENCE.year) {
+      const monthly = zoneMonthlyHistory(zone, year);
+      const avg = monthly.reduce((acc, m) => acc + m.avgMax, 0) / monthly.length;
+      return {
+        year,
+        avgMax: Number(avg.toFixed(1)),
+        isCurrentYear: true,
+      };
+    }
+
+    return {
+      year,
+      avgMax: Number(
+        (
+          zone.temp -
+          (CURRENT_DATE_REFERENCE.year - year) * 0.18 +
+          ((idSeed + i) % 3) * 0.08
+        ).toFixed(1)
+      ),
+    };
+  });
 }
 
 export type DailyRecord = { day: string; date: string; t: number };
 
 /**
  * Gera histórico diário de máximas para uma zona em um mês/ano específico.
- * @param zone - A zona climática
- * @param year - Ano (2022–2026)
- * @param monthIndex - Índice do mês (0 = Jan, 11 = Dez)
- * @param numDays - Número de dias a exibir (3, 7, 14 ou 30)
- * @param startDay - Dia inicial (1-based)
+ * Para Outubro de 2026, limita estritamente ao dia 20 (data atual).
+ * Para meses futuros como Novembro e Dezembro de 2026, retorna lista vazia.
  */
 export function zoneDailyHistory(
   zone: Zone,
@@ -410,15 +463,23 @@ export function zoneDailyHistory(
   numDays: number = 7,
   startDay: number = 1
 ): DailyRecord[] {
-  const monthNames = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-  const monthName = monthNames[monthIndex]!;
-  const yearDelta = (2026 - year) * 0.18;
+  if (!isMonthAvailable(year, monthIndex)) {
+    return [];
+  }
+
+  const maxAvailableDays = getMaxAvailableDaysInMonth(year, monthIndex);
+  if (startDay > maxAvailableDays) {
+    return [];
+  }
+
+  // Ajusta o número de dias para não ultrapassar a data atual
+  const effectiveDays = Math.min(numDays, maxAvailableDays - startDay + 1);
+  const yearDelta = (CURRENT_DATE_REFERENCE.year - year) * 0.18;
   const idSeed = zone.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   const baseTemp = zone.temp + RECIFE_SEASONAL_OFFSET[monthIndex]! - yearDelta;
 
-  return Array.from({ length: numDays }, (_, i) => {
+  return Array.from({ length: effectiveDays }, (_, i) => {
     const dayNum = startDay + i;
-    // Variação diária determinística: combina seno para simular oscilação térmica semanal
     const noise = Math.sin((dayNum + idSeed) * 1.7) * 1.2 + Math.cos((dayNum + idSeed) * 0.9) * 0.7;
     return {
       day: String(dayNum).padStart(2, "0"),

@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import {
   zones,
   zoneDailyHistory,
@@ -11,6 +11,9 @@ import {
   MONTH_NAMES_SHORT,
   MONTH_NAMES_FULL,
   DAY_RANGE_OPTIONS,
+  CURRENT_DATE_REFERENCE,
+  isMonthAvailable,
+  getMaxAvailableDaysInMonth,
   type Zone,
   type DayRange,
 } from "@/lib/radar-data";
@@ -26,6 +29,7 @@ import {
   CalendarDays,
   Calendar,
   BarChart2,
+  Info,
 } from "lucide-react";
 
 interface ComparisonHistoryViewProps {
@@ -39,7 +43,7 @@ type DrillLevel = "year" | "month" | "day";
  * Módulo de Comparação e Histórico (Épico 1)
  * Drill-down hierárquico interativo: Ano → Mês → Período de dias
  * - Nível Ano: pills clicáveis para selecionar e navegar para os meses
- * - Nível Mês: grid de meses com mini barras de prévia
+ * - Nível Mês: grid de meses com mini barras de prévia (meses futuros como Nov/Dez de 2026 sem dados consolidados)
  * - Nível Dias: seletor de período (3/7/14/30 dias) + slider de dia inicial + pickers inline
  */
 export function ComparisonHistoryView({
@@ -53,26 +57,57 @@ export function ComparisonHistoryView({
   );
 
   // ─── Estado do drill-down ───────────────────────────────────────────────────
+  // Data de corte do sistema: 20/10/2026
   const [drillLevel, setDrillLevel] = useState<DrillLevel>("year");
-  const [selectedYear, setSelectedYear] = useState<number>(2026);
-  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(7);
+  const [selectedYear, setSelectedYear] = useState<number>(CURRENT_DATE_REFERENCE.year);
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(CURRENT_DATE_REFERENCE.monthIndex);
   const [dayRange, setDayRange] = useState<DayRange>(7);
-  const [startDay, setStartDay] = useState<number>(1);
+  // Inicializa com os últimos 7 dias consolidados até a data atual (14 a 20/10)
+  const [startDay, setStartDay] = useState<number>(Math.max(1, CURRENT_DATE_REFERENCE.day - 7 + 1));
 
-  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][selectedMonthIndex] ?? 30;
-  const maxStartDay = Math.max(1, daysInMonth - dayRange + 1);
+  // Blindagem: no ano de 2026, é estritamente impossível selecionar ou calcular mês posterior a Outubro (índice 9)
+  const isCurrentYear = selectedYear === CURRENT_DATE_REFERENCE.year;
+  const safeMonthIndex = isCurrentYear && selectedMonthIndex > CURRENT_DATE_REFERENCE.monthIndex
+    ? CURRENT_DATE_REFERENCE.monthIndex
+    : selectedMonthIndex;
+
+  const availableDaysInMonth = getMaxAvailableDaysInMonth(selectedYear, safeMonthIndex);
+  const maxStartDay = Math.max(1, availableDaysInMonth - dayRange + 1);
 
   // ─── Dados ─────────────────────────────────────────────────────────────────
   const yearlyA = zoneYearlyHistory(zoneA);
   const yearlyB = zoneYearlyHistory(zoneB);
   const monthlyA = zoneMonthlyHistory(zoneA, selectedYear);
   const monthlyB = zoneMonthlyHistory(zoneB, selectedYear);
-  const dailyA = zoneDailyHistory(zoneA, selectedYear, selectedMonthIndex, dayRange, startDay);
-  const dailyB = zoneDailyHistory(zoneB, selectedYear, selectedMonthIndex, dayRange, startDay);
+  const dailyA = zoneDailyHistory(zoneA, selectedYear, safeMonthIndex, dayRange, startDay);
+  const dailyB = zoneDailyHistory(zoneB, selectedYear, safeMonthIndex, dayRange, startDay);
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
-  const handleSelectYear = (year: number) => { setSelectedYear(year); setDrillLevel("month"); };
-  const handleSelectMonth = (monthIndex: number) => { setSelectedMonthIndex(monthIndex); setStartDay(1); setDrillLevel("day"); };
+  const handleSelectYear = (year: number) => {
+    setSelectedYear(year);
+    // Se o mês atualmente selecionado for futuro no ano escolhido, ajusta para o último disponível
+    let newMonth = safeMonthIndex;
+    if (!isMonthAvailable(year, safeMonthIndex)) {
+      newMonth = CURRENT_DATE_REFERENCE.monthIndex;
+      setSelectedMonthIndex(newMonth);
+    }
+    const maxDays = getMaxAvailableDaysInMonth(year, newMonth);
+    setStartDay((prev) => Math.max(1, Math.min(prev, maxDays - dayRange + 1)));
+    setDrillLevel("month");
+  };
+
+  const handleSelectMonth = (monthIndex: number) => {
+    if (!isMonthAvailable(selectedYear, monthIndex)) return; // Mês futuro não transcorrido
+    setSelectedMonthIndex(monthIndex);
+    const maxDays = getMaxAvailableDaysInMonth(selectedYear, monthIndex);
+    if (selectedYear === CURRENT_DATE_REFERENCE.year && monthIndex === CURRENT_DATE_REFERENCE.monthIndex) {
+      setStartDay(Math.max(1, CURRENT_DATE_REFERENCE.day - dayRange + 1));
+    } else {
+      setStartDay(1);
+    }
+    setDrillLevel("day");
+  };
+
   const handleBreadcrumbYear = () => setDrillLevel("year");
   const handleBreadcrumbMonth = () => setDrillLevel("month");
 
@@ -96,23 +131,31 @@ export function ComparisonHistoryView({
 
   const { dataA, dataB } = getChartData();
   const allTemps = [...dataA.map((d) => d.t), ...dataB.map((d) => d.t)];
-  const minTemp = Math.min(...allTemps) - 1.5;
-  const maxTemp = Math.max(...allTemps) + 1.5;
+  const minTemp = allTemps.length > 0 ? Math.min(...allTemps) - 1.5 : 20;
+  const maxTemp = allTemps.length > 0 ? Math.max(...allTemps) + 1.5 : 40;
   const deltas = calculateMicroclimateDelta(zoneA, zoneB);
+
+  const isCurrentMonth = isCurrentYear && safeMonthIndex === CURRENT_DATE_REFERENCE.monthIndex;
 
   const drillTitle =
     drillLevel === "year"
       ? "Média das Máximas por Ano (2022 – 2026)"
       : drillLevel === "month"
-      ? `Média das Máximas por Mês — ${selectedYear}`
-      : `Máximas Diárias — ${dayRange} dias · ${MONTH_NAMES_FULL[selectedMonthIndex]}/${selectedYear}`;
+      ? isCurrentYear
+        ? "Média das Máximas por Mês — 2026 (Jan a Out · Ano Vigente)"
+        : `Média das Máximas por Mês — ${selectedYear}`
+      : `Máximas Diárias — ${Math.min(dayRange, availableDaysInMonth)} dias · ${MONTH_NAMES_FULL[safeMonthIndex]}/${selectedYear}`;
 
   const drillSubtitle =
     drillLevel === "year"
-      ? "Selecione um ano para explorar os meses. Tendência de aquecimento urbano visível ao longo dos anos."
+      ? "Selecione um ano para explorar os meses. 2026 exibe médias consolidadas até 20 de outubro."
       : drillLevel === "month"
-      ? "Selecione um mês para ver as máximas diárias no período escolhido."
-      : `Exibindo do dia ${String(startDay).padStart(2, "0")} ao ${String(startDay + dayRange - 1).padStart(2, "0")} de ${MONTH_NAMES_FULL[selectedMonthIndex]}.`;
+      ? isCurrentYear
+        ? "Exibindo dados consolidados de Janeiro a Outubro de 2026 (data de corte: 20/10/2026). Novembro e Dezembro ainda não transcorreram."
+        : "Selecione um mês para ver as máximas diárias no período escolhido."
+      : isCurrentMonth
+      ? `Exibindo do dia ${String(startDay).padStart(2, "0")} ao ${String(Math.min(startDay + dayRange - 1, availableDaysInMonth)).padStart(2, "0")} de ${MONTH_NAMES_FULL[safeMonthIndex]} (dados consolidados até hoje, 20/10/2026).`
+      : `Exibindo do dia ${String(startDay).padStart(2, "0")} ao ${String(Math.min(startDay + dayRange - 1, availableDaysInMonth)).padStart(2, "0")} de ${MONTH_NAMES_FULL[safeMonthIndex]}.`;
 
   return (
     <div className="space-y-6">
@@ -302,7 +345,7 @@ export function ComparisonHistoryView({
                   </span>
                   {year === 2026 && (
                     <span className="mt-0.5 rounded-full bg-primary/20 px-1.5 font-mono text-[9px] font-bold text-primary uppercase tracking-wide">
-                      atual
+                      atual (jan-out)
                     </span>
                   )}
                   <span className="mt-1.5 font-mono text-[10px] text-muted-foreground">
@@ -318,39 +361,58 @@ export function ComparisonHistoryView({
         {/* ── NÍVEL MÊS: grid de meses com mini barras ───────────────────── */}
         {drillLevel === "month" && (
           <div className="space-y-2">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-              Selecione o mês em {selectedYear} →
-            </p>
-            <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-2">
-              {MONTH_NAMES_SHORT.map((m, idx) => {
-                const avgA = monthlyA[idx]?.avgMax ?? 0;
-                const avgB = monthlyB[idx]?.avgMax ?? 0;
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                Selecione o mês em {selectedYear} ({isCurrentYear ? "10 meses apurados até 20/10/2026" : "12 meses apurados"}) →
+              </p>
+              {isCurrentYear && (
+                <span className="font-mono text-[10px] text-primary font-medium">
+                  Jan – Out · Ano Vigente
+                </span>
+              )}
+            </div>
+            {/* Para 2026 exibe estritamente 10 colunas (Jan a Out). Novembro e Dezembro não existem pois ainda não ocorreram. */}
+            <div className={isCurrentYear ? "grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2" : "grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-2"}>
+              {(isCurrentYear ? MONTH_NAMES_SHORT.slice(0, CURRENT_DATE_REFERENCE.monthIndex + 1) : MONTH_NAMES_SHORT).map((m, idx) => {
+                const avgA = monthlyA.find((d) => d.monthIndex === idx)?.avgMax;
+                const avgB = monthlyB.find((d) => d.monthIndex === idx)?.avgMax;
                 const isSelected = idx === selectedMonthIndex;
+                const isThisCurrentMonth = isCurrentYear && idx === CURRENT_DATE_REFERENCE.monthIndex;
+
                 return (
                   <button
                     key={m}
                     onClick={() => handleSelectMonth(idx)}
-                    className={`flex flex-col items-center rounded-xl border px-2 py-2.5 text-center transition-all duration-200 hover:scale-105 active:scale-95 ${
+                    className={`relative flex flex-col items-center rounded-xl border px-2 py-2.5 text-center transition-all duration-200 hover:scale-105 active:scale-95 ${
                       isSelected
-                        ? "border-primary bg-primary/15 shadow shadow-primary/20"
+                        ? "border-primary bg-primary/15 shadow shadow-primary/20 ring-1 ring-primary/40"
                         : "border-border/60 bg-secondary/40 hover:border-primary/40 hover:bg-primary/10"
                     }`}
                   >
                     <span className={`font-mono text-xs font-bold ${isSelected ? "text-primary" : "text-foreground"}`}>
                       {m}
                     </span>
-                    <div className="mt-1.5 h-8 w-full flex items-end justify-center gap-0.5">
-                      <div
-                        className="w-2 rounded-t transition-all"
-                        style={{ height: `${Math.max(20, ((avgA - 26) / (40 - 26)) * 100)}%`, background: heatVar(avgA) }}
-                      />
-                      <div
-                        className="w-2 rounded-t bg-accent opacity-80 transition-all"
-                        style={{ height: `${Math.max(20, ((avgB - 26) / (40 - 26)) * 100)}%` }}
-                      />
+                    {isThisCurrentMonth && (
+                      <span className="text-[8px] font-mono font-bold text-amber-500 uppercase tracking-tighter">
+                        até dia 20
+                      </span>
+                    )}
+                    <div className="mt-1 h-8 w-full flex items-end justify-center gap-0.5">
+                      {avgA !== undefined && (
+                        <div
+                          className="w-2 rounded-t transition-all"
+                          style={{ height: `${Math.max(20, ((avgA - 26) / (40 - 26)) * 100)}%`, background: heatVar(avgA) }}
+                        />
+                      )}
+                      {avgB !== undefined && (
+                        <div
+                          className="w-2 rounded-t bg-accent opacity-80 transition-all"
+                          style={{ height: `${Math.max(20, ((avgB - 26) / (40 - 26)) * 100)}%` }}
+                        />
+                      )}
                     </div>
                     <span className="mt-1 font-mono text-[9px] text-muted-foreground">
-                      {avgA.toFixed(0)}°
+                      {avgA !== undefined ? `${avgA.toFixed(0)}°` : "-"}
                     </span>
                   </button>
                 );
@@ -368,22 +430,29 @@ export function ComparisonHistoryView({
                 Período
               </p>
               <div className="flex items-center gap-1.5">
-                {DAY_RANGE_OPTIONS.map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => {
-                      setDayRange(r);
-                      setStartDay(Math.min(startDay, Math.max(1, daysInMonth - r + 1)));
-                    }}
-                    className={`rounded-lg border px-3 py-1.5 font-mono text-xs font-bold transition-all ${
-                      dayRange === r
-                        ? "border-primary bg-primary text-primary-foreground shadow"
-                        : "border-border/60 bg-card/60 text-muted-foreground hover:border-primary/50 hover:text-primary"
-                    }`}
-                  >
-                    {r}d
-                  </button>
-                ))}
+                {DAY_RANGE_OPTIONS.map((r) => {
+                  const isExceeded = availableDaysInMonth < r;
+                  return (
+                    <button
+                      key={r}
+                      disabled={isExceeded}
+                      onClick={() => {
+                        setDayRange(r);
+                        setStartDay((prev) => Math.min(prev, Math.max(1, availableDaysInMonth - r + 1)));
+                      }}
+                      title={isExceeded ? `Período de ${r} dias excede os ${availableDaysInMonth} dias consolidados disponíveis neste mês.` : undefined}
+                      className={`rounded-lg border px-3 py-1.5 font-mono text-xs font-bold transition-all ${
+                        isExceeded
+                          ? "opacity-30 border-border/40 bg-secondary/10 cursor-not-allowed text-muted-foreground"
+                          : dayRange === r
+                          ? "border-primary bg-primary text-primary-foreground shadow"
+                          : "border-border/60 bg-card/60 text-muted-foreground hover:border-primary/50 hover:text-primary"
+                      }`}
+                    >
+                      {r}d
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -396,7 +465,7 @@ export function ComparisonHistoryView({
                 <span className="font-mono text-xs font-bold text-primary">
                   {String(startDay).padStart(2, "0")}/{String(selectedMonthIndex + 1).padStart(2, "0")}
                   {" "}→{" "}
-                  {String(Math.min(startDay + dayRange - 1, daysInMonth)).padStart(2, "0")}/{String(selectedMonthIndex + 1).padStart(2, "0")}
+                  {String(Math.min(startDay + dayRange - 1, availableDaysInMonth)).padStart(2, "0")}/{String(selectedMonthIndex + 1).padStart(2, "0")}
                 </span>
               </div>
               <input
@@ -409,7 +478,7 @@ export function ComparisonHistoryView({
               />
               <div className="flex justify-between font-mono text-[9px] text-muted-foreground">
                 <span>Dia 01</span>
-                <span>Dia {String(daysInMonth).padStart(2, "0")}</span>
+                <span>Dia {String(availableDaysInMonth).padStart(2, "0")}{isCurrentMonth ? " (Hoje · 20/10)" : ""}</span>
               </div>
             </div>
 
@@ -417,13 +486,26 @@ export function ComparisonHistoryView({
             <div className="space-y-1.5">
               <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Mês</p>
               <select
-                value={selectedMonthIndex}
-                onChange={(e) => { setSelectedMonthIndex(Number(e.target.value)); setStartDay(1); }}
+                value={safeMonthIndex}
+                onChange={(e) => {
+                  const m = Number(e.target.value);
+                  setSelectedMonthIndex(m);
+                  if (selectedYear === CURRENT_DATE_REFERENCE.year && m === CURRENT_DATE_REFERENCE.monthIndex) {
+                    setStartDay(Math.max(1, CURRENT_DATE_REFERENCE.day - dayRange + 1));
+                  } else {
+                    setStartDay(1);
+                  }
+                }}
                 className="rounded-lg border border-border/70 bg-card/80 px-2.5 py-1.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                {MONTH_NAMES_FULL.map((name, idx) => (
-                  <option key={idx} value={idx}>{name}</option>
-                ))}
+                {(isCurrentYear ? MONTH_NAMES_FULL.slice(0, CURRENT_DATE_REFERENCE.monthIndex + 1) : MONTH_NAMES_FULL).map((name, idx) => {
+                  const isCurrent = isCurrentYear && idx === CURRENT_DATE_REFERENCE.monthIndex;
+                  return (
+                    <option key={idx} value={idx}>
+                      {name}{isCurrent ? " (Em andamento · até dia 20)" : ""}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
@@ -434,7 +516,16 @@ export function ComparisonHistoryView({
                 {AVAILABLE_YEARS.map((y) => (
                   <button
                     key={y}
-                    onClick={() => setSelectedYear(y)}
+                    onClick={() => {
+                      setSelectedYear(y);
+                      let newM = safeMonthIndex;
+                      if (!isMonthAvailable(y, safeMonthIndex)) {
+                        newM = CURRENT_DATE_REFERENCE.monthIndex;
+                        setSelectedMonthIndex(newM);
+                      }
+                      const maxDays = getMaxAvailableDaysInMonth(y, newM);
+                      setStartDay((prev) => Math.max(1, Math.min(prev, maxDays - dayRange + 1)));
+                    }}
                     className={`rounded-md border px-2 py-1 font-mono text-[10px] font-bold transition-all ${
                       selectedYear === y
                         ? "border-primary bg-primary/20 text-primary"
@@ -505,6 +596,15 @@ export function ComparisonHistoryView({
             );
           })}
         </div>
+
+        {drillLevel === "month" && isCurrentYear && (
+          <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+            <Info className="h-4 w-4 shrink-0 text-primary" />
+            <p className="leading-relaxed">
+              <strong className="text-foreground">Série Temporal de 2026:</strong> O gráfico apresenta os dados consolidados apurados de <strong>Janeiro a Outubro de 2026</strong> (corte em 20/10/2026). Os meses de <strong>Novembro e Dezembro</strong> ainda não transcorreram, preservando a fidelidade histórica do sistema.
+            </p>
+          </div>
+        )}
 
         {drillLevel !== "day" && (
           <p className="text-center font-mono text-[10px] text-muted-foreground/50">
