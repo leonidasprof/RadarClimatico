@@ -354,7 +354,7 @@ export function getOrUpdateDailyMaxFeels(
     temperature_2m?: number[];
     apparent_temperature?: number[];
   },
-  sparseHourly?: { h: string; t: number; feels?: number }[]
+  sparseHourly?: { h: string; t: number; feels?: number | undefined }[]
 ): {
   maxFeels: number;
   peakZone: string;

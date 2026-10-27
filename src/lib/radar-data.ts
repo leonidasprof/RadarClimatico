@@ -520,6 +520,8 @@ export function heatVar(temp: number) {
   return "var(--heat-1)";
 }
 
+export type DayRange = 3 | 7 | 14 | 30;
+
 export type AlertLevel = "critico" | "alto" | "moderado";
 
 export type AlertItem = {
@@ -535,7 +537,7 @@ export type AlertItem = {
   recordedTemp?: number; // Temperatura registrada no momento exato em que o alerta foi gerado
   recordedFeels?: number; // Sensação térmica no momento do disparo
   currentTemp?: number; // Temperatura atual do bairro para detecção de mudança brusca
-  conditionShift?: string; // Mensagem informativa caso o tempo mude após o alerta
+  conditionShift?: string | undefined; // Mensagem informativa caso o tempo mude após o alerta
   isDynamic?: boolean; // Gerado automaticamente pela regra de negócio das APIs
 };
 

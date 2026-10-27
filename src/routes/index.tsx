@@ -34,6 +34,8 @@ import { MapLayerSwitcher } from "@/components/dashboard/MapLayerSwitcher";
 import { LoginPage } from "./login";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { TourProvider, useTour } from "@/context/TourContext";
+import { ClimaTourOverlay } from "@/components/tour/ClimaTourOverlay";
 import {
   Sun,
   Moon,
@@ -178,230 +180,251 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen">
-      <Header
-        activeTab={activeTab}
-        onSelectTab={(tab) => {
-          setActiveTab(tab);
-          if (tab === "tempo-real") setMapLayer("calor");
-        }}
-        onOpenContactModal={() => setContactModalOpen(true)}
-        weatherSnapshot={weatherSnapshot}
-        isSyncingWeather={isSyncingWeather}
-        onSyncWeather={() => syncWeather(false)}
-      />
-      <main className="mx-auto grid max-w-[1500px] gap-4 px-4 pb-14 lg:grid-cols-12">
-        {/* Visualização Padrão: Operação em Tempo Real (Mapa Térmico & Camadas) */}
-        {activeTab === "tempo-real" && (
-          <>
-            {mapLayer === "calor" && (
-              <>
-                <div className="lg:col-span-8 space-y-4">
-                  <Kpis weather={weatherSnapshot} />
-                  <MapPanel
-                    selected={selected}
-                    onSelect={setSelected}
-                    zonesList={currentZones}
-                    onOpenGreenDashboard={() => setActiveTab("verde")}
-                    activeLayer={mapLayer}
-                    onChangeLayer={setMapLayer}
-                  />
-                  {/* Linha 1 abaixo do mapa térmico: Índice Térmico e Histórico de Temperatura */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <RatingPanel
-                      zonesList={currentZones}
-                      onSelect={setSelected}
+    <TourProvider>
+      <TourRouteSync setActiveTab={setActiveTab} setMapLayer={setMapLayer} />
+      <div className="min-h-screen">
+        <Header
+          activeTab={activeTab}
+          onSelectTab={(tab) => {
+            setActiveTab(tab);
+            if (tab === "tempo-real") setMapLayer("calor");
+          }}
+          onOpenContactModal={() => setContactModalOpen(true)}
+          weatherSnapshot={weatherSnapshot}
+          isSyncingWeather={isSyncingWeather}
+          onSyncWeather={() => syncWeather(false)}
+        />
+        <main className="mx-auto grid max-w-[1500px] gap-4 px-4 pb-14 lg:grid-cols-12">
+          {/* Visualização Padrão: Operação em Tempo Real (Mapa Térmico & Camadas) */}
+          {activeTab === "tempo-real" && (
+            <>
+              {mapLayer === "calor" && (
+                <>
+                  <div className="lg:col-span-8 space-y-4">
+                    <Kpis weather={weatherSnapshot} />
+                    <MapPanel
                       selected={selected}
+                      onSelect={setSelected}
+                      zonesList={currentZones}
+                      onOpenGreenDashboard={() => setActiveTab("verde")}
+                      activeLayer={mapLayer}
+                      onChangeLayer={setMapLayer}
                     />
-                    <HistoryPanel
+                    {/* Linha 1 abaixo do mapa térmico: Índice Térmico e Histórico de Temperatura */}
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <RatingPanel
+                        zonesList={currentZones}
+                        onSelect={setSelected}
+                        selected={selected}
+                      />
+                      <HistoryPanel
+                        zone={selected}
+                        onOpenComparison={() => setActiveTab("historico")}
+                      />
+                    </div>
+                    {/* Linha 2 abaixo: Curva do Dia e Priorização de Infraestrutura Verde */}
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <HourlyPanel
+                        hourlyData={weatherSnapshot?.hourly}
+                        peakHour={weatherSnapshot?.peakHour}
+                        peakTemp={weatherSnapshot?.peakTemp}
+                      />
+                      <PriorityPanel onOpenGreenDashboard={() => setActiveTab("verde")} />
+                    </div>
+                  </div>
+                  <aside className="lg:col-span-4 space-y-4">
+                    <AlertsPanel
+                      alerts={alertsList}
+                      onOpenReportModal={() => setReportModalOpen(true)}
+                      onDispatchAlert={handleDispatchAlert}
+                    />
+                    <ZoneDetail
                       zone={selected}
                       onOpenComparison={() => setActiveTab("historico")}
+                      onOpenVegetalView={() => setMapLayer("vegetal")}
+                      onOpenVulnView={() => setMapLayer("vulnerabilidade")}
+                      onOpenNasaPower={() => setActiveTab("clima-nasa")}
+                      onOpenEnvironmentalAnalysis={() => setActiveTab("analise-ambiental")}
                     />
-                  </div>
-                  {/* Linha 2 abaixo: Curva do Dia e Priorização de Infraestrutura Verde */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <HourlyPanel
-                      hourlyData={weatherSnapshot?.hourly}
-                      peakHour={weatherSnapshot?.peakHour}
-                      peakTemp={weatherSnapshot?.peakTemp}
-                    />
-                    <PriorityPanel onOpenGreenDashboard={() => setActiveTab("verde")} />
-                  </div>
-                </div>
-                <aside className="lg:col-span-4 space-y-4">
-                  <AlertsPanel
-                    alerts={alertsList}
-                    onOpenReportModal={() => setReportModalOpen(true)}
-                    onDispatchAlert={handleDispatchAlert}
+                    <InsightsPanel />
+                  </aside>
+                </>
+              )}
+
+              {/* Visualização de Cobertura Vegetal integrada dentro do Mapa Térmico */}
+              {mapLayer === "vegetal" && (
+                <div className="lg:col-span-12" data-tour="sub-vegetal-view">
+                  <VegetationCoverView
+                    initialZone={selected}
+                    onSelectZone={setSelected}
+                    activeLayer={mapLayer}
+                    onChangeLayer={setMapLayer}
+                    onBackToThermalMap={() => setMapLayer("calor")}
                   />
-                  <ZoneDetail
-                    zone={selected}
-                    onOpenComparison={() => setActiveTab("historico")}
-                    onOpenVegetalView={() => setMapLayer("vegetal")}
-                    onOpenVulnView={() => setMapLayer("vulnerabilidade")}
-                    onOpenNasaPower={() => setActiveTab("clima-nasa")}
-                    onOpenEnvironmentalAnalysis={() => setActiveTab("analise-ambiental")}
-                  />
-                  <InsightsPanel />
-                </aside>
-              </>
-            )}
-
-            {/* Visualização de Cobertura Vegetal integrada dentro do Mapa Térmico */}
-            {mapLayer === "vegetal" && (
-              <div className="lg:col-span-12">
-                <VegetationCoverView
-                  initialZone={selected}
-                  onSelectZone={setSelected}
-                  activeLayer={mapLayer}
-                  onChangeLayer={setMapLayer}
-                  onBackToThermalMap={() => setMapLayer("calor")}
-                />
-              </div>
-            )}
-
-            {/* Visualização de Vulnerabilidade Social integrada dentro do Mapa Térmico */}
-            {mapLayer === "vulnerabilidade" && (
-              <div className="lg:col-span-12">
-                <SocialVulnerabilityView
-                  initialZone={selected}
-                  onSelectZone={setSelected}
-                  activeLayer={mapLayer}
-                  onChangeLayer={setMapLayer}
-                  onBackToThermalMap={() => setMapLayer("calor")}
-                />
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Módulo de Comparação e Histórico (Épico 1) */}
-        {activeTab === "historico" && (
-          <div className="lg:col-span-12">
-            <ComparisonHistoryView
-              initialZone={selected}
-              onSelectZone={setSelected}
-            />
-          </div>
-        )}
-
-        {/* Dashboard Verde (Épico 1) */}
-        {activeTab === "verde" && (
-          <div className="lg:col-span-12">
-            <GreenDashboardView
-              onSelectZone={(z) => {
-                setSelected(z);
-                setActiveTab("tempo-real");
-              }}
-            />
-          </div>
-        )}
-
-        {/* Dashboard Climático NASA POWER (Módulo 3 Arboris) */}
-        {activeTab === "clima-nasa" && (
-          <div className="lg:col-span-12">
-            <NasaPowerDashboardView onBack={() => setActiveTab("tempo-real")} />
-          </div>
-        )}
-
-        {/* Análise Ambiental MapBiomas + Landsat (Módulos 1, 2, 4 e 5 Arboris) */}
-        {activeTab === "analise-ambiental" && (
-          <div className="lg:col-span-12">
-            <EnvironmentalAnalysisView
-              onBack={() => setActiveTab("tempo-real")}
-              onSelectMunicipality={(m) => {
-                const matched = zones.find((z) => z.name.toLowerCase().includes(m.name.toLowerCase()));
-                if (matched) {
-                  setSelected(matched);
-                  setActiveTab("tempo-real");
-                }
-              }}
-            />
-          </div>
-        )}
-
-        {/* Módulo de Alertas em Vista Expandida (Épico 1) */}
-        {activeTab === "alertas" && (
-          <div className="lg:col-span-12 space-y-4">
-            <AlertsPanel
-              alerts={alertsList}
-              onOpenReportModal={() => setReportModalOpen(true)}
-              onDispatchAlert={handleDispatchAlert}
-              expandedView
-            />
-          </div>
-        )}
-
-        {/* Índice Térmico Completo */}
-        {activeTab === "indice" && (
-          <div className="lg:col-span-12 space-y-4">
-            <div className="panel p-6">
-              <div className="flex items-center justify-between mb-4 border-b border-border/70 pb-3">
-                <div>
-                  <h2 className="text-lg font-bold">Matriz de Índice Térmico e Risco Microclimático</h2>
-                  <p className="text-xs text-muted-foreground">Classificação de calor e estresse térmico em todos os microterritórios monitorados do Recife</p>
                 </div>
-                <button
-                  onClick={() => setActiveTab("tempo-real")}
-                  className="text-xs text-primary hover:underline cursor-pointer"
-                >
-                  ← Voltar ao mapa operacional
-                </button>
-              </div>
-              <RatingPanel
-                zonesList={currentZones}
-                onSelect={(z) => {
+              )}
+
+              {/* Visualização de Vulnerabilidade Social integrada dentro do Mapa Térmico */}
+              {mapLayer === "vulnerabilidade" && (
+                <div className="lg:col-span-12" data-tour="sub-vuln-view">
+                  <SocialVulnerabilityView
+                    initialZone={selected}
+                    onSelectZone={setSelected}
+                    activeLayer={mapLayer}
+                    onChangeLayer={setMapLayer}
+                    onBackToThermalMap={() => setMapLayer("calor")}
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Módulo de Comparação e Histórico (Épico 1) */}
+          {activeTab === "historico" && (
+            <div className="lg:col-span-12" data-tour="sub-history-view">
+              <ComparisonHistoryView
+                initialZone={selected}
+                onSelectZone={setSelected}
+              />
+            </div>
+          )}
+
+          {/* Dashboard Verde (Épico 1) */}
+          {activeTab === "verde" && (
+            <div className="lg:col-span-12" data-tour="sub-green-view">
+              <GreenDashboardView
+                onSelectZone={(z) => {
                   setSelected(z);
                   setActiveTab("tempo-real");
                 }}
-                selected={selected}
               />
             </div>
-          </div>
-        )}
-      </main>
-      <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground bg-card/20">
-        <div className="mx-auto max-w-4xl px-4 flex flex-col items-center gap-4">
-          <img
-            src={isDark ? "/logo-arboris.png" : "/logo-arboris2.png"}
-            alt="Logo Arboris"
-            className="h-16 object-contain"
-          />
+          )}
 
-          <Button
-            asChild
-            variant="outline"
-            className="gap-2.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 shadow-sm transition-all duration-200 h-10 px-5 font-medium rounded-lg"
-          >
-            <a
-              href="https://radarclimatico.vercel.app/site_arboris/index.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Acessar o portal/site do Radar Climático Arboris"
-              id="btn-site-radarclimatico"
+          {/* Dashboard Climático NASA POWER (Módulo 3 Arboris) */}
+          {activeTab === "clima-nasa" && (
+            <div className="lg:col-span-12" data-tour="sub-nasa-view">
+              <NasaPowerDashboardView onBack={() => setActiveTab("tempo-real")} />
+            </div>
+          )}
+
+          {/* Análise Ambiental MapBiomas + Landsat (Módulos 1, 2, 4 e 5 Arboris) */}
+          {activeTab === "analise-ambiental" && (
+            <div className="lg:col-span-12" data-tour="sub-mapbiomas-view">
+              <EnvironmentalAnalysisView
+                onBack={() => setActiveTab("tempo-real")}
+                onSelectMunicipality={(m) => {
+                  const matched = zones.find((z) => z.name.toLowerCase().includes(m.name.toLowerCase()));
+                  if (matched) {
+                    setSelected(matched);
+                    setActiveTab("tempo-real");
+                  }
+                }}
+              />
+            </div>
+          )}
+
+          {/* Módulo de Alertas em Vista Expandida (Épico 1) */}
+          {activeTab === "alertas" && (
+            <div className="lg:col-span-12 space-y-4">
+              <AlertsPanel
+                alerts={alertsList}
+                onOpenReportModal={() => setReportModalOpen(true)}
+                onDispatchAlert={handleDispatchAlert}
+                expandedView
+              />
+            </div>
+          )}
+
+          {/* Índice Térmico Completo */}
+          {activeTab === "indice" && (
+            <div className="lg:col-span-12 space-y-4">
+              <div className="panel p-6">
+                <div className="flex items-center justify-between mb-4 border-b border-border/70 pb-3">
+                  <div>
+                    <h2 className="text-lg font-bold">Matriz de Índice Térmico e Risco Microclimático</h2>
+                    <p className="text-xs text-muted-foreground">Classificação de calor e estresse térmico em todos os microterritórios monitorados do Recife</p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("tempo-real")}
+                    className="text-xs text-primary hover:underline cursor-pointer"
+                  >
+                    ← Voltar ao mapa operacional
+                  </button>
+                </div>
+                <RatingPanel
+                  zonesList={currentZones}
+                  onSelect={(z) => {
+                    setSelected(z);
+                    setActiveTab("tempo-real");
+                  }}
+                  selected={selected}
+                />
+              </div>
+            </div>
+          )}
+        </main>
+        <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground bg-card/20">
+          <div className="mx-auto max-w-4xl px-4 flex flex-col items-center gap-4">
+            <img
+              src={isDark ? "/logo-arboris.png" : "/logo-arboris2.png"}
+              alt="Logo Arboris"
+              className="h-16 object-contain"
+            />
+
+            <Button
+              asChild
+              variant="outline"
+              className="gap-2.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 shadow-sm transition-all duration-200 h-10 px-5 font-medium rounded-lg"
             >
-              <Globe className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-              <span>Acessar Portal Radar Climático</span>
-              <ExternalLink className="h-3.5 w-3.5 opacity-70 shrink-0" />
-            </a>
-          </Button>
+              <a
+                href="https://radarclimatico.vercel.app/site_arboris/index.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Acessar o portal/site do Radar Climático Arboris"
+                id="btn-site-radarclimatico"
+              >
+                <Globe className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <span>Acessar Portal Radar Climático</span>
+                <ExternalLink className="h-3.5 w-3.5 opacity-70 shrink-0" />
+              </a>
+            </Button>
 
-          <p className="text-muted-foreground/80">
-            Radar Climático · Plataforma Arboris Integrada · Dados reais: Google Earth Engine, Landsat 8/9, MapBiomas Coleção 11 e NASA POWER
-          </p>
-        </div>
-      </footer>
-      <ReportAlertModal
-        open={reportModalOpen}
-        onOpenChange={setReportModalOpen}
-        onAddAlert={handleAddAlert}
-      />
-      <UserContactModal
-        open={contactModalOpen}
-        onOpenChange={setContactModalOpen}
-      />
-    </div>
+            <p className="text-muted-foreground/80">
+              Radar Climático · Plataforma Arboris Integrada · Dados reais: Google Earth Engine, Landsat 8/9, MapBiomas Coleção 11 e NASA POWER
+            </p>
+          </div>
+        </footer>
+        <ReportAlertModal
+          open={reportModalOpen}
+          onOpenChange={setReportModalOpen}
+          onAddAlert={handleAddAlert}
+        />
+        <UserContactModal
+          open={contactModalOpen}
+          onOpenChange={setContactModalOpen}
+        />
+        <ClimaTourOverlay />
+      </div>
+    </TourProvider>
   );
+}
+
+function TourRouteSync({
+  setActiveTab,
+  setMapLayer,
+}: {
+  setActiveTab: (tab: NavTab) => void;
+  setMapLayer: (layer: "calor" | "vegetal" | "vulnerabilidade") => void;
+}) {
+  const { registerNavHandler } = useTour();
+  useEffect(() => {
+    registerNavHandler((tab: string, layer?: "calor" | "vegetal" | "vulnerabilidade") => {
+      setActiveTab(tab as NavTab);
+      if (layer) setMapLayer(layer);
+    });
+  }, [registerNavHandler, setActiveTab, setMapLayer]);
+  return null;
 }
 
 function Header({
@@ -458,7 +481,7 @@ function Header({
   return (
     <header className="mx-auto mb-4 flex max-w-[1500px] flex-col gap-4 px-4 pt-6 pb-4">
       {/* Faixa superior */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between" data-tour="header-title">
         {/* Logo maior à esquerda */}
         <img
           src={isDark ? "/logo-arboris.png" : "/logo-arboris2.png"}
@@ -601,7 +624,7 @@ function Header({
             </svg>
           </div>
 
-          <nav className="flex items-center gap-1 rounded-lg border border-border bg-card/60 p-1">
+          <nav className="flex items-center gap-1 rounded-lg border border-border bg-card/60 p-1" data-tour="nav-tabs">
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
@@ -623,7 +646,7 @@ function Header({
         </div>
 
         {/* Indicadores de status compactos e proporcionais na mesma linha à direita */}
-        <div className="flex items-center gap-2 shrink-0 pr-1">
+        <div className="flex items-center gap-2 shrink-0 pr-1" data-tour="sensors-status">
           <div
             className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 whitespace-nowrap"
             title="Sensores IoT e estações ativas em campo"
@@ -686,41 +709,41 @@ function Kpis({ weather }: { weather?: RealtimeWeatherSnapshot | null }) {
     tooltip?: string | undefined;
     tone: string;
   }[] = [
-    {
-      label: "Temp. média da cidade",
-      value: avgTemp,
-      unit: "°C",
-      delta: weather?.source === "live" ? "Ao vivo · Open-Meteo API" : "+2,3 vs média histórica",
-      tone: "var(--heat-4)",
-    },
-    {
-      label: "Maior temperatura do dia",
-      value: maxTempFormatted,
-      unit: "°C",
-      delta: tempStatus,
-      subDelta: `${maxTempZone}${maxTempHour}`,
-      tooltip: maxFeelsFormatted
-        ? `Temperatura máx: ${maxTempFormatted}°C em ${maxTempZone}${maxTempHour} · Sensação térmica: ${maxFeelsFormatted}°C`
-        : undefined,
-      tone: tempTone,
-    },
-    {
-      label: "Zonas em criticidade",
-      value: critCount,
-      unit: `de ${totalCount}`,
-      delta: "Monitoramento contínuo",
-      tone: "var(--heat-4)",
-    },
-    {
-      label: "População exposta",
-      value: "318",
-      unit: "mil",
-      delta: "62% em alta vulnerabilidade",
-      tone: "var(--accent)",
-    },
-  ];
+      {
+        label: "Temp. média da cidade",
+        value: avgTemp,
+        unit: "°C",
+        delta: weather?.source === "live" ? "Ao vivo · Open-Meteo API" : "+2,3 vs média histórica",
+        tone: "var(--heat-4)",
+      },
+      {
+        label: "Maior temperatura do dia",
+        value: maxTempFormatted,
+        unit: "°C",
+        delta: tempStatus,
+        subDelta: `${maxTempZone}${maxTempHour}`,
+        tooltip: maxFeelsFormatted
+          ? `Temperatura máx: ${maxTempFormatted}°C em ${maxTempZone}${maxTempHour} · Sensação térmica: ${maxFeelsFormatted}°C`
+          : undefined,
+        tone: tempTone,
+      },
+      {
+        label: "Zonas em criticidade",
+        value: critCount,
+        unit: `de ${totalCount}`,
+        delta: "Monitoramento contínuo",
+        tone: "var(--heat-4)",
+      },
+      {
+        label: "População exposta",
+        value: "318",
+        unit: "mil",
+        delta: "62% em alta vulnerabilidade",
+        tone: "var(--accent)",
+      },
+    ];
   return (
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-tour="kpi-macro">
       {items.map((k) => (
         <div key={k.label} title={k.tooltip} className="panel p-4 flex flex-col justify-between min-h-[110px]">
           <div>
@@ -788,7 +811,7 @@ function MapPanel({
   };
 
   return (
-    <section className="panel overflow-hidden">
+    <section className="panel overflow-hidden" data-tour="map-panel">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-4 py-3">
         <div>
           <h2 className="text-sm font-semibold">Mapa térmico · Região Metropolitana do Recife</h2>
@@ -826,7 +849,9 @@ function MapPanel({
           </div>
 
           {/* Seletor de camadas – exclui "Calor" pois já estamos nessa camada */}
-          <MapLayerSwitcher activeLayer={activeLayer} onChangeLayer={onChangeLayer} excludeLayers={["calor"]} />
+          <div data-tour="map-layers">
+            <MapLayerSwitcher activeLayer={activeLayer} onChangeLayer={onChangeLayer} excludeLayers={["calor"]} />
+          </div>
         </div>
       </div>
 
@@ -970,7 +995,7 @@ function HourlyPanel({
   const peakT = peakTemp !== undefined ? peakTemp.toFixed(1).replace(".", ",") : "36,8";
 
   return (
-    <section className="panel p-4">
+    <section className="panel p-4" data-tour="hourly-curve">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold">Curva térmica do dia</h2>
         {hourlyData && hourlyData.length > 0 && (
@@ -1015,7 +1040,7 @@ function HourlyPanel({
 
 function PriorityPanel({ onOpenGreenDashboard }: { onOpenGreenDashboard?: () => void }) {
   return (
-    <section className="panel p-4">
+    <section className="panel p-4" data-tour="green-priority">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold">Priorização de infraestrutura verde</h2>
         {onOpenGreenDashboard && (
@@ -1110,7 +1135,7 @@ function AlertsPanel({
   ] as const;
 
   return (
-    <section className="panel p-4">
+    <section className="panel p-4" data-tour="alerts-panel">
       {/* Cabeçalho da Central de Alertas: Alternância entre Alertas do Dia e Histórico */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3 mb-3">
         <div className="flex items-center gap-1.5 p-1 rounded-lg bg-card/60 border border-border/70 shadow-xs">
@@ -1118,16 +1143,16 @@ function AlertsPanel({
             type="button"
             onClick={() => setViewMode("ativos")}
             className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${viewMode === "ativos"
-                ? "bg-destructive/15 text-destructive font-semibold shadow-xs ring-1 ring-destructive/30"
-                : "text-muted-foreground hover:text-foreground"
+              ? "bg-destructive/15 text-destructive font-semibold shadow-xs ring-1 ring-destructive/30"
+              : "text-muted-foreground hover:text-foreground"
               }`}
           >
             <span className={activeAlerts.length > 0 ? "h-2 w-2 rounded-full bg-destructive animate-pulse" : "h-2 w-2 rounded-full bg-muted-foreground/50"} />
             <span>Alertas do dia</span>
             <span
               className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] ${viewMode === "ativos"
-                  ? "bg-destructive text-destructive-foreground font-bold"
-                  : "bg-muted text-muted-foreground"
+                ? "bg-destructive text-destructive-foreground font-bold"
+                : "bg-muted text-muted-foreground"
                 }`}
             >
               {activeAlerts.length}
@@ -1138,8 +1163,8 @@ function AlertsPanel({
             type="button"
             onClick={() => setViewMode("historico")}
             className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${viewMode === "historico"
-                ? "bg-secondary text-foreground font-semibold shadow-xs ring-1 ring-border"
-                : "text-muted-foreground hover:text-foreground"
+              ? "bg-secondary text-foreground font-semibold shadow-xs ring-1 ring-border"
+              : "text-muted-foreground hover:text-foreground"
               }`}
           >
             <History className="h-3 w-3" />
@@ -1237,8 +1262,8 @@ function AlertsPanel({
                   key={tab.id}
                   onClick={() => setFilter(tab.id)}
                   className={`group flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer ${isActive
-                      ? tab.activeClass
-                      : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                    ? tab.activeClass
+                    : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
                     }`}
                 >
                   <span
@@ -1248,8 +1273,8 @@ function AlertsPanel({
                   <span>{tab.label}</span>
                   <span
                     className={`ml-0.5 rounded-full px-1.5 py-0.2 font-mono text-[10px] ${isActive
-                        ? "bg-foreground/10 text-foreground font-bold"
-                        : "bg-muted text-muted-foreground"
+                      ? "bg-foreground/10 text-foreground font-bold"
+                      : "bg-muted text-muted-foreground"
                       }`}
                   >
                     {tab.count}
@@ -1400,7 +1425,7 @@ function ZoneDetail({
   ];
 
   return (
-    <section className="panel p-4">
+    <section className="panel p-4" data-tour="zone-detail">
       {/* Cabeçalho do Bairro Selecionado com Classificação em Destaque */}
       <div className="flex items-start justify-between gap-3">
         <div>
