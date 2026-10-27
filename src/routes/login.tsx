@@ -177,7 +177,7 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void } = 
 
         {/* Rodapé da Tela */}
         <p className="mt-4 text-center text-xs text-muted-foreground font-mono">
-          Radar Climático v1.0 MVP
+          Radar Climático v2.0 MVP
         </p>
       </div>
     </div>

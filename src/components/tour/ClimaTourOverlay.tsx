@@ -80,11 +80,11 @@ export function ClimaTourOverlay() {
       };
       setTargetRect(calculatedRect);
 
-      // Posicionamento inteligente do Pop-up Laranja
-      const popupWidth = 380;
-      const popupHeight = 270;
+      // Posicionamento inteligente e responsivo do Pop-up Laranja
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
+      const popupWidth = Math.min(380, windowWidth - 24);
+      const popupHeight = 280;
 
       let top = 0;
       let left = 0;
@@ -96,7 +96,7 @@ export function ClimaTourOverlay() {
           top = calculatedRect.top + calculatedRect.height + 14;
           left = calculatedRect.left + calculatedRect.width / 2 - popupWidth / 2;
         } else {
-          top = Math.max(16, calculatedRect.top - popupHeight - 14);
+          top = Math.max(12, calculatedRect.top - popupHeight - 14);
           left = calculatedRect.left + calculatedRect.width / 2 - popupWidth / 2;
         }
       } else if (pref === "top") {
@@ -112,7 +112,7 @@ export function ClimaTourOverlay() {
           left = calculatedRect.left - popupWidth - 14;
           top = calculatedRect.top + 20;
         } else {
-          left = Math.min(windowWidth - popupWidth - 16, calculatedRect.left + calculatedRect.width + 14);
+          left = Math.min(windowWidth - popupWidth - 12, calculatedRect.left + calculatedRect.width + 14);
           top = calculatedRect.top + 20;
         }
       } else if (pref === "right") {
@@ -120,13 +120,13 @@ export function ClimaTourOverlay() {
           left = calculatedRect.left + calculatedRect.width + 14;
           top = calculatedRect.top + 20;
         } else {
-          left = Math.max(16, calculatedRect.left - popupWidth - 14);
+          left = Math.max(12, calculatedRect.left - popupWidth - 14);
           top = calculatedRect.top + 20;
         }
       }
 
-      left = Math.max(16, Math.min(windowWidth - popupWidth - 16, left));
-      top = Math.max(16, Math.min(windowHeight - popupHeight - 16, top));
+      left = Math.max(12, Math.min(windowWidth - popupWidth - 12, left));
+      top = Math.max(12, Math.min(windowHeight - popupHeight - 12, top));
 
       setPopupPos({ top, left });
     } else {
@@ -236,7 +236,7 @@ export function ClimaTourOverlay() {
           </h2>
 
           <p className="text-sm text-slate-300 leading-relaxed mb-6 px-2">
-            Eu sou o <strong>CLIMA</strong>, seu caranguejo guia! Posso te guiar pela visão geral do sistema ou te levar para conhecer as <strong>funcionalidades internas</strong> (MapBiomas, NASA, Simulador Verde e mais)!
+            Eu sou o <strong>CLIMA</strong>, seu caranguejo guia! Posso te guiar pela visão geral do sistema ou te levar para conhecer as <strong>funcionalidades internas</strong>!
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -244,7 +244,7 @@ export function ClimaTourOverlay() {
               onClick={acceptTour}
               className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-3 font-semibold text-white shadow-lg shadow-orange-500/30 hover:from-orange-600 hover:to-amber-600 active:scale-95 transition-all cursor-pointer"
             >
-              <span>Sim, guiar-me!</span>
+              <span>Vamos</span>
               <ChevronRight className="h-4 w-4" />
             </button>
 
@@ -271,7 +271,7 @@ export function ClimaTourOverlay() {
         {/* MODAL DO MENU PRINCIPAL GAMIFICADO */}
         {isMenuOpen && (
           <div className="fixed inset-0 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/80 animate-in fade-in z-50 overflow-y-auto">
-            <div className="relative w-full max-w-2xl rounded-3xl border border-orange-500/30 bg-slate-900/98 p-6 text-white shadow-2xl backdrop-blur-xl my-8">
+            <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-orange-500/30 bg-slate-900/98 p-4 sm:p-6 text-white shadow-2xl backdrop-blur-xl my-4 sm:my-8">
               {/* Cabeçalho do Menu Principal */}
               <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
                 <div className="flex items-center gap-3">
@@ -279,11 +279,8 @@ export function ClimaTourOverlay() {
                     <ClimaMascot size="sm" variant="popup" isWaving={true} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                      <span>Menu Principal do Tour</span>
-                      <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-orange-400 border border-orange-500/30">
-                        CLIMA GUIA
-                      </span>
+                    <h3 className="font-bold text-lg text-white">
+                      Menu Principal do Tour
                     </h3>
                     <p className="text-xs text-slate-400">
                       Escolha navegar pela visão geral ou explorar as funcionalidades internas avançadas
@@ -348,12 +345,7 @@ export function ClimaTourOverlay() {
                             {originalIdx + 1}
                           </span>
                           <div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-xs font-bold text-white">{step.menuTitle}</p>
-                              <span className="text-[10px] font-mono text-amber-300/80 bg-amber-500/10 px-1.5 py-0.2 rounded">
-                                {step.badgeLabel}
-                              </span>
-                            </div>
+                            <p className="text-xs font-bold text-white">{step.menuTitle}</p>
                             <p className="text-[11px] text-slate-400 line-clamp-1">{step.title}</p>
                           </div>
                         </div>
@@ -390,12 +382,7 @@ export function ClimaTourOverlay() {
                               {step.category === "sub-vegetacao" && <Layers className="h-4 w-4 text-teal-400" />}
                             </div>
                             <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-bold text-sm text-white">{step.menuTitle}</h4>
-                                <span className="rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 px-2 py-0.5 text-[10px] font-mono">
-                                  {step.badgeLabel}
-                                </span>
-                              </div>
+                              <h4 className="font-bold text-sm text-white">{step.menuTitle}</h4>
                               <p className="text-xs text-slate-300 mt-1 leading-snug">{step.title}</p>
                               <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                                 {step.climaSpeech}
@@ -482,7 +469,7 @@ export function ClimaTourOverlay() {
         {/* POP-UP LARANJA DA IDENTIDADE VISUAL COM BOTÃO "MENU PRINCIPAL" */}
         {!isMenuOpen && currentStep && (
           <div
-            className="fixed z-50 w-full max-w-[380px] animate-in fade-in zoom-in-95 duration-200 transition-all overflow-visible"
+            className="fixed z-50 w-[calc(100vw-24px)] sm:w-full max-w-[380px] animate-in fade-in zoom-in-95 duration-200 transition-all overflow-visible"
             style={{
               top: `${popupPos.top}px`,
               left: `${popupPos.left}px`,
@@ -499,11 +486,8 @@ export function ClimaTourOverlay() {
                     <ClimaMascot size="sm" variant="popup" isWaving={true} />
                   </div>
                   <div>
-                    <span className="inline-block rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase text-white">
-                      {currentStep.badgeLabel}
-                    </span>
-                    <span className="text-[11px] font-mono text-white/90 ml-2 font-medium">
-                      {activeStepIndex + 1}/{totalSteps}
+                    <span className="inline-block rounded-full bg-white/25 px-2.5 py-0.5 text-[11px] font-mono font-bold tracking-wide text-white">
+                      Passo {activeStepIndex + 1} de {totalSteps}
                     </span>
                   </div>
                 </div>

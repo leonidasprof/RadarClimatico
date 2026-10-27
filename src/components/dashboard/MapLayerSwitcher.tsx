@@ -87,7 +87,8 @@ export function MapLayerSwitcher({
                   isActive ? "scale-110" : "group-hover:scale-110 opacity-80"
                 }`}
               />
-              <span className="whitespace-nowrap">{l.label}</span>
+              <span className="hidden sm:inline whitespace-nowrap">{l.label}</span>
+              <span className="sm:hidden whitespace-nowrap">{l.shortLabel}</span>
             </button>
           );
         })}

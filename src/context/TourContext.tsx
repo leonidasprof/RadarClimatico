@@ -28,7 +28,7 @@ interface TourContextType {
 
 const TourContext = createContext<TourContextType | undefined>(undefined);
 
-const STORAGE_KEY = "arboris_clima_tour_v1";
+const STORAGE_KEY = "arboris_clima_tour_v2";
 
 export function TourProvider({ children }: { children: React.ReactNode }) {
   const [tourState, setTourState] = useState<TourState>("idle");

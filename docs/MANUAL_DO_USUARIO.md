@@ -1,6 +1,6 @@
 # Manual do Usuário · Radar Climático Arboris
 > **Documento:** Guia Oficial de Operação e Uso do Sistema  
-> **Versão:** 1.3.0  
+> **Versão:** 2.0.0  
 > **Data:** Outubro de 2026  
 > **Público-Alvo:** Gestores Públicos, Coordenadores da Defesa Civil (CODECIR), Agentes de Saúde Pública (UPAs), Técnicos da EMLURB, Planejadores Urbanos e Operadores do COP-ARIES.
 

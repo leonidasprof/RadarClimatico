@@ -481,38 +481,43 @@ function Header({
   return (
     <header className="mx-auto mb-4 flex max-w-[1500px] flex-col gap-4 px-4 pt-6 pb-4">
       {/* Faixa superior */}
-      <div className="flex items-center justify-between" data-tour="header-title">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3" data-tour="header-title">
         {/* Logo maior à esquerda */}
-        <img
-          src={isDark ? "/logo-arboris.png" : "/logo-arboris2.png"}
-          alt="Arboris Logo"
-          className="h-16 w-auto object-contain"
-        />
+        <div className="flex items-center gap-3 min-w-0">
+          <img
+            src={isDark ? "/logo-arboris.png" : "/logo-arboris2.png"}
+            alt="Arboris Logo"
+            className="h-11 sm:h-14 md:h-16 w-auto object-contain shrink-0"
+          />
 
-        {/* Texto principal + localização alinhados à esquerda da logo */}
-        <div className="flex flex-col items-start ml-4">
-          <h1 className="text-xl font-bold">
-            SISTEMA DE MONITORAMENTO E ALERTA DE ILHAS DE CALOR
-          </h1>
-          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            Arboris · Recife / PE
-          </p>
+          {/* Texto principal + localização alinhados à esquerda da logo */}
+          <div className="flex flex-col items-start min-w-0">
+            <h1 className="text-sm sm:text-base md:text-xl font-bold leading-tight line-clamp-2 sm:line-clamp-none">
+              SISTEMA DE MONITORAMENTO E ALERTA DE ILHAS DE CALOR
+            </h1>
+            <p className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              Arboris · Recife / PE
+            </p>
+          </div>
         </div>
 
         {/* Botões à direita */}
-        <div className="flex items-center gap-2.5 ml-auto">
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end sm:self-auto ml-auto sm:ml-0">
           {/* Badge Interativo com Horário em Tempo Real e Sincronização ao lado do botão de tema */}
           {onSyncWeather && (
             <button
               onClick={onSyncWeather}
               disabled={isSyncingWeather}
               type="button"
-              className="flex items-center gap-1.5 rounded-full border border-sky-500/40 bg-sky-500/10 px-3 py-1.5 whitespace-nowrap hover:bg-sky-500/20 transition-all cursor-pointer shadow-xs disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-full border border-sky-500/40 bg-sky-500/10 px-2.5 sm:px-3 py-1.5 whitespace-nowrap hover:bg-sky-500/20 transition-all cursor-pointer shadow-xs disabled:opacity-60"
               title="Clique para sincronizar o clima ao vivo via Open-Meteo & NASA POWER"
             >
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span className="font-mono text-xs text-sky-400 font-semibold">
+              <span className="font-mono text-xs text-sky-400 font-semibold hidden sm:inline">
                 {isSyncingWeather ? "Sincronizando..." : `Ao vivo · ${currentTime}`}
+              </span>
+              <span className="font-mono text-xs text-sky-400 font-semibold sm:hidden">
+                {currentTime}
               </span>
             </button>
           )}
@@ -611,20 +616,11 @@ function Header({
         </div>
       </div>
 
-      {/* Faixa inferior: menus de navegação ampliados e sensores na MESMA linha */}
-      <div className="flex items-center justify-between gap-3 flex-nowrap py-1 px-1">
-        {/* Alerta piscando + navegação alinhados à esquerda */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 ring-1 ring-primary/40 ml-1">
-            <span className="absolute inset-0 rounded-lg bg-primary/25 pulse-ring" />
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <circle cx="12" cy="12" r="8" className="text-primary" />
-              <circle cx="12" cy="12" r="3.5" className="text-primary" />
-              <path d="M12 4v16M4 12h16" className="text-primary/50" />
-            </svg>
-          </div>
-
-          <nav className="flex items-center gap-1 rounded-lg border border-border bg-card/60 p-1" data-tour="nav-tabs">
+      {/* Faixa inferior: menus de navegação e sensores */}
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 py-1 px-1">
+        {/* Navegação principal alinhada à esquerda */}
+        <div className="flex items-center min-w-0 overflow-x-auto no-scrollbar py-0.5">
+          <nav className="flex items-center gap-1 rounded-lg border border-border bg-card/60 p-1 overflow-x-auto no-scrollbar scroll-smooth" data-tour="nav-tabs">
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
@@ -632,9 +628,9 @@ function Header({
                   key={item.id}
                   onClick={() => onSelectTab(item.id)}
                   className={
-                    "rounded-md px-3 py-1.5 transition-colors cursor-pointer text-xs sm:text-sm font-medium whitespace-nowrap " +
+                    "rounded-md px-3 py-1.5 transition-colors cursor-pointer text-xs sm:text-sm font-medium whitespace-nowrap shrink-0 " +
                     (isActive
-                      ? "bg-primary text-primary-foreground shadow-xs"
+                      ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/40")
                   }
                 >
@@ -646,7 +642,7 @@ function Header({
         </div>
 
         {/* Indicadores de status compactos e proporcionais na mesma linha à direita */}
-        <div className="flex items-center gap-2 shrink-0 pr-1" data-tour="sensors-status">
+        <div className="flex items-center gap-2 shrink-0 self-end lg:self-auto pr-1" data-tour="sensors-status">
           <div
             className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 whitespace-nowrap"
             title="Sensores IoT e estações ativas em campo"
@@ -830,15 +826,15 @@ function MapPanel({
 
         <div className="flex items-center gap-2">
           {/* Seletor rápido de foco territorial */}
-          <div className="hidden sm:flex items-center gap-1 text-xs">
-            <span className="text-muted-foreground text-[11px]">Bairro:</span>
+          <div className="flex items-center gap-1 text-xs">
+            <span className="text-muted-foreground text-[11px] hidden xs:inline">Bairro:</span>
             <select
               value={selected.id}
               onChange={(e) => {
                 const found = activeZones.find((z) => z.id === e.target.value);
                 if (found) onSelect(found);
               }}
-              className="rounded border border-border bg-background px-2 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+              className="rounded border border-border bg-background px-2 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer max-w-[120px] sm:max-w-none"
             >
               {activeZones.map((z) => (
                 <option key={z.id} value={z.id}>
@@ -855,7 +851,7 @@ function MapPanel({
         </div>
       </div>
 
-      <div className="relative h-[490px]">
+      <div className="relative h-[380px] sm:h-[490px]">
         {/* malha viária esquemática do Recife */}
         <RecifeStreetMesh className="absolute inset-0 h-full w-full" />
 
