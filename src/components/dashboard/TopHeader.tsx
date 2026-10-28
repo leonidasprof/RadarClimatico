@@ -222,13 +222,12 @@ export function TopHeader({
         </div>
 
         {/* LADO DIREITO: QUADRINHO UNIFICADO (ON LINE + DATA/HORA/CLIMA) + TEMA + PERFIL */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-end md:self-auto ml-auto">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-end md:self-auto ml-auto" data-tour="sensors-status">
           {/* QUADRINHO UNIFICADO: STATUS ON LINE + HORA + DATA + ÍCONE DO CLIMA */}
           <button
             onClick={onSyncWeather}
             disabled={isSyncingWeather}
             type="button"
-            data-tour="sensors-status"
             className="flex items-center gap-2 sm:gap-2.5 rounded-xl border border-border/80 bg-card/75 px-2.5 sm:px-3 py-1.5 text-xs transition-colors hover:bg-card cursor-pointer shadow-xs"
             title="Conexão com estações meteorológicas (clique para sincronizar)"
           >

@@ -671,74 +671,86 @@ function ThermalIndexTable({
   const sorted = [...zonesList].sort((a, b) => b.temp - a.temp);
 
   return (
-    <section className="panel p-4 flex flex-col justify-between h-full shadow-xs" data-tour="thermal-index">
-      <div>
-        <div className="flex items-center justify-between pb-2 border-b border-border/60">
-          <div>
-            <h3 className="text-xs sm:text-sm font-bold text-foreground">Índice Térmico por bairro</h3>
-            <p className="text-[10px] text-muted-foreground">Classificação de calor e sensação térmica</p>
+    <section className="panel p-4 sm:p-5 flex flex-col justify-between h-full shadow-xs" data-tour="thermal-index">
+      <div className="flex-1 flex flex-col justify-between">
+        <div>
+          <div className="flex items-center justify-between pb-2.5 border-b border-border/60">
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold text-foreground">Índice Térmico por bairro</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Classificação de calor e sensação térmica</p>
+            </div>
+            {onViewAll && (
+              <button
+                type="button"
+                onClick={onViewAll}
+                className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>Ver todos</span>
+                <span>→</span>
+              </button>
+            )}
           </div>
-          {onViewAll && (
-            <button
-              onClick={onViewAll}
-              className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
-            >
-              <span>Ver todos</span>
-              <span>→</span>
-            </button>
-          )}
+
+          <div className="mt-2 overflow-x-auto no-scrollbar">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-border/60 text-[10px] font-mono uppercase text-muted-foreground">
+                  <th className="py-2 px-2 font-normal">#</th>
+                  <th className="py-2 px-2 font-normal">Bairro</th>
+                  <th className="py-2 px-2 font-normal text-right">Temp. (°C)</th>
+                  <th className="py-2 px-2 font-normal text-right">Sensação (°C)</th>
+                  <th className="py-2 px-2 font-normal text-center">Classe</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 font-mono">
+                {sorted.map((z, idx) => {
+                  const isSelected = z.id === selected.id;
+                  const rColor = ratingDefinitions[z.rating]?.color || heatVar(z.temp);
+                  return (
+                    <tr
+                      key={z.id}
+                      onClick={() => onSelect(z)}
+                      className={`transition-colors cursor-pointer ${
+                        isSelected
+                          ? "bg-secondary/90 font-bold"
+                          : "hover:bg-muted/50"
+                      }`}
+                    >
+                      <td className="py-2.5 sm:py-3 px-2 text-muted-foreground">{idx + 1}</td>
+                      <td className="py-2.5 sm:py-3 px-2 font-sans font-medium text-foreground">
+                        {z.name}
+                      </td>
+                      <td className="py-2.5 sm:py-3 px-2 text-right">{z.temp.toFixed(1).replace(".", ",")}</td>
+                      <td className="py-2.5 sm:py-3 px-2 text-right text-muted-foreground">
+                        {z.feels.toFixed(1).replace(".", ",")}
+                      </td>
+                      <td className="py-2.5 sm:py-3 px-2 text-center">
+                        <span
+                          className="inline-flex h-5 w-5 items-center justify-center rounded-md font-display text-[11px] font-bold shadow-xs mx-auto"
+                          style={{
+                            background: `color-mix(in oklab, ${rColor} 20%, transparent)`,
+                            color: rColor,
+                            border: `1px solid color-mix(in oklab, ${rColor} 45%, transparent)`,
+                          }}
+                        >
+                          {z.rating}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div className="mt-2 overflow-x-auto no-scrollbar">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border/60 text-[10px] font-mono uppercase text-muted-foreground">
-                <th className="py-1.5 px-2 font-normal">#</th>
-                <th className="py-1.5 px-2 font-normal">Bairro</th>
-                <th className="py-1.5 px-2 font-normal text-right">Temp. (°C)</th>
-                <th className="py-1.5 px-2 font-normal text-right">Sensação (°C)</th>
-                <th className="py-1.5 px-2 font-normal text-center">Classe</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/40 font-mono">
-              {sorted.map((z, idx) => {
-                const isSelected = z.id === selected.id;
-                const rColor = ratingDefinitions[z.rating]?.color || heatVar(z.temp);
-                return (
-                  <tr
-                    key={z.id}
-                    onClick={() => onSelect(z)}
-                    className={`transition-colors cursor-pointer ${
-                      isSelected
-                        ? "bg-secondary/90 font-bold"
-                        : "hover:bg-muted/50"
-                    }`}
-                  >
-                    <td className="py-1.5 px-2 text-muted-foreground">{idx + 1}</td>
-                    <td className="py-1.5 px-2 font-sans font-medium text-foreground">
-                      {z.name}
-                    </td>
-                    <td className="py-1.5 px-2 text-right">{z.temp.toFixed(1).replace(".", ",")}</td>
-                    <td className="py-1.5 px-2 text-right text-muted-foreground">
-                      {z.feels.toFixed(1).replace(".", ",")}
-                    </td>
-                    <td className="py-1.5 px-2 text-center">
-                      <span
-                        className="inline-flex h-5 w-5 items-center justify-center rounded-md font-display text-[11px] font-bold shadow-xs mx-auto"
-                        style={{
-                          background: `color-mix(in oklab, ${rColor} 20%, transparent)`,
-                          color: rColor,
-                          border: `1px solid color-mix(in oklab, ${rColor} 45%, transparent)`,
-                        }}
-                      >
-                        {z.rating}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        {/* Rodapé informativo preenchendo a base do bloco de forma harmoniosa */}
+        <div className="mt-auto pt-3 border-t border-border/60 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+          <span>{sorted.length} territórios monitorados</span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Pico: <strong className="text-destructive font-bold">{sorted[0]?.name} ({sorted[0]?.temp.toFixed(1).replace(".", ",")} °C)</strong>
+          </span>
         </div>
       </div>
     </section>
@@ -789,137 +801,140 @@ function TemperatureHistoryCard({
   const peakItem = historyData.find((d) => d.isPeak) || historyData[4];
 
   return (
-    <section className="panel p-4 flex flex-col justify-between h-full shadow-xs" data-tour="history-card">
-      <div>
-        <div className="flex items-center justify-between pb-2 border-b border-border/60">
-          <div>
-            <h3 className="text-xs sm:text-sm font-bold text-foreground">
-              Histórico de temperatura — {zone.name}
-            </h3>
-            <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-0.5">
-              <span className="flex items-center gap-1 font-mono">
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
+    <section className="panel p-4 sm:p-5 flex flex-col justify-between h-full shadow-xs" data-tour="history-card">
+      <div className="flex-1 flex flex-col justify-between">
+        <div>
+          {/* Cabeçalho limpo sem badge isolado */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-border/60">
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold text-foreground">
+                Histórico de temperatura — {zone.name}
+              </h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Série temporal recente com curva de sensação térmica real
+              </p>
+            </div>
+            <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-mono">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-amber-500 shadow-xs" />
                 <span>Temperatura</span>
               </span>
-              <span className="flex items-center gap-1 font-mono">
-                <span className="h-2 w-2 rounded-full bg-cyan-500" />
-                <span>Sensação térmica</span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-cyan-500 shadow-xs" />
+                <span>Sensação</span>
               </span>
             </div>
           </div>
-          <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-2 py-0.5 rounded border border-border/60">
-            Últimos 7 dias
-          </span>
-        </div>
 
-        {/* Gráfico de Linhas Duplo com Grid Cartesiana */}
-        <div className="relative mt-3 h-36 w-full">
-          {/* Linhas de grade horizontal */}
-          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
-            <div className="border-b border-foreground w-full" />
-            <div className="border-b border-foreground w-full" />
-            <div className="border-b border-foreground w-full" />
-            <div className="border-b border-foreground w-full" />
-          </div>
-
-          {/* Marcadores do Eixo Y */}
-          <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between font-mono text-[9px] text-muted-foreground pointer-events-none pr-1">
-            <span>40°</span>
-            <span>35°</span>
-            <span>30°</span>
-            <span>25°</span>
-          </div>
-
-          {/* SVG com curvas */}
-          <svg
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            className="h-full w-full pl-6 overflow-visible"
-          >
-            {/* Curva Sensação Térmica (Cyan) */}
-            <polyline
-              fill="none"
-              stroke="#06b6d4"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              points={pointsFeels}
-              className="drop-shadow-xs"
-            />
-
-            {/* Curva Temperatura (Amber/Orange) */}
-            <polyline
-              fill="none"
-              stroke="#f97316"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              points={pointsTemp}
-              className="drop-shadow-xs"
-            />
-
-            {/* Pontos da curva */}
-            {historyData.map((d, i) => {
-              const x = (i / (historyData.length - 1)) * 100;
-              const yT = 100 - ((d.temp - minVal) / range) * 100;
-              const yF = 100 - ((d.feels - minVal) / range) * 100;
-              return (
-                <g key={i}>
-                  <circle cx={x} cy={yF} r="2.2" fill="#06b6d4" className="stroke-background stroke-1" />
-                  <circle cx={x} cy={yT} r="2.2" fill="#f97316" className="stroke-background stroke-1" />
-                </g>
-              );
-            })}
-          </svg>
-
-          {/* Tooltip destacado no dia de pico */}
-          {peakItem && (
-            <div
-              className="absolute -top-1 rounded-md bg-card/95 border border-border px-2 py-0.5 text-[10px] font-mono shadow-md backdrop-blur-xs pointer-events-none transform -translate-x-1/2"
-              style={{ left: "68%" }}
-            >
-              <span className="font-bold text-amber-500">{peakItem.temp}°C</span>
-              <span className="text-muted-foreground ml-1">({peakItem.date})</span>
+          {/* Gráfico de Linhas Duplo com Grid Cartesiana expandido */}
+          <div className="relative mt-4 h-48 sm:h-56 w-full">
+            {/* Linhas de grade horizontal */}
+            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+              <div className="border-b border-foreground w-full" />
+              <div className="border-b border-foreground w-full" />
+              <div className="border-b border-foreground w-full" />
+              <div className="border-b border-foreground w-full" />
             </div>
-          )}
+
+            {/* Marcadores do Eixo Y */}
+            <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between font-mono text-[9px] text-muted-foreground pointer-events-none pr-1">
+              <span>40°</span>
+              <span>35°</span>
+              <span>30°</span>
+              <span>25°</span>
+            </div>
+
+            {/* SVG com curvas */}
+            <svg
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              className="h-full w-full pl-6 overflow-visible"
+            >
+              {/* Curva Sensação Térmica (Cyan) */}
+              <polyline
+                fill="none"
+                stroke="#06b6d4"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                points={pointsFeels}
+                className="drop-shadow-xs"
+              />
+
+              {/* Curva Temperatura (Amber/Orange) */}
+              <polyline
+                fill="none"
+                stroke="#f97316"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                points={pointsTemp}
+                className="drop-shadow-xs"
+              />
+
+              {/* Pontos da curva */}
+              {historyData.map((d, i) => {
+                const x = (i / (historyData.length - 1)) * 100;
+                const yT = 100 - ((d.temp - minVal) / range) * 100;
+                const yF = 100 - ((d.feels - minVal) / range) * 100;
+                return (
+                  <g key={i}>
+                    <circle cx={x} cy={yF} r="2.2" fill="#06b6d4" className="stroke-background stroke-1" />
+                    <circle cx={x} cy={yT} r="2.2" fill="#f97316" className="stroke-background stroke-1" />
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* Tooltip destacado no dia de pico */}
+            {peakItem && (
+              <div
+                className="absolute -top-1 rounded-md bg-card/95 border border-border px-2 py-0.5 text-[10px] font-mono shadow-md backdrop-blur-xs pointer-events-none transform -translate-x-1/2"
+                style={{ left: "68%" }}
+              >
+                <span className="font-bold text-amber-500">{peakItem.temp}°C</span>
+                <span className="text-muted-foreground ml-1">({peakItem.date})</span>
+              </div>
+            )}
+          </div>
+
+          {/* Eixo X com as datas */}
+          <div className="grid grid-cols-7 gap-1 text-center pl-6 pt-2 font-mono text-[10px] text-muted-foreground">
+            {historyData.map((d, idx) => (
+              <span key={idx} className={d.isPeak ? "font-bold text-amber-500" : ""}>
+                {d.date}
+              </span>
+            ))}
+          </div>
         </div>
 
-        {/* Eixo X com as datas */}
-        <div className="grid grid-cols-7 gap-1 text-center pl-6 pt-1 font-mono text-[10px] text-muted-foreground">
-          {historyData.map((d, idx) => (
-            <span key={idx} className={d.isPeak ? "font-bold text-amber-500" : ""}>
-              {d.date}
-            </span>
-          ))}
-        </div>
-
-        {/* Faixa inferior de resumo consolidado */}
-        <div className="mt-3 grid grid-cols-4 gap-2 border-t border-border/60 pt-2.5 text-center font-mono">
+        {/* Faixa inferior de resumo consolidado com bom espaçamento */}
+        <div className="my-3 grid grid-cols-4 gap-2 border-y border-border/60 py-3 text-center font-mono bg-muted/20 rounded-xl">
           <div>
-            <p className="text-[9px] uppercase text-muted-foreground">Média</p>
-            <p className="text-xs font-bold text-foreground">{avgTemp.toFixed(1).replace(".", ",")} °C</p>
+            <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Média</p>
+            <p className="text-xs sm:text-sm font-bold text-foreground mt-0.5">{avgTemp.toFixed(1).replace(".", ",")} °C</p>
           </div>
           <div>
-            <p className="text-[9px] uppercase text-muted-foreground">Máxima</p>
-            <p className="text-xs font-bold text-rose-500">{maxTemp.toFixed(1).replace(".", ",")} °C</p>
+            <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Máxima</p>
+            <p className="text-xs sm:text-sm font-bold text-rose-500 mt-0.5">{maxTemp.toFixed(1).replace(".", ",")} °C</p>
           </div>
           <div>
-            <p className="text-[9px] uppercase text-muted-foreground">Variação</p>
-            <p className="text-xs font-bold text-foreground">↑ 2,3 °C</p>
+            <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Variação</p>
+            <p className="text-xs sm:text-sm font-bold text-foreground mt-0.5">↑ 2,3 °C</p>
           </div>
           <div>
-            <p className="text-[9px] uppercase text-muted-foreground">Tendência</p>
-            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Estável</p>
+            <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Tendência</p>
+            <p className="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">Estável</p>
           </div>
         </div>
 
-        {/* Botão de consulta por período (7, 14 ou 30 dias) que abre Comparação & Histórico */}
+        {/* Botão de consulta por período (7, 14 ou 30 dias) perfeitamente posicionado na base */}
         {onOpenComparison && (
-          <div className="mt-3 pt-2.5 border-t border-border/60">
+          <div className="mt-auto pt-3 border-t border-border/60">
             <button
               type="button"
               onClick={onOpenComparison}
-              className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card/80 hover:bg-secondary hover:border-primary/50 py-2 px-3 text-xs font-semibold text-primary transition-all cursor-pointer shadow-xs group"
+              className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card/80 hover:bg-secondary hover:border-primary/50 py-2.5 px-3 text-xs font-semibold text-primary transition-all cursor-pointer shadow-xs group"
               title="Consultar histórico detalhado por período (7, 14 ou 30 dias) na tela Comparação & Histórico"
             >
               <CalendarRange className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform" />
@@ -982,19 +997,13 @@ function MapPanel({
       {/* Top Header of Map */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-border/70 px-4 py-2.5 bg-card/40">
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xs sm:text-sm font-bold text-foreground truncate">
-              Mapa térmico — Região Metropolitana do Recife
-            </h2>
-            <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.2 text-[10px] font-mono font-medium text-emerald-600 dark:text-emerald-400 shrink-0">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Ao vivo
-            </span>
-          </div>
-          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-            {activeLayer === "calor" && "Exibindo anomalias de temperatura de superfície e ilhas de calor"}
-            {activeLayer === "vegetal" && "Exibindo densidade de copa arbórea e refúgios térmicos"}
-            {activeLayer === "vulnerabilidade" && "Exibindo Índice de Vulnerabilidade Social (IVS) da população exposta"}
+          <h2 className="text-xs sm:text-sm font-bold text-foreground whitespace-nowrap">
+            Mapa térmico real
+          </h2>
+          <p className="text-[11px] text-muted-foreground mt-0.5 whitespace-normal leading-tight">
+            {activeLayer === "calor" && "Anomalias de calor e ilhas térmicas"}
+            {activeLayer === "vegetal" && "Copas arbóreas e refúgios térmicos"}
+            {activeLayer === "vulnerabilidade" && "Vulnerabilidade social da população exposta"}
           </p>
         </div>
 
