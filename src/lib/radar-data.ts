@@ -490,8 +490,8 @@ export function zoneDailyHistory(
 }
 
 export const AVAILABLE_YEARS = [2022, 2023, 2024, 2025, 2026] as const;
-export const MONTH_NAMES_SHORT = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"] as const;
-export const MONTH_NAMES_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"] as const;
+export const MONTH_NAMES_SHORT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"] as const;
+export const MONTH_NAMES_FULL = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"] as const;
 export const DAY_RANGE_OPTIONS = [3, 7, 14, 30] as const;
 export const hourly = [
   { h: "06h", t: 26.1 },
@@ -631,8 +631,8 @@ export function evaluateWeatherAlerts(
           title: isCritical
             ? `Onda de Calor Extrema: ${zone.name}`
             : isHigh
-            ? `Anomalia Térmica Elevada: ${zone.name}`
-            : `Alerta Preventivo: Sobrecarga Térmica em ${zone.name}`,
+              ? `Anomalia Térmica Elevada: ${zone.name}`
+              : `Alerta Preventivo: Sobrecarga Térmica em ${zone.name}`,
           detail: `Detectado em tempo real às ${timeStr}: Temperatura de ${zone.temp.toFixed(1)} °C e sensação térmica de ${zone.feels.toFixed(1)} °C. Limiar de risco operacional ultrapassado.`,
           date: dateStr,
           time: `Hoje às ${timeStr}`,
@@ -820,7 +820,7 @@ export function calculateCoolingImpact(zone: Zone, additionalTreesPct: number) {
   const newTemp = Number(Math.max(26.5, zone.temp - tempDrop).toFixed(1));
   const newFeels = Number(Math.max(28.0, zone.feels - feelsDrop).toFixed(1));
   const newCanopy = Math.min(100, zone.canopy + additionalTreesPct);
-  
+
   // Estimativa de mudas nativas para plantio (aprox. 310 mudas por cada 1% de cobertura territorial no bairro)
   const treesToPlant = Math.round(additionalTreesPct * 310);
   // Sequestro médio de CO2: ~22 kg por árvore adulta/ano (0,022 ton)

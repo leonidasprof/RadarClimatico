@@ -1435,12 +1435,12 @@ function AlertsPanel({
   return (
     <section className="panel p-4" data-tour="alerts-panel">
       {/* Cabeçalho da Central de Alertas: Alternância entre Alertas do Dia e Histórico */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3 mb-3">
-        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-card/60 border border-border/70 shadow-xs">
+      <div className="flex items-center justify-between gap-1.5 sm:gap-2 border-b border-border/60 pb-3 mb-3">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-card/60 border border-border/70 shadow-xs min-w-0">
           <button
             type="button"
             onClick={() => setViewMode("ativos")}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${viewMode === "ativos"
+            className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] xl:text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${viewMode === "ativos"
               ? "bg-destructive/15 text-destructive font-semibold shadow-xs ring-1 ring-destructive/30"
               : "text-muted-foreground hover:text-foreground"
               }`}
@@ -1460,15 +1460,15 @@ function AlertsPanel({
           <button
             type="button"
             onClick={() => setViewMode("historico")}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${viewMode === "historico"
+            className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] xl:text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${viewMode === "historico"
               ? "bg-secondary text-foreground font-semibold shadow-xs ring-1 ring-border"
               : "text-muted-foreground hover:text-foreground"
               }`}
           >
             <History className="h-3 w-3" />
-            <span>Histórico</span>
-            <span className="rounded-full bg-muted px-1.5 py-0.2 font-mono text-[10px] text-muted-foreground">
-              {historyAlerts.length}
+            <span>Histórico
+
+
             </span>
           </button>
         </div>
@@ -1476,7 +1476,7 @@ function AlertsPanel({
         <div className="flex items-center gap-2">
           <button
             onClick={onOpenReportModal}
-            className="flex items-center gap-1 rounded-md bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground transition-opacity hover:opacity-90 cursor-pointer shadow-sm"
+            className="flex items-center gap-1 rounded-lg bg-destructive px-2.5 py-1.5 text-[11px] xl:text-xs font-semibold text-destructive-foreground whitespace-nowrap shrink-0 transition-opacity hover:opacity-90 cursor-pointer shadow-sm"
             title="Registrar nova ocorrência ou anomalia operacional"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -1499,17 +1499,17 @@ function AlertsPanel({
               Todas as estações e microterritórios do Recife estão operando dentro dos limiares térmicos toleráveis da Defesa Civil.
             </p>
           </div>
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+          <div className="pt-2 flex items-center justify-center gap-2 w-full">
             <button
               onClick={() => setViewMode("historico")}
-              className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary hover:border-primary/40 transition-all cursor-pointer shadow-xs"
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-[11px] xl:text-xs font-semibold text-foreground whitespace-nowrap hover:bg-secondary hover:border-primary/40 transition-all cursor-pointer shadow-xs"
             >
               <History className="h-3.5 w-3.5 text-primary" />
               <span>Ver Histórico de Alertas ({historyAlerts.length})</span>
             </button>
             <button
               onClick={onOpenReportModal}
-              className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              className="flex items-center gap-1 rounded-lg bg-secondary px-2.5 py-1.5 text-[11px] xl:text-xs font-medium text-muted-foreground whitespace-nowrap hover:text-foreground transition-colors cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Registrar Alerta</span>
