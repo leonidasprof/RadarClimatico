@@ -90,6 +90,18 @@ Recife apresenta um dos maiores índices de vulnerabilidade climática da Améri
 
 ---
 
+### `ADR-006`: Fidelidade Cromática dos Círculos do Mapa Térmico às Classes Bioclimáticas (A a E)
+- **Status:** **Aprovado**
+- **Contexto:** Na tela inicial, os círculos dos bairros no Mapa Térmico utilizavam a função estática `heatVar(temp)` com faixas genéricas (>36°, >34°, >32°, >30°), o que fazia todos os bairros ficarem azuis (`--heat-1`) em temperaturas amenas como 27,5 °C, divergindo da classificação bioclimática exibida no card de detalhe territorial (onde Ibura exibia Classe B com cor verde-limão, mas a bolinha no mapa ficava azul).
+- **Decisão:**
+  - O cálculo da cor da camada de calor no mapa (`getZoneColor`) passa a adotar prioritariamente as cores oficiais das classes bioclimáticas (`ratingDefinitions[z.rating].color`).
+  - Cada círculo no mapa agora exibe a letra da classe (A a E) com alto contraste no seu núcleo interno.
+  - A etiqueta dos bairros passa a incluir temperatura e classe (ex.: `Ibura · 28,5° (B)`) com fundo legível.
+  - A legenda da camada térmica foi atualizada para exibir os 5 blocos cromáticos das classes A a E com os limiares de sensação térmica (≤32°, ≤35°, ≤38,5°, ≤42°, >42°).
+  - O painel `RatingPanel` e o comparativo `ComparisonHistoryView` foram sincronizados para utilizar `ratingDefinitions[rating].color`.
+
+---
+
 ## 4. Regras de Negócio Biofísicas e Equações
 
 ### 4.1 Cálculo da Temperatura de Superfície Terrestre (LST)

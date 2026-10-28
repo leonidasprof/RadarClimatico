@@ -783,25 +783,25 @@ function MapPanel({
 
   /**
    * Lógica de cálculo cromático por camada (Épico 1):
-   * - Calor: gradiente térmico de azul/amarelo a vermelho rubro (heatVar)
+   * - Calor: regras de temperatura e bioclimáticas de A a E (ratingDefinitions)
    * - Vegetal: escala verde florestal (canopyVar)
    * - Vulnerabilidade: tonalidades de alerta social (vulnVar)
    */
   const getZoneColor = (z: Zone) => {
-    if (activeLayer === "calor") return heatVar(z.temp);
+    if (activeLayer === "calor") return ratingDefinitions[z.rating]?.color || heatVar(z.temp);
     if (activeLayer === "vegetal") return canopyVar(z.canopy);
     return vulnVar(z.vuln);
   };
 
   const getZoneLabel = (z: Zone) => {
-    if (activeLayer === "calor") return `${z.name} · ${z.temp.toFixed(1)}°`;
+    if (activeLayer === "calor") return `${z.name} · ${z.temp.toFixed(1).replace(".", ",")}° (${z.rating})`;
     if (activeLayer === "vegetal") return `${z.name} · ${z.canopy}% copa`;
     return `${z.name} · IVS ${z.vuln}`;
   };
 
-  // Condição de pulso crítico: calor excessivo (>36°C), déficit de árvore (<=10%) ou altíssima vulnerabilidade (>=75)
+  // Condição de pulso crítico: calor extremo (Classe E ou >=36°C), déficit de árvore (<=10%) ou altíssima vulnerabilidade (>=75)
   const shouldPulse = (z: Zone) => {
-    if (activeLayer === "calor") return z.temp >= 36;
+    if (activeLayer === "calor") return z.rating === "E" || z.temp >= 36;
     if (activeLayer === "vegetal") return z.canopy <= 10;
     return z.vuln >= 75;
   };
@@ -866,7 +866,7 @@ function MapPanel({
               onClick={() => onSelect(z)}
               className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform hover:scale-105 focus:outline-none cursor-pointer"
               style={{ left: `${z.x}%`, top: `${z.y}%`, width: z.size, height: z.size }}
-              aria-label={z.name}
+              aria-label={`${z.name} - Classe ${z.rating}`}
             >
               <span
                 className="absolute inset-0 rounded-full blur-xl"
@@ -875,20 +875,25 @@ function MapPanel({
                 }}
               />
               <span
-                className="absolute inset-[38%] rounded-full"
+                className="absolute inset-[38%] rounded-full flex items-center justify-center font-display text-[11px] font-black shadow-md transition-all select-none"
                 style={{
                   background: color,
-                  boxShadow: active ? "0 0 0 3px var(--foreground)" : "none",
-                  opacity: 0.9,
+                  color: z.rating === "B" || z.rating === "C" ? "#0f172a" : "#ffffff",
+                  boxShadow: active
+                    ? "0 0 0 3px var(--foreground), 0 0 14px color-mix(in oklab, var(--foreground) 50%, transparent)"
+                    : "0 2px 5px rgba(0,0,0,0.35)",
+                  opacity: 0.95,
                 }}
-              />
+              >
+                {activeLayer === "calor" ? z.rating : ""}
+              </span>
               {isPulsing && (
                 <span
                   className="absolute inset-[36%] rounded-full pulse-ring"
                   style={{ background: color }}
                 />
               )}
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 translate-y-4 whitespace-nowrap font-mono text-[11px] text-foreground/90 font-medium">
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 translate-y-4 whitespace-nowrap font-mono text-[11px] text-foreground font-semibold px-1.5 py-0.5 rounded bg-background/90 border border-border/60 shadow-xs backdrop-blur-xs">
                 {getZoneLabel(z)}
               </span>
             </button>
@@ -896,19 +901,54 @@ function MapPanel({
         })}
 
         {/* Legenda Dinâmica de Acordo com a Camada Ativa */}
-        <div className="absolute bottom-3 left-3 rounded-lg border border-border bg-background/85 p-3 backdrop-blur shadow-sm max-w-xs">
+        <div className={`absolute bottom-3 left-3 rounded-lg border border-border/80 bg-background/90 backdrop-blur-md shadow-md z-10 transition-all ${activeLayer === "calor" ? "p-2 max-w-[130px]" : "p-3 max-w-xs"}`}>
           {activeLayer === "calor" && (
-            <>
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Escala de sensação térmica
-              </p>
-              <div className="h-2 w-52 rounded-full heat-bar" />
-              <div className="mt-1 flex justify-between font-mono text-[10px] text-muted-foreground">
-                <span>28°</span>
-                <span>34°</span>
-                <span>45°+</span>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between border-b border-border/60 pb-1 gap-2">
+                <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground font-bold">
+                  Escala Térmica
+                </span>
+                <span className="font-mono text-[8px] text-sky-400 font-semibold">A–E</span>
               </div>
-            </>
+
+              {/* Barra vertical com as 5 classes de E (topo, crítico) a A (base, ameno) */}
+              <div className="flex flex-col gap-1 py-0.5">
+                {(["E", "D", "C", "B", "A"] as const).map((r) => {
+                  const def = ratingDefinitions[r];
+                  return (
+                    <div
+                      key={r}
+                      className="flex items-center gap-1.5 px-0.5 py-0.5 rounded hover:bg-muted/40 transition-colors"
+                      title={`${def.name}: ${def.shortDesc} (Sensação ${r === "A" ? "≤32°C" : r === "B" ? "≤35°C" : r === "C" ? "≤38,5°C" : r === "D" ? "≤42°C" : ">42°C"})`}
+                    >
+                      <span
+                        className="flex h-4 w-4 shrink-0 items-center justify-center rounded font-display text-[9px] font-black shadow-xs select-none"
+                        style={{
+                          background: def.color,
+                          color: r === "B" || r === "C" ? "#0f172a" : "#ffffff",
+                        }}
+                      >
+                        {r}
+                      </span>
+                      <span className="font-mono text-[10px] font-semibold text-foreground/90 whitespace-nowrap">
+                        {r === "E" && ">42°"}
+                        {r === "D" && "≤42°"}
+                        {r === "C" && "≤38,5°"}
+                        {r === "B" && "≤35°"}
+                        {r === "A" && "≤32°"}
+                      </span>
+                      <span className="font-mono text-[8px] text-muted-foreground hidden sm:inline capitalize">
+                        {r === "E" && "Crítico"}
+                        {r === "D" && "Alerta"}
+                        {r === "C" && "Atenção"}
+                        {r === "B" && "Seguro"}
+                        {r === "A" && "Refúgio"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           {activeLayer === "vegetal" && (
@@ -1849,26 +1889,29 @@ function RatingPanel({
           Classificação de estresse térmico de A a E
         </p>
         <ul className="mt-3 space-y-1">
-          {sorted.map((z) => (
-            <li key={z.id}>
-              <button
-                onClick={() => onSelect(z)}
-                className={
-                  "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors " +
-                  (z.id === selected.id ? "bg-secondary" : "hover:bg-secondary/60")
-                }
-              >
-                <span className="h-2.5 w-2.5 rounded-full" style={{ background: heatVar(z.temp) }} />
-                <span className="text-sm">{z.name}</span>
-                <span className="ml-auto font-mono text-xs text-muted-foreground">
-                  {z.feels.toFixed(1)}°
-                </span>
-                <span className="w-5 text-center font-display text-sm font-semibold" style={{ color: heatVar(z.temp) }}>
-                  {z.rating}
-                </span>
-              </button>
-            </li>
-          ))}
+          {sorted.map((z) => {
+            const rColor = ratingDefinitions[z.rating]?.color || heatVar(z.temp);
+            return (
+              <li key={z.id}>
+                <button
+                  onClick={() => onSelect(z)}
+                  className={
+                    "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors " +
+                    (z.id === selected.id ? "bg-secondary" : "hover:bg-secondary/60")
+                  }
+                >
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: rColor }} />
+                  <span className="text-sm">{z.name}</span>
+                  <span className="ml-auto font-mono text-xs text-muted-foreground">
+                    {z.feels.toFixed(1).replace(".", ",")}°
+                  </span>
+                  <span className="w-5 text-center font-display text-sm font-semibold" style={{ color: rColor }}>
+                    {z.rating}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </section>

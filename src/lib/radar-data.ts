@@ -516,8 +516,12 @@ export function heatVar(temp: number) {
   if (temp >= 36) return "var(--heat-5)";
   if (temp >= 34) return "var(--heat-4)";
   if (temp >= 32) return "var(--heat-3)";
-  if (temp >= 30) return "var(--heat-2)";
-  return "var(--heat-1)";
+  if (temp >= 28) return "oklch(0.75 0.14 125)";
+  return "oklch(0.68 0.18 142)";
+}
+
+export function ratingColor(rating: "A" | "B" | "C" | "D" | "E") {
+  return ratingDefinitions[rating]?.color || "var(--heat-3)";
 }
 
 export type DayRange = 3 | 7 | 14 | 30;

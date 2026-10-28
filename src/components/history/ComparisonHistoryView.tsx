@@ -5,6 +5,7 @@ import {
   zoneMonthlyHistory,
   zoneYearlyHistory,
   calculateMicroclimateDelta,
+  ratingDefinitions,
   heatVar,
   canopyVar,
   AVAILABLE_YEARS,
@@ -174,7 +175,7 @@ export function ComparisonHistoryView({
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: heatVar(zoneA.temp) }} />
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: ratingDefinitions[zoneA.rating]?.color || heatVar(zoneA.temp) }} />
             <select
               value={zoneA.id}
               onChange={(e) => {
@@ -188,7 +189,7 @@ export function ComparisonHistoryView({
           </div>
           <span className="text-xs font-mono text-muted-foreground">vs</span>
           <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: heatVar(zoneB.temp) }} />
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: ratingDefinitions[zoneB.rating]?.color || heatVar(zoneB.temp) }} />
             <select
               value={zoneB.id}
               onChange={(e) => {
@@ -312,7 +313,7 @@ export function ComparisonHistoryView({
             )}
             <div className="flex items-center gap-4 text-xs font-mono">
               <div className="flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded-sm" style={{ background: heatVar(zoneA.temp) }} />
+                <span className="h-3 w-3 rounded-sm" style={{ background: ratingDefinitions[zoneA.rating]?.color || heatVar(zoneA.temp) }} />
                 <span className="font-medium text-foreground">{zoneA.name}</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -672,8 +673,8 @@ export function ComparisonHistoryView({
                 </tr>
                 <tr>
                   <td className="py-2.5 text-muted-foreground">Classificação de Resiliência</td>
-                  <td className="py-2.5 font-display font-bold" style={{ color: heatVar(zoneA.temp) }}>Grau {zoneA.rating}</td>
-                  <td className="py-2.5 font-display font-bold" style={{ color: heatVar(zoneB.temp) }}>Grau {zoneB.rating}</td>
+                  <td className="py-2.5 font-display font-bold" style={{ color: ratingDefinitions[zoneA.rating]?.color || heatVar(zoneA.temp) }}>Grau {zoneA.rating}</td>
+                  <td className="py-2.5 font-display font-bold" style={{ color: ratingDefinitions[zoneB.rating]?.color || heatVar(zoneB.temp) }}>Grau {zoneB.rating}</td>
                   <td className="py-2.5 font-mono text-right text-muted-foreground">
                     {zoneA.rating === zoneB.rating ? "Equivalente" : "Divergente"}
                   </td>
