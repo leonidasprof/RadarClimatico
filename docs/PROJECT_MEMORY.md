@@ -102,6 +102,16 @@ Recife apresenta um dos maiores índices de vulnerabilidade climática da Améri
 
 ---
 
+### `ADR-007`: Inversão de Tema Padrão para Modo Claro e Redimensionamento da Tela de Login
+- **Status:** **Aprovado (28/10/2026)**
+- **Contexto:** Pesquisas de usabilidade com os usuários finais indicaram preferência majoritária pelo tema claro durante o uso diurno nos centros de operações. Além disso, o card de autenticação (`LoginPage`) exibia proporções excessivas (`max-w-lg`, logo de 420px) e utilizava assets de baixa legibilidade em fundos claros (`fundo_claro.png`).
+- **Decisão:**
+  - O tema padrão da aplicação foi alterado para **Modo Claro (`light`)** em `theme-context.tsx`, com chave de cache `arboris_theme_v2` preservando a opção de alternância manual para o modo escuro a critério do usuário.
+  - O card de login foi redimensionado para uma escala compacta e equilibrada (`max-w-[400px]`, `p-6 sm:p-7`).
+  - A logo da tela de login foi substituída pelos assets oficiais vetorizados de alto contraste: `/logo-arboris2.png` (com tipografia marinho de alta visibilidade para fundo claro) e `/logo-arboris.png` (com tipografia branca luminescente para o modo escuro), com altura contida (`h-20 sm:h-24`).
+
+---
+
 ## 4. Regras de Negócio Biofísicas e Equações
 
 ### 4.1 Cálculo da Temperatura de Superfície Terrestre (LST)

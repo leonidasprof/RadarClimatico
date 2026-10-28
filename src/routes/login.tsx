@@ -94,26 +94,29 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void } = 
         </button>
       </div>
 
-      <div className="w-full max-w-lg">
+      <div className="w-full max-w-[400px]">
         {/* Card Principal */}
-        <div className="panel overflow-hidden p-6 sm:p-8 backdrop-blur-md shadow-2xl border-border/80">
+        <div className="panel overflow-hidden p-6 sm:p-7 backdrop-blur-md shadow-xl border-border/80">
           {/* Cabeçalho da Marca */}
           <div className="flex flex-col items-center text-center">
-            <div className="relative flex justify-center w-full">
+            <div className="relative flex justify-center w-full py-1">
               <img
-                src={isDark ? "/fundo_escuro.png" : "/fundo_claro.png"}
+                src={isDark ? "/logo-arboris.png" : "/logo-arboris2.png"}
                 alt="Logo Arboris - Radar Climático"
-                className="w-full max-w-[420px] h-auto object-contain drop-shadow-md transition-all duration-200"
+                className="h-20 sm:h-24 w-auto max-w-[260px] object-contain transition-all duration-200"
               />
             </div>
 
-            <h1 className="mt-6 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+            <h1 className="mt-4 text-lg font-bold tracking-tight text-foreground sm:text-xl">
               Central de Operações
             </h1>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Sistema de Monitoramento e Alerta de Ondas de Calor
+            </p>
           </div>
 
           {/* Formulário de Login */}
-          <form onSubmit={handleLogin} className="mt-6 space-y-4">
+          <form onSubmit={handleLogin} className="mt-5 space-y-3.5">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-foreground/90 block">
                 E-mail institucional
@@ -125,7 +128,7 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void } = 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nome@recife.pe.gov.br"
-                  className="pl-9 bg-background/50 text-sm"
+                  className="pl-9 bg-background/60 text-sm h-10"
                   required
                 />
               </div>
@@ -142,13 +145,13 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void } = 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="pl-9 pr-9 bg-background/50 text-sm font-mono"
+                  className="pl-9 pr-9 bg-background/60 text-sm font-mono h-10"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none cursor-pointer"
                   aria-label={showPassword ? "Ocultar senha" : "Ver senha"}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -159,7 +162,7 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void } = 
             <Button
               type="submit"
               disabled={submitting}
-              className="w-full h-10 bg-primary text-primary-foreground font-medium text-sm gap-2 shadow-md hover:opacity-95 cursor-pointer"
+              className="w-full h-10 bg-primary text-primary-foreground font-medium text-sm gap-2 shadow-md hover:opacity-95 cursor-pointer mt-1"
             >
               {submitting ? "Autenticando..." : "Entrar no Radar Climático"}
               <ArrowRight className="h-4 w-4" />
@@ -167,8 +170,8 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void } = 
           </form>
 
           {/* Aviso Institucional */}
-          <div className="mt-6 rounded-lg border border-border/60 bg-muted/40 p-3 text-[11px] text-muted-foreground flex items-center justify-center gap-2 text-center">
-            <ShieldAlert className="h-4 w-4 text-primary shrink-0" />
+          <div className="mt-5 rounded-lg border border-border/60 bg-muted/40 p-2.5 text-[11px] text-muted-foreground flex items-center justify-center gap-2 text-center">
+            <ShieldAlert className="h-3.5 w-3.5 text-primary shrink-0" />
             <span>
               Ambiente de validação COP e CESAR School.
             </span>
@@ -176,8 +179,8 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void } = 
         </div>
 
         {/* Rodapé da Tela */}
-        <p className="mt-4 text-center text-xs text-muted-foreground font-mono">
-          Radar Climático v2.0 MVP
+        <p className="mt-3 text-center text-[11px] text-muted-foreground font-mono">
+          Radar Climático v2.0 MVP · Recife
         </p>
       </div>
     </div>

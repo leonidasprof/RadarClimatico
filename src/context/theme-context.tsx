@@ -11,10 +11,10 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const THEME_STORAGE_KEY = "arboris_theme";
+const THEME_STORAGE_KEY = "arboris_theme_v2";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -23,11 +23,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (savedTheme === "light" || savedTheme === "dark") {
         setThemeState(savedTheme);
       } else {
-        // Padrão do Arboris: Dark Tech
-        setThemeState("dark");
+        // Novo padrão do Arboris: Tema Claro (Light Theme)
+        setThemeState("light");
       }
     } catch {
-      setThemeState("dark");
+      setThemeState("light");
     }
     setMounted(true);
   }, []);
