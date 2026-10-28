@@ -6,6 +6,48 @@
 
 import { zones as defaultZones, type Zone } from "../radar-data";
 
+export type WeatherIconType = "sun" | "cloud-sun" | "cloud" | "rain" | "cloud-lightning";
+
+export function getWeatherInterpretation(code: number = 0, isDay: number = 1): {
+  description: string;
+  icon: WeatherIconType;
+} {
+  if (code === 0) {
+    return {
+      description: isDay ? "Ensolarado" : "Céu Limpo",
+      icon: "sun",
+    };
+  }
+  if (code === 1 || code === 2) {
+    return {
+      description: "Sol com nuvens",
+      icon: "cloud-sun",
+    };
+  }
+  if (code === 3 || code === 45 || code === 48) {
+    return {
+      description: "Nublado",
+      icon: "cloud",
+    };
+  }
+  if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) {
+    return {
+      description: "Chuvoso",
+      icon: "rain",
+    };
+  }
+  if ([95, 96, 99].includes(code)) {
+    return {
+      description: "Pancadas de chuva",
+      icon: "cloud-lightning",
+    };
+  }
+  return {
+    description: "Parcialmente nublado",
+    icon: "cloud-sun",
+  };
+}
+
 export interface RealtimeWeatherSnapshot {
   source: "live" | "cache" | "fallback";
   fetchedAt: string;
@@ -14,9 +56,14 @@ export interface RealtimeWeatherSnapshot {
   recifeBaseHumidity: number;
   recifeWindSpeed: number;
   recifePrecipitation: number;
+  weatherCode: number;
+  isDay: number;
+  weatherDescription: string;
+  weatherIcon: WeatherIconType;
   zones: Zone[];
   hourly: { h: string; t: number; feels?: number | undefined }[];
   cityAverageTemp: number;
+  cityAverageFeels: number;
   cityMaxFeels: number; // Maior sensação térmica do dia registrada hoje até a hora atual
   cityMaxFeelsZone?: string | undefined;
   cityMaxFeelsHour?: string | undefined;
@@ -150,7 +197,7 @@ export async function fetchRealtimeRecifeWeather(): Promise<RealtimeWeatherSnaps
 
   // 2. Chamar a API pública Open-Meteo para Recife (-8.05, -34.90)
   const url =
-    "https://api.open-meteo.com/v1/forecast?latitude=-8.05&longitude=-34.90&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m&hourly=temperature_2m,apparent_temperature&timezone=America%2FRecife&forecast_days=1";
+    "https://api.open-meteo.com/v1/forecast?latitude=-8.05&longitude=-34.90&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weather_code,is_day&hourly=temperature_2m,apparent_temperature&timezone=America%2FRecife&forecast_days=1";
 
   try {
     const controller = new AbortController();
@@ -179,6 +226,9 @@ export async function fetchRealtimeRecifeWeather(): Promise<RealtimeWeatherSnaps
     const baseHumidity = Math.round(current.relative_humidity_2m);
     const windSpeed = Number((current.wind_speed_10m || 0).toFixed(1));
     const precipitation = Number((current.precipitation || 0).toFixed(1));
+    const weatherCode = typeof current.weather_code === "number" ? current.weather_code : 0;
+    const isDay = typeof current.is_day === "number" ? current.is_day : 1;
+    const { description: weatherDescription, icon: weatherIcon } = getWeatherInterpretation(weatherCode, isDay);
 
     // 3. Atualizar cada zona com base no microclima territorial biofísico real
     const updatedZones: Zone[] = defaultZones.map((z) => {
@@ -246,6 +296,9 @@ export async function fetchRealtimeRecifeWeather(): Promise<RealtimeWeatherSnaps
     const avgTemp = Number(
       (updatedZones.reduce((acc, z) => acc + z.temp, 0) / updatedZones.length).toFixed(1)
     );
+    const avgFeels = Number(
+      (updatedZones.reduce((acc, z) => acc + z.feels, 0) / updatedZones.length).toFixed(1)
+    );
     const instantMaxFeels = Number(Math.max(...updatedZones.map((z) => z.feels)).toFixed(1));
     const instantPeakZone = updatedZones.find((z) => z.feels === instantMaxFeels)?.name || "Santo Amaro";
     const instantMaxTemp = Number(Math.max(...updatedZones.map((z) => z.temp)).toFixed(1));
@@ -275,9 +328,14 @@ export async function fetchRealtimeRecifeWeather(): Promise<RealtimeWeatherSnaps
       recifeBaseHumidity: baseHumidity,
       recifeWindSpeed: windSpeed,
       recifePrecipitation: precipitation,
+      weatherCode,
+      isDay,
+      weatherDescription,
+      weatherIcon,
       zones: updatedZones,
       hourly: finalHourly,
       cityAverageTemp: avgTemp,
+      cityAverageFeels: avgFeels,
       cityMaxFeels: dailyPeak.maxFeels,
       cityMaxFeelsZone: dailyPeak.peakZone,
       cityMaxFeelsHour: dailyPeak.peakHour,
@@ -605,25 +663,34 @@ function getResilientFallbackSnapshot(): RealtimeWeatherSnapshot {
 
   const critCount = updatedZones.filter((z) => z.rating === "D" || z.rating === "E").length;
 
-  return {
-    source: "fallback",
-    fetchedAt: "Recife / PE",
-    recifeBaseTemp: baseTemp,
-    recifeBaseFeels: baseFeels,
-    recifeBaseHumidity: baseHumidity,
-    recifeWindSpeed: 14.2,
-    recifePrecipitation: 0.0,
-    zones: updatedZones,
-    hourly: fallbackHourly,
-    cityAverageTemp: avgTemp,
-    cityMaxFeels: dailyPeak.maxFeels,
-    cityMaxFeelsZone: dailyPeak.peakZone,
-    cityMaxFeelsHour: dailyPeak.peakHour,
-    cityMaxTemp: dailyPeak.maxTemp,
-    cityMaxTempZone: dailyPeak.maxTempZone,
-    cityMaxTempHour: dailyPeak.maxTempHour,
-    criticalZonesCount: critCount,
-    peakHour: "14h",
-    peakTemp: 32.2,
-  };
+    const fallbackAvgFeels = Number(
+      (updatedZones.reduce((acc, z) => acc + z.feels, 0) / updatedZones.length).toFixed(1)
+    );
+
+    return {
+      source: "fallback",
+      fetchedAt: "Recife / PE",
+      recifeBaseTemp: baseTemp,
+      recifeBaseFeels: baseFeels,
+      recifeBaseHumidity: baseHumidity,
+      recifeWindSpeed: 14.2,
+      recifePrecipitation: 0.0,
+      weatherCode: 0,
+      isDay: 1,
+      weatherDescription: "Ensolarado",
+      weatherIcon: "sun",
+      zones: updatedZones,
+      hourly: fallbackHourly,
+      cityAverageTemp: avgTemp,
+      cityAverageFeels: fallbackAvgFeels,
+      cityMaxFeels: dailyPeak.maxFeels,
+      cityMaxFeelsZone: dailyPeak.peakZone,
+      cityMaxFeelsHour: dailyPeak.peakHour,
+      cityMaxTemp: dailyPeak.maxTemp,
+      cityMaxTempZone: dailyPeak.maxTempZone,
+      cityMaxTempHour: dailyPeak.maxTempHour,
+      criticalZonesCount: critCount,
+      peakHour: "14h",
+      peakTemp: 32.2,
+    };
 }

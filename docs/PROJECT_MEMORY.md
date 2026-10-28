@@ -112,6 +112,40 @@ Recife apresenta um dos maiores índices de vulnerabilidade climática da Améri
 
 ---
 
+### `ADR-008`: Redesenho do Layout com Sidebar Lateral, Mapa de PE, Sensação Térmica Open-Meteo e Grid 8x4 Alinhada
+- **Status:** **Aprovado (28/10/2026)**
+- **Contexto:** Necessidade de redistribuição das informações para eliminar áreas vazias, maximizar o aproveitamento horizontal do dashboard e conferir alinhamento perfeito de todos os quadros (conforme mockup operacional de referência). Requerimento de inclusão de Sensação Térmica da Cidade a partir de API aberta, mapa estadual de Pernambuco localizando o Recife, status "On line" em destaque no modo claro com relógio, data e ícone meteorológico dinâmico automático.
+- **Decisão:**
+  1. **Sidebar Lateral Esquerda (`SidebarNav`):**
+     - Logo oficial da Arboris adaptativa ao tema (`/logo-arboris2.png` em modo claro e `/logo-arboris.png` em modo escuro).
+     - Menus verticais: `Tempo real`, `Comparação & Histórico`, `Dashboard Verde`, `Clima NASA POWER`, `MapBiomas & Landsat`, `Alertas`, `Índice Térmico` e `Relatórios` (com modal interativo de exportação).
+     - Componente `PernambucoMinimap`: silhueta SVG do Estado de Pernambuco com ponto pulsante com brilho e anel de radar ciano demarcando a localização litorânea exata do Recife (8.05° S, 34.88° O).
+     - Bloco `Dados atualizados`: horário real do carimbo de medição (`↳ HH:mm`) e lista de fontes ativas (`Open-Meteo API`, `Landsat 8/9`, `MapBiomas · NASA POWER`).
+     - Rodapé de versão da plataforma: `v1.0 MVP · Radar Climático · Plataforma Arboris Integrada`.
+  2. **Barra Superior (`TopHeader`):**
+     - Título institucional: `SISTEMA DE MONITORAMENTO E ALERTA DE ILHAS DE CALOR`, subtítulo `RECIFE / PE · PLATAFORMA ARBORIS` e slogan em destaque `“MONITORAR HOJE, PROTEGER AMANHÃ”`.
+     - Barra de pesquisa territorial com atalho de teclado `/` e seleção de bairros.
+     - Indicador de status em alto contraste no tema claro: pílula esmeralda `● On line`.
+     - Relógio digital em tempo real e data do dia gerada automaticamente em português (`Seg, 24 de jun de 2024`).
+     - Ícone de tempo dinâmico automático (Sol, Chuva, Nublado, Tempestade) derivado da tabela de códigos WMO (`weather_code`) da API pública Open-Meteo.
+     - Central de notificações, alternador de modo claro/escuro e menu do operador logado.
+  3. **Sensação Térmica da Cidade (`apparent_temperature`):**
+     - Integração do parâmetro aberto `apparent_temperature` da Open-Meteo API ao serviço `realtime-weather-service.ts`.
+     - Exibição destacada no KPI de Temperatura Média da Cidade e na tabela de bairros.
+  4. **Layout Alinhado em Grid 8x4:**
+     - **Coluna Esquerda (8 colunas):**
+       - `Mapa térmico — Região Metropolitana do Recife`: botões de camadas (`Temperatura`, `Cobertura vegetal`, `Vulnerabilidade`), maximizar/restaurar, controles de zoom flutuantes (`+`, `-`, `⌖`), texto sobre o mar `OCEANO ATLÂNTICO`, escala gráfica (`0 2 4 6 km`) e card flutuante de legenda (`28° a 45°`) com checkboxes de camadas (`Bairros`, `Estações meteorológicas`, `Ilhas de calor`, `Rede viária`, `Hidrografia`).
+       - Linha inferior abaixo do mapa: dois quadros perfeitamente alinhados lado a lado: `Índice Térmico por bairro` (tabela ordenada com classes) e `Histórico de temperatura` (gráfico de linhas duplas com curva de temperatura laranja e curva de sensação térmica ciano, com barra de métricas Média, Máxima, Variação e Tendência).
+     - **Coluna Direita (4 colunas):**
+       - `Alertas do dia` com alternância para Histórico, botão `Novo Alerta` e card de conformidade da Defesa Civil.
+       - Detalhe territorial do bairro selecionado (`ZoneDetail`) com badge de classificação A-E, indicadores biofísicos, caixa de Recomendação Operacional com ícone de caminhão-pipa da Defesa Civil e botões de atalho.
+       - Painel de `Insights` com botão `Ver todos →`, ícones representativos (Árvore esmeralda e Usuários âmbar) e métricas consolidadas.
+  5. **Responsividade & Mascote CLIMA:**
+     - Gaveta lateral retrátil no mobile e tablet acionada pelo menu hambúrguer.
+     - Preservação dos seletores `data-tour` para garantir a funcionalidade ininterrupta do mascote CLIMA.
+
+---
+
 ## 4. Regras de Negócio Biofísicas e Equações
 
 ### 4.1 Cálculo da Temperatura de Superfície Terrestre (LST)

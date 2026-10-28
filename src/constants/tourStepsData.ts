@@ -1,11 +1,17 @@
 export type TourCategory =
   | "geral"
+  | "sidebar"
+  | "minimap"
+  | "fontes"
   | "sensores"
   | "kpis"
   | "mapa"
   | "camadas"
+  | "indice"
+  | "historico"
   | "alertas"
   | "detalhes"
+  | "insights"
   | "curva"
   | "sub-mapbiomas"
   | "sub-verde"
@@ -42,22 +48,64 @@ export const CLIMA_TOUR_STEPS: TourStep[] = [
     targetTourId: "header-title",
     title: "Olá! Bem-vindo ao Radar Climático",
     climaSpeech:
-      "Epa! Tudo bem, operador? Eu sou o CLIMA, o caranguejo guardião do Recife! 🦀💧 Minha missão é traduzir satélites espaciais, sensores de rua e asfalto quente em decisões práticas para proteger a nossa gente dos extremos de temperatura. Vem comigo conhecer os cantos do sistema!",
+      "Epa! Tudo bem, gestor e operador? Eu sou o CLIMA, o caranguejo guardião do Recife! 🦀💧 Minha missão é traduzir satélites espaciais, sensores de rua e asfalto quente em decisões práticas para proteger a nossa gente dos extremos de temperatura. Vem comigo conhecer todos os módulos da plataforma!",
     climaMood: "waving",
     positionPreference: "bottom",
+  },
+  {
+    id: "sidebar-nav",
+    category: "sidebar",
+    requiredTab: "tempo-real",
+    requiredLayer: "calor",
+    menuTitle: "Menus & Navegação do Sistema",
+    badgeLabel: "Menu Lateral",
+    targetTourId: "sidebar-nav",
+    title: "Navegação Completa da Plataforma",
+    climaSpeech:
+      "Aqui na barra lateral esquerda você tem acesso direto a todos os nossos centros de comando: Operação em Tempo Real, Comparação & Histórico detalhado, Dashboard Verde com simulador de plantio, Clima NASA POWER oficial, Análise Ambiental MapBiomas, Central de Alertas com contador em tempo real e Emissão de Relatórios Executivos!",
+    climaMood: "explaining",
+    positionPreference: "right",
+  },
+  {
+    id: "sidebar-minimap",
+    category: "minimap",
+    requiredTab: "tempo-real",
+    requiredLayer: "calor",
+    menuTitle: "Recife no Mapa de Pernambuco",
+    badgeLabel: "Localização Geográfica",
+    targetTourId: "sidebar-minimap",
+    title: "Nosso Polo de Monitoramento",
+    climaSpeech:
+      "Este é o mapa geográfico real do Estado de Pernambuco! O ponto pulsante em ciano marca exatamente as coordenadas da nossa capital (8.05° S, 34.88° O). O Radar Climático cobre toda a Região Metropolitana a partir do coração do litoral pernambucano!",
+    climaMood: "happy",
+    positionPreference: "right",
+  },
+  {
+    id: "sidebar-sources",
+    category: "fontes",
+    requiredTab: "tempo-real",
+    requiredLayer: "calor",
+    menuTitle: "Fontes de Dados & APIs ao Vivo",
+    badgeLabel: "Engenharia de Dados",
+    targetTourId: "sidebar-sources",
+    title: "Sincronização Contínua Multi-Sensor",
+    climaSpeech:
+      "Olha que transparência: aqui você confere a hora exata da última atualização e as APIs integradas que alimentam nossos algoritmos em tempo real — Open-Meteo para dados atmosféricos ao vivo, satélites orbitais Landsat 8/9, Coleção 11 do MapBiomas e a agência espacial NASA POWER!",
+    climaMood: "explaining",
+    positionPreference: "right",
   },
   {
     id: "sensors-status",
     category: "sensores",
     requiredTab: "tempo-real",
     requiredLayer: "calor",
-    menuTitle: "Sensores e IoT ao Vivo",
+    menuTitle: "Status On line & Horário",
     badgeLabel: "Conexões em Campo",
     targetTourId: "sensors-status",
-    title: "Nossos Termômetros Urbanos Conectados",
+    title: "Estações Urbanas Conectadas",
     climaSpeech:
-      "Essas luzinhas verdes são os nossos postos avançados nos bairros! Funcionam como termômetros urbanos conectados 24h por dia. Se a temperatura der um salto em Santo Amaro ou no Ibura, a gente fica sabendo no mesmo instante, sem ter que adivinhar!",
-    climaMood: "explaining",
+      "Este quadrinho unificado no topo indica que nossa rede está 100% On line! Ele exibe o horário de Brasília em tempo real, a data atual e o ícone meteorológico dinâmico. Se clicar nele, você força uma sincronização imediata com os sensores de campo!",
+    climaMood: "happy",
     positionPreference: "bottom",
   },
   {
@@ -68,10 +116,10 @@ export const CLIMA_TOUR_STEPS: TourStep[] = [
     menuTitle: "Painel de Indicadores (KPIs)",
     badgeLabel: "Diagnóstico Rápido",
     targetTourId: "kpi-macro",
-    title: "A 'Febre' da Cidade em 4 Números",
+    title: "A 'Febre' da Cidade em Tempo Real",
     climaSpeech:
-      "Olha só que prático: aqui você bate o olho e vê a temperatura média da cidade, o recorde máximo registrado hoje, quantos microterritórios estão sufocando de calor e a quantidade de cidadãos expostos ao risco térmico. É a febre urbana medida em segundos!",
-    climaMood: "happy",
+      "Diagnóstico em 4 cartões: Temperatura média da cidade, a Sensação Térmica média em destaque logo abaixo, o pico máximo registrado hoje com o bairro recordista, e o número de cidadãos recifenses em situação de risco térmico cruzado com o Censo IBGE!",
+    climaMood: "explaining",
     positionPreference: "bottom",
   },
   {
@@ -84,7 +132,7 @@ export const CLIMA_TOUR_STEPS: TourStep[] = [
     targetTourId: "map-panel",
     title: "O Raio-X do Calor nas Ruas",
     climaSpeech:
-      "Este é o mapa do Recife como você nunca viu! Áreas azuis são refrescadas pela brisa e sombras; áreas em amarelo e vermelho-escuro viram frigideiras urbanas por causa do concreto e falta de árvores. Clique em qualquer bairro para focar a análise nele!",
+      "O mapa interativo da RMR! Áreas azuis são refrescadas pela brisa e dossel verde; manchas amarelas e vermelhas representam ilhas de calor severas provocadas pelo asfalto e concreto. Clique em qualquer bairro para focar a análise territorial imediata!",
     climaMood: "explaining",
     positionPreference: "top",
   },
@@ -93,14 +141,42 @@ export const CLIMA_TOUR_STEPS: TourStep[] = [
     category: "camadas",
     requiredTab: "tempo-real",
     requiredLayer: "calor",
-    menuTitle: "Lentes e Camadas do Mapa",
-    badgeLabel: "Filtros Estratégicos",
+    menuTitle: "Lentes & Controles do Mapa",
+    badgeLabel: "Camadas & Zoom",
     targetTourId: "map-layers",
-    title: "Troque as Lentes de Investigação",
+    title: "Filtros Estratégicos & Tela Cheia",
     climaSpeech:
-      "Aqui você ganha superpoderes! Alterne entre a lente de Calor (temperatura), Cobertura Vegetal (onde temos dossel de árvores) e Vulnerabilidade Social (onde vivem idosos e famílias que mais sofrem sem refrigeração). O cruzamento perfeito para políticas públicas!",
+      "No topo do mapa, você seleciona o bairro no menu rápido e troca as lentes entre Temperatura (anomalia de calor), Cobertura Vegetal (copas e refúgios) e Vulnerabilidade Social (população exposta). Use o botão no canto direito para expandir o mapa em tela cheia!",
     climaMood: "explaining",
     positionPreference: "bottom",
+  },
+  {
+    id: "thermal-index",
+    category: "indice",
+    requiredTab: "tempo-real",
+    requiredLayer: "calor",
+    menuTitle: "Índice Térmico por Bairro",
+    badgeLabel: "Ranking Municipal",
+    targetTourId: "thermal-index",
+    title: "Matriz Comparativa dos Bairros",
+    climaSpeech:
+      "Esta tabela classifica todos os microterritórios do Recife pelo nível térmico. Você confere a temperatura do ar, a sensação térmica calculada e a letra de risco de A a E. Clique em qualquer linha para selecionar o bairro instantaneamente!",
+    climaMood: "happy",
+    positionPreference: "top",
+  },
+  {
+    id: "history-card",
+    category: "historico",
+    requiredTab: "tempo-real",
+    requiredLayer: "calor",
+    menuTitle: "Histórico de Temperatura",
+    badgeLabel: "Curva dos 7 Dias",
+    targetTourId: "history-card",
+    title: "Tendência Térmica & Consulta por Período",
+    climaSpeech:
+      "Aqui você acompanha a curva dupla dos últimos 7 dias: a linha laranja mostra a temperatura e a linha ciano mostra a sensação térmica real com o dia de pico destacado. Quer analisar períodos maiores? Basta clicar no botão inferior para abrir a tela de Comparação & Histórico de 7, 14 ou 30 dias!",
+    climaMood: "explaining",
+    positionPreference: "top",
   },
   {
     id: "alerts-panel",
@@ -112,7 +188,7 @@ export const CLIMA_TOUR_STEPS: TourStep[] = [
     targetTourId: "alerts-panel",
     title: "Linha Direta com o Socorro",
     climaSpeech:
-      "Alerta ligado salva vidas! Quando a sensação térmica ferve acima do limite aceitável da Defesa Civil, este painel acende. Com um clique em 'Disparar notificação', o alerta vai direto para o rádio das equipes de campo e aplicativo oficial!",
+      "Alerta ligado salva vidas! Quando a sensação térmica ferve acima do limite da Defesa Civil, este painel acende com as ocorrências do dia. Com um toque em 'Disparar notificação', o plano de contingência é acionado para as equipes de campo!",
     climaMood: "alert",
     positionPreference: "left",
   },
@@ -121,26 +197,26 @@ export const CLIMA_TOUR_STEPS: TourStep[] = [
     category: "detalhes",
     requiredTab: "tempo-real",
     requiredLayer: "calor",
-    menuTitle: "Recomendações por Órgão Público",
-    badgeLabel: "Plano de Ação",
+    menuTitle: "Detalhes do Microterritório",
+    badgeLabel: "Plano de Contingência",
     targetTourId: "zone-detail",
-    title: "Ação Sob Medida para Cada Secretaria",
+    title: "Diagnóstico & Recomendações Operacionais",
     climaSpeech:
-      "Saber que tá quente é bom, mas agir é melhor ainda! Aqui eu mastigo as ordens de serviço: Defesa Civil distribui água, EMLURB irriga praças, CTTU alivia semáforos para motociclistas não cozinharem no sol e a Saúde coloca as UPAs de sobreaviso!",
+      "Este bloco detalha o bairro selecionado: classificação de risco térmico de A a E (com botão para ver o significado), indicadores de umidade e vulnerabilidade, além da Recomendação Operacional para envio emergencial de caminhões-pipa e agentes de saúde da Prefeitura!",
     climaMood: "happy",
     positionPreference: "left",
   },
   {
-    id: "hourly-curve",
-    category: "curva",
+    id: "insights-panel",
+    category: "insights",
     requiredTab: "tempo-real",
     requiredLayer: "calor",
-    menuTitle: "Curva do Dia & Horário de Pico",
-    badgeLabel: "Previsão Diurna",
-    targetTourId: "hourly-curve",
-    title: "A Montanha-Russa Térmica do Dia",
+    menuTitle: "Insights & Inteligência Territorial",
+    badgeLabel: "Cruzamento Científico",
+    targetTourId: "insights-panel",
+    title: "Ciência Aplicada à Gestão Pública",
     climaSpeech:
-      "Aqui você vê a escalada do sol hora a hora. Dá pra antecipar em que momento a cidade vai bater o pico da tarde e quando a brisa da noite vai começar a aliviar. Perfeito para programar rondas e operações externas!",
+      "Este painel horizontal cruza inteligência biofísica: comprova que cada 10% a mais de copas de árvores arrefece o bairro em até 2,1 °C, identifica o horário de sobrecarga humana (13h às 16h30) e demonstra o papel protetor da brisa marítima costeira!",
     climaMood: "explaining",
     positionPreference: "top",
   },

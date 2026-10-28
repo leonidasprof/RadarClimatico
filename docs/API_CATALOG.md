@@ -39,12 +39,12 @@ O **Catálogo de APIs do Arboris** consolida a especificação exaustiva de toda
 #### Identificação & Governança
 - **Nome:** Open-Meteo Free Weather API
 - **Descrição:** Serviço meteorológico global de alta resolução que sintetiza previsões numéricas dos modelos ECMWF IFS, GFS, DWD ICON e Météo-France.
-- **Finalidade:** Fornecer leituras ao vivo de temperatura do ar (°C), umidade relativa (%), velocidade do vento (km/h) e curva horária para a latitude/longitude central do Recife (-8.0578, -34.8829).
+- **Finalidade:** Fornecer leituras ao vivo de temperatura do ar (°C), sensação térmica da cidade (`apparent_temperature` em °C), umidade relativa (%), código de tempo da Organização Meteorológica Mundial (`weather_code` WMO para ícone dinâmico do clima), status dia/noite (`is_day`), velocidade do vento (km/h) e curva horária para a latitude/longitude central do Recife (-8.0578, -34.8829).
 - **Fornecedor:** Open-Meteo GmbH (Alemanha)
 - **Link Oficial:** [https://open-meteo.com/en/docs](https://open-meteo.com/en/docs)
 - **Versão da API:** `v1`
 - **Status:** **Ativa (Produção)**
-- **Última Validação:** 19/10/2026
+- **Última Validação:** 28/10/2026
 
 #### Especificação Técnica
 - **URL Base:** `https://api.open-meteo.com/v1`

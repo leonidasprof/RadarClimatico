@@ -31,6 +31,9 @@ import {
   type RealtimeWeatherSnapshot,
 } from "@/lib/geo-services/realtime-weather-service";
 import { MapLayerSwitcher } from "@/components/dashboard/MapLayerSwitcher";
+import { SidebarNav } from "@/components/dashboard/SidebarNav";
+import { TopHeader } from "@/components/dashboard/TopHeader";
+import { ReportsModal } from "@/components/dashboard/ReportsModal";
 import { LoginPage } from "./login";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -47,6 +50,10 @@ import {
   ShieldAlert,
   Info,
   Plus,
+  Minus,
+  Crosshair,
+  Maximize2,
+  Minimize2,
   ArrowLeftRight,
   Trees,
   CheckCheck,
@@ -61,6 +68,13 @@ import {
   History,
   Clock,
   AlertTriangle,
+  Thermometer,
+  Flame,
+  Users,
+  Check,
+  Truck,
+  Droplets,
+  CalendarRange,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -106,6 +120,8 @@ function Dashboard() {
   const [alertsList, setAlertsList] = useState<AlertItem[]>(alerts);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [reportsModalOpen, setReportsModalOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [weatherSnapshot, setWeatherSnapshot] = useState<RealtimeWeatherSnapshot | null>(null);
   const [isSyncingWeather, setIsSyncingWeather] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
@@ -182,74 +198,97 @@ function Dashboard() {
   return (
     <TourProvider>
       <TourRouteSync setActiveTab={setActiveTab} setMapLayer={setMapLayer} />
-      <div className="min-h-screen">
-        <Header
+      <div className="min-h-screen flex bg-background text-foreground transition-colors">
+        {/* 1. SIDEBAR LATERAL ESQUERDA (Desktop fixo / Mobile drawer) */}
+        <SidebarNav
           activeTab={activeTab}
           onSelectTab={(tab) => {
             setActiveTab(tab);
             if (tab === "tempo-real") setMapLayer("calor");
           }}
-          onOpenContactModal={() => setContactModalOpen(true)}
+          isDark={isDark}
+          currentTime={weatherSnapshot?.fetchedAt || new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
           weatherSnapshot={weatherSnapshot}
-          isSyncingWeather={isSyncingWeather}
-          onSyncWeather={() => syncWeather(false)}
+          alertsCount={alertsList.filter((a) => !a.notified).length}
+          mobileOpen={mobileMenuOpen}
+          onCloseMobile={() => setMobileMenuOpen(false)}
+          onOpenReports={() => setReportsModalOpen(true)}
         />
-        <main className="mx-auto grid max-w-[1500px] gap-4 px-4 pb-14 lg:grid-cols-12">
-          {/* Visualização Padrão: Operação em Tempo Real (Mapa Térmico & Camadas) */}
-          {activeTab === "tempo-real" && (
-            <>
-              {mapLayer === "calor" && (
-                <>
-                  <div className="lg:col-span-8 space-y-4">
+
+        {/* 2. ÁREA DE CONTEÚDO PRINCIPAL À DIREITA */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <TopHeader
+            onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onOpenContactModal={() => setContactModalOpen(true)}
+            weatherSnapshot={weatherSnapshot}
+            isSyncingWeather={isSyncingWeather}
+            onSyncWeather={() => syncWeather(false)}
+            zonesList={currentZones}
+            onSelectZone={setSelected}
+            onOpenAlerts={() => setActiveTab("alertas")}
+          />
+
+          <main className="p-3.5 sm:p-5 lg:p-6 space-y-4 max-w-[1600px] w-full mx-auto pb-14">
+            {/* Visualização Padrão: Operação em Tempo Real (Mapa Térmico & Camadas) */}
+            {activeTab === "tempo-real" && (
+              <>
+                {mapLayer === "calor" && (
+                  <div className="space-y-4">
+                    {/* Linha 1 de Indicadores Macro (KPIs) com Ícones e Sensação Térmica */}
                     <Kpis weather={weatherSnapshot} />
-                    <MapPanel
-                      selected={selected}
-                      onSelect={setSelected}
-                      zonesList={currentZones}
-                      onOpenGreenDashboard={() => setActiveTab("verde")}
-                      activeLayer={mapLayer}
-                      onChangeLayer={setMapLayer}
-                    />
-                    {/* Linha 1 abaixo do mapa térmico: Índice Térmico e Histórico de Temperatura */}
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <RatingPanel
-                        zonesList={currentZones}
-                        onSelect={setSelected}
-                        selected={selected}
-                      />
-                      <HistoryPanel
-                        zone={selected}
-                        onOpenComparison={() => setActiveTab("historico")}
-                      />
+
+                    {/* Linha 2: Grid Principal 8 Colunas (Mapa + Bloco de Dados) x 4 Colunas (Painel Operacional) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                      <div className="lg:col-span-8 flex flex-col gap-4">
+                        <MapPanel
+                          selected={selected}
+                          onSelect={setSelected}
+                          zonesList={currentZones}
+                          onOpenGreenDashboard={() => setActiveTab("verde")}
+                          activeLayer={mapLayer}
+                          onChangeLayer={setMapLayer}
+                        />
+
+                        {/* Bloco Alinhado Abaixo do Mapa: Índice Térmico (Tabela) e Histórico de Temperatura (Gráfico Duplo) */}
+                        <div className="grid gap-4 md:grid-cols-2 flex-1">
+                          <ThermalIndexTable
+                            zonesList={currentZones}
+                            onSelect={setSelected}
+                            selected={selected}
+                            onViewAll={() => setActiveTab("indice")}
+                          />
+                          <TemperatureHistoryCard
+                            zone={selected}
+                            onOpenComparison={() => setActiveTab("historico")}
+                          />
+                        </div>
+                      </div>
+
+                      <aside className="lg:col-span-4 flex flex-col gap-4">
+                        <AlertsPanel
+                          alerts={alertsList}
+                          onOpenReportModal={() => setReportModalOpen(true)}
+                          onDispatchAlert={handleDispatchAlert}
+                        />
+                        <div className="flex-1 flex flex-col min-h-0">
+                          <ZoneDetail
+                            zone={selected}
+                            onOpenComparison={() => setActiveTab("historico")}
+                            onOpenVegetalView={() => setMapLayer("vegetal")}
+                            onOpenVulnView={() => setMapLayer("vulnerabilidade")}
+                            onOpenNasaPower={() => setActiveTab("clima-nasa")}
+                            onOpenEnvironmentalAnalysis={() => setActiveTab("analise-ambiental")}
+                          />
+                        </div>
+                      </aside>
                     </div>
-                    {/* Linha 2 abaixo: Curva do Dia e Priorização de Infraestrutura Verde */}
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <HourlyPanel
-                        hourlyData={weatherSnapshot?.hourly}
-                        peakHour={weatherSnapshot?.peakHour}
-                        peakTemp={weatherSnapshot?.peakTemp}
-                      />
-                      <PriorityPanel onOpenGreenDashboard={() => setActiveTab("verde")} />
+
+                    {/* Bloco Insights na horizontal iniciando abaixo do índice térmico até o final da página */}
+                    <div className="w-full">
+                      <InsightsPanel />
                     </div>
                   </div>
-                  <aside className="lg:col-span-4 space-y-4">
-                    <AlertsPanel
-                      alerts={alertsList}
-                      onOpenReportModal={() => setReportModalOpen(true)}
-                      onDispatchAlert={handleDispatchAlert}
-                    />
-                    <ZoneDetail
-                      zone={selected}
-                      onOpenComparison={() => setActiveTab("historico")}
-                      onOpenVegetalView={() => setMapLayer("vegetal")}
-                      onOpenVulnView={() => setMapLayer("vulnerabilidade")}
-                      onOpenNasaPower={() => setActiveTab("clima-nasa")}
-                      onOpenEnvironmentalAnalysis={() => setActiveTab("analise-ambiental")}
-                    />
-                    <InsightsPanel />
-                  </aside>
-                </>
-              )}
+                )}
 
               {/* Visualização de Cobertura Vegetal integrada dentro do Mapa Térmico */}
               {mapLayer === "vegetal" && (
@@ -404,9 +443,14 @@ function Dashboard() {
           open={contactModalOpen}
           onOpenChange={setContactModalOpen}
         />
+        <ReportsModal
+          open={reportsModalOpen}
+          onOpenChange={setReportsModalOpen}
+        />
         <ClimaTourOverlay />
       </div>
-    </TourProvider>
+    </div>
+  </TourProvider>
   );
 }
 
@@ -427,334 +471,464 @@ function TourRouteSync({
   return null;
 }
 
-function Header({
-  activeTab,
-  onSelectTab,
-  onOpenContactModal,
-  weatherSnapshot,
-  isSyncingWeather,
-  onSyncWeather,
-}: {
-  activeTab: NavTab;
-  onSelectTab: (tab: NavTab) => void;
-  onOpenContactModal: () => void;
-  weatherSnapshot?: RealtimeWeatherSnapshot | null;
-  isSyncingWeather?: boolean;
-  onSyncWeather?: () => void;
-}) {
-  const { isDark, toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [currentTime, setCurrentTime] = useState<string>(() =>
-    new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
-  );
-
-  useEffect(() => {
-    const update = () => {
-      setCurrentTime(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
-    };
-    update();
-    const timer = setInterval(update, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const handleLogout = () => {
-    setMenuOpen(false);
-    logout();
-    toast.info("Sessão encerrada.", {
-      description: "Você foi desconectado do Radar Climático.",
-    });
-    navigate({ to: "/login" });
-  };
-
-  const navItems: { id: NavTab; label: string }[] = [
-    { id: "tempo-real", label: "Tempo real" },
-    { id: "historico", label: "Comparação & Histórico" },
-    { id: "verde", label: "Dashboard Verde" },
-    { id: "clima-nasa", label: "Clima NASA POWER" },
-    { id: "analise-ambiental", label: "MapBiomas & Landsat" },
-    { id: "alertas", label: "Alertas" },
-    { id: "indice", label: "Índice Térmico" },
-  ];
-
-  return (
-    <header className="mx-auto mb-4 flex max-w-[1500px] flex-col gap-4 px-4 pt-6 pb-4">
-      {/* Faixa superior */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3" data-tour="header-title">
-        {/* Logo maior à esquerda */}
-        <div className="flex items-center gap-3 min-w-0">
-          <img
-            src={isDark ? "/logo-arboris.png" : "/logo-arboris2.png"}
-            alt="Arboris Logo"
-            className="h-11 sm:h-14 md:h-16 w-auto object-contain shrink-0"
-          />
-
-          {/* Texto principal + localização alinhados à esquerda da logo */}
-          <div className="flex flex-col items-start min-w-0">
-            <h1 className="text-sm sm:text-base md:text-xl font-bold leading-tight line-clamp-2 sm:line-clamp-none">
-              SISTEMA DE MONITORAMENTO E ALERTA DE ILHAS DE CALOR
-            </h1>
-            <p className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              Arboris · Recife / PE
-            </p>
-          </div>
-        </div>
-
-        {/* Botões à direita */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end sm:self-auto ml-auto sm:ml-0">
-          {/* Badge Interativo com Horário em Tempo Real e Sincronização ao lado do botão de tema */}
-          {onSyncWeather && (
-            <button
-              onClick={onSyncWeather}
-              disabled={isSyncingWeather}
-              type="button"
-              className="flex items-center gap-1.5 rounded-full border border-sky-500/40 bg-sky-500/10 px-2.5 sm:px-3 py-1.5 whitespace-nowrap hover:bg-sky-500/20 transition-all cursor-pointer shadow-xs disabled:opacity-60"
-              title="Clique para sincronizar o clima ao vivo via Open-Meteo & NASA POWER"
-            >
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span className="font-mono text-xs text-sky-400 font-semibold hidden sm:inline">
-                {isSyncingWeather ? "Sincronizando..." : `Ao vivo · ${currentTime}`}
-              </span>
-              <span className="font-mono text-xs text-sky-400 font-semibold sm:hidden">
-                {currentTime}
-              </span>
-            </button>
-          )}
-
-          {/* Botão alternar tema */}
-          <button
-            onClick={toggleTheme}
-            type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card/60 transition-colors hover:bg-card focus:outline-none cursor-pointer"
-            aria-label="Alternar modo claro/escuro"
-            title={isDark ? "Mudar para Modo Claro" : "Mudar para Modo Escuro"}
-          >
-            {isDark ? (
-              <Sun className="h-4 w-4 text-amber-400" />
-            ) : (
-              <Moon className="h-4 w-4 text-slate-700" />
-            )}
-          </button>
-
-          {/* Botão Usuário */}
-          <div className="relative">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              type="button"
-              className="flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-2.5 py-1.5 transition-all hover:bg-card hover:border-primary/50 focus:outline-none cursor-pointer shadow-sm"
-              aria-label="Menu da conta de usuário"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary font-display text-xs font-bold text-primary-foreground">
-                {user?.avatarInitials ?? "U"}
-              </div>
-              <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-semibold leading-tight text-foreground">
-                  {user?.name ?? "Usuário"}
-                </span>
-                <span className="text-[10px] text-muted-foreground leading-tight">
-                  {user?.role ? user.role.slice(0, 24) : "Defesa Civil"}
-                </span>
-              </div>
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground ml-0.5" />
-            </button>
-
-            {menuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setMenuOpen(false)}
-                />
-                <div className="absolute right-0 mt-2 w-72 rounded-lg border border-border bg-card p-2 shadow-2xl z-50">
-                  {/* Perfil resumido */}
-                  <div className="px-3 py-2 border-b border-border/60">
-                    <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                      <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                      {user?.name ?? "Jorge Gonçalves"}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground font-mono truncate mt-0.5">
-                      {user?.email ?? "jorge.goncalves@recife.pe.gov.br"}
-                    </p>
-                    <span className="mt-1.5 inline-block rounded bg-secondary px-1.5 py-0.5 text-[9px] font-mono text-secondary-foreground">
-                      {user?.department ?? "Defesa Civil / CODECIR"}
-                    </span>
-                  </div>
-
-                  <div className="py-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        onOpenContactModal();
-                      }}
-                      className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-xs text-foreground transition-colors hover:bg-muted cursor-pointer"
-                    >
-                      <Edit3 className="h-3.5 w-3.5 text-primary" />
-                      <div className="flex flex-col">
-                        <span className="font-medium">Alterar informações de contato</span>
-                        <span className="text-[10px] text-muted-foreground">Telefone, e-mail e cargo</span>
-                      </div>
-                    </button>
-                  </div>
-
-                  <div className="my-1 border-t border-border/60"></div>
-
-                  <div className="py-0.5">
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-xs text-destructive transition-colors hover:bg-destructive/10 cursor-pointer"
-                    >
-                      <LogOut className="h-3.5 w-3.5" />
-                      <span className="font-medium">Sair da conta / trocar de usuário</span>
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Faixa inferior: menus de navegação e sensores */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 py-1 px-1">
-        {/* Navegação principal alinhada à esquerda */}
-        <div className="flex items-center min-w-0 overflow-x-auto no-scrollbar py-0.5">
-          <nav className="flex items-center gap-1 rounded-lg border border-border bg-card/60 p-1 overflow-x-auto no-scrollbar scroll-smooth" data-tour="nav-tabs">
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => onSelectTab(item.id)}
-                  className={
-                    "rounded-md px-3 py-1.5 transition-colors cursor-pointer text-xs sm:text-sm font-medium whitespace-nowrap shrink-0 " +
-                    (isActive
-                      ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40")
-                  }
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Indicadores de status compactos e proporcionais na mesma linha à direita */}
-        <div className="flex items-center gap-2 shrink-0 self-end lg:self-auto pr-1" data-tour="sensors-status">
-          <div
-            className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 whitespace-nowrap"
-            title="Sensores IoT e estações ativas em campo"
-          >
-            <span className="h-2 w-2 rounded-full bg-canopy shrink-0" />
-            <span className="font-mono text-xs text-muted-foreground">
-              {weatherSnapshot?.zones.length || zones.length} online
-            </span>
-          </div>
-          <div
-            className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 whitespace-nowrap"
-            title="Sensores offline"
-          >
-            <span className="h-2 w-2 rounded-full bg-destructive/60 shrink-0" />
-            <span className="font-mono text-xs text-muted-foreground">
-              0 offline
-            </span>
-          </div>
-        </div>
-      </div>
-    </header>
-  );
-}
-
 function Kpis({ weather }: { weather?: RealtimeWeatherSnapshot | null }) {
   const avgTemp = weather?.cityAverageTemp
     ? weather.cityAverageTemp.toFixed(1).replace(".", ",")
-    : "27,0";
+    : "28,7";
 
-  // 1. Regra de Negócio: Maior temperatura do dia
-  // Durante as 24 horas do dia, este bloco informa a temperatura mais alta registrada na cidade até o momento
+  const avgFeels = weather?.cityAverageFeels
+    ? weather.cityAverageFeels.toFixed(1).replace(".", ",")
+    : (weather?.cityAverageTemp ? (weather.cityAverageTemp + 4.1).toFixed(1).replace(".", ",") : "32,8");
+
   const maxTempNum = weather?.cityMaxTemp !== undefined
     ? weather.cityMaxTemp
-    : (weather?.cityAverageTemp ? Number((weather.cityAverageTemp + 2.4).toFixed(1)) : 29.4);
+    : (weather?.cityAverageTemp ? Number((weather.cityAverageTemp + 2.4).toFixed(1)) : 33.2);
 
   const maxTempFormatted = maxTempNum.toFixed(1).replace(".", ",");
   const maxTempZone = weather?.cityMaxTempZone || "Santo Amaro";
-  const maxTempHour = weather?.cityMaxTempHour ? ` (${weather.cityMaxTempHour})` : "";
+  const maxTempHour = weather?.cityMaxTempHour ? ` (${weather.cityMaxTempHour})` : " (12h)";
 
-  // 2. Regra de Negócio: Só usar o termo "Pico" se for alta (>= 32 °C)
-  // Pela manhã ou em horários moderados (< 32 °C), NÃO usa o termo pico, exibindo "Máxima até o momento".
   const isHighTemp = maxTempNum >= 32.0;
   const tempStatus = isHighTemp ? "Pico registrado hoje" : "Máxima até o momento";
-  const tempTone = isHighTemp ? "var(--heat-5)" : "var(--heat-4)";
-
-  // Sensação térmica correspondente para contexto complementar
-  const maxFeelsFormatted = weather?.cityMaxFeels
-    ? weather.cityMaxFeels.toFixed(1).replace(".", ",")
-    : undefined;
 
   const critCount = weather?.criticalZonesCount !== undefined ? String(weather.criticalZonesCount) : "0";
   const totalCount = weather?.zones.length || 8;
 
-  const items: {
-    label: string;
-    value: string;
-    unit: string;
-    delta: string;
-    subDelta?: string | undefined;
-    tooltip?: string | undefined;
-    tone: string;
-  }[] = [
-      {
-        label: "Temp. média da cidade",
-        value: avgTemp,
-        unit: "°C",
-        delta: weather?.source === "live" ? "Ao vivo · Open-Meteo API" : "+2,3 vs média histórica",
-        tone: "var(--heat-4)",
-      },
-      {
-        label: "Maior temperatura do dia",
-        value: maxTempFormatted,
-        unit: "°C",
-        delta: tempStatus,
-        subDelta: `${maxTempZone}${maxTempHour}`,
-        tooltip: maxFeelsFormatted
-          ? `Temperatura máx: ${maxTempFormatted}°C em ${maxTempZone}${maxTempHour} · Sensação térmica: ${maxFeelsFormatted}°C`
-          : undefined,
-        tone: tempTone,
-      },
-      {
-        label: "Zonas em criticidade",
-        value: critCount,
-        unit: `de ${totalCount}`,
-        delta: "Monitoramento contínuo",
-        tone: "var(--heat-4)",
-      },
-      {
-        label: "População exposta",
-        value: "318",
-        unit: "mil",
-        delta: "62% em alta vulnerabilidade",
-        tone: "var(--accent)",
-      },
-    ];
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-tour="kpi-macro">
-      {items.map((k) => (
-        <div key={k.label} title={k.tooltip} className="panel p-4 flex flex-col justify-between min-h-[110px]">
+      {/* 1. Temperatura Média e Sensação Térmica da Cidade */}
+      <div className="panel p-4 flex flex-col justify-between min-h-[124px] transition-all hover:border-amber-500/40 shadow-xs">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs text-muted-foreground">{k.label}</p>
-            <p className="mt-2 flex items-baseline gap-1 font-display text-3xl font-semibold">
-              <span style={{ color: k.tone }}>{k.value}</span>
-              <span className="text-sm font-normal text-muted-foreground">{k.unit}</span>
-            </p>
+            <p className="text-xs font-medium text-muted-foreground">Temperatura média da cidade</p>
+            <div className="mt-1.5 flex items-baseline gap-2">
+              <span className="font-display text-3xl font-bold tracking-tight text-amber-500">
+                {avgTemp}
+              </span>
+              <span className="text-sm font-normal text-muted-foreground">°C</span>
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.2 text-[10px] font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                <TrendingDown className="h-2.5 w-2.5" />
+                -1,2°C
+              </span>
+            </div>
+            {/* Sensação Térmica em Destaque Integrado */}
+            <div className="mt-1 flex items-center gap-1.5 text-xs">
+              <span className="text-[11px] text-muted-foreground font-mono">Sensação:</span>
+              <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+                {avgFeels} °C
+              </span>
+            </div>
           </div>
-          <div className="mt-1.5 font-mono text-[11px] text-muted-foreground leading-snug">
-            <p>{k.delta}</p>
-            {k.subDelta && <p className="font-semibold text-foreground/90">{k.subDelta}</p>}
+
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 border border-amber-500/25 text-amber-500 shrink-0 shadow-xs">
+              <Thermometer className="h-5 w-5" />
+            </div>
+            {/* Sparkline Sutil Âmbar */}
+            <svg viewBox="0 0 50 16" className="w-14 h-4 overflow-visible">
+              <path
+                d="M 2 12 Q 14 4, 25 9 T 48 4"
+                fill="none"
+                stroke="#f59e0b"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
           </div>
         </div>
-      ))}
+
+        <div className="mt-2 pt-2 border-t border-border/50 font-mono text-[10px] text-muted-foreground flex items-center justify-between">
+          <span>On line · Open-Meteo API</span>
+          <span className="text-amber-600 dark:text-amber-400 font-semibold">apparent_temp</span>
+        </div>
+      </div>
+
+      {/* 2. Maior Temperatura do Dia */}
+      <div className="panel p-4 flex flex-col justify-between min-h-[124px] transition-all hover:border-rose-500/40 shadow-xs">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">Maior temperatura do dia</p>
+            <div className="mt-1.5 flex items-baseline gap-1">
+              <span className="font-display text-3xl font-bold tracking-tight text-rose-500">
+                {maxTempFormatted}
+              </span>
+              <span className="text-sm font-normal text-muted-foreground">°C</span>
+            </div>
+            <p className="text-[11px] font-mono text-muted-foreground mt-1">
+              {tempStatus}
+            </p>
+            <p className="text-xs font-bold text-foreground">
+              {maxTempZone}{maxTempHour}
+            </p>
+          </div>
+
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/15 border border-rose-500/25 text-rose-500 shrink-0 shadow-xs">
+              <Flame className="h-5 w-5" />
+            </div>
+            {/* Sparkline Vermelha */}
+            <svg viewBox="0 0 50 16" className="w-14 h-4 overflow-visible">
+              <path
+                d="M 2 14 Q 15 12, 28 6 T 48 3"
+                fill="none"
+                stroke="#f43f5e"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <div className="mt-2 pt-2 border-t border-border/50 font-mono text-[10px] text-muted-foreground">
+          <span>Estação Termométrica Urbana</span>
+        </div>
+      </div>
+
+      {/* 3. Zonas em Criticidade */}
+      <div className="panel p-4 flex flex-col justify-between min-h-[124px] transition-all hover:border-slate-500/40 shadow-xs">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">Zonas em criticidade</p>
+            <div className="mt-1.5 flex items-baseline gap-1">
+              <span className="font-display text-3xl font-bold tracking-tight text-foreground">
+                {critCount}
+              </span>
+              <span className="text-sm font-normal text-muted-foreground">de {totalCount}</span>
+            </div>
+            <p className="text-[11px] font-mono text-muted-foreground mt-1">
+              Monitoramento contínuo
+            </p>
+          </div>
+
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-500/15 border border-slate-500/25 text-slate-400 dark:text-slate-300 shrink-0 shadow-xs">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            {/* Mini gráfico de barras */}
+            <div className="flex items-end gap-1 h-4">
+              <span className="w-1.5 h-2 bg-slate-400/40 rounded-xs" />
+              <span className="w-1.5 h-3 bg-slate-400/60 rounded-xs" />
+              <span className="w-1.5 h-4 bg-primary/70 rounded-xs" />
+              <span className="w-1.5 h-2.5 bg-slate-400/50 rounded-xs" />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-2 pt-2 border-t border-border/50 font-mono text-[10px] text-muted-foreground">
+          <span>Classes de Severidade D e E</span>
+        </div>
+      </div>
+
+      {/* 4. População Exposta */}
+      <div className="panel p-4 flex flex-col justify-between min-h-[124px] transition-all hover:border-cyan-500/40 shadow-xs">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">População exposta</p>
+            <div className="mt-1.5 flex items-baseline gap-2">
+              <span className="font-display text-3xl font-bold tracking-tight text-cyan-600 dark:text-cyan-400">
+                318
+              </span>
+              <span className="text-sm font-normal text-muted-foreground">mil</span>
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-1.5 py-0.2 text-[10px] font-mono font-semibold text-rose-600 dark:text-rose-400">
+                ↑ +12%
+              </span>
+            </div>
+            <p className="text-[11px] font-mono text-muted-foreground mt-1">
+              62% em alta vulnerabilidade
+            </p>
+          </div>
+
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-500/15 border border-cyan-500/25 text-cyan-500 shrink-0 shadow-xs">
+              <Users className="h-5 w-5" />
+            </div>
+            {/* Indicador de densidade */}
+            <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden">
+              <div className="h-full bg-cyan-500 w-[62%]" />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-2 pt-2 border-t border-border/50 font-mono text-[10px] text-muted-foreground">
+          <span>Cruzamento Censo IBGE 2022</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ThermalIndexTable({
+  zonesList,
+  selected,
+  onSelect,
+  onViewAll,
+}: {
+  zonesList: Zone[];
+  selected: Zone;
+  onSelect: (z: Zone) => void;
+  onViewAll?: () => void;
+}) {
+  const sorted = [...zonesList].sort((a, b) => b.temp - a.temp);
+
+  return (
+    <section className="panel p-4 flex flex-col justify-between h-full shadow-xs" data-tour="thermal-index">
+      <div>
+        <div className="flex items-center justify-between pb-2 border-b border-border/60">
+          <div>
+            <h3 className="text-xs sm:text-sm font-bold text-foreground">Índice Térmico por bairro</h3>
+            <p className="text-[10px] text-muted-foreground">Classificação de calor e sensação térmica</p>
+          </div>
+          {onViewAll && (
+            <button
+              onClick={onViewAll}
+              className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <span>Ver todos</span>
+              <span>→</span>
+            </button>
+          )}
+        </div>
+
+        <div className="mt-2 overflow-x-auto no-scrollbar">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-border/60 text-[10px] font-mono uppercase text-muted-foreground">
+                <th className="py-1.5 px-2 font-normal">#</th>
+                <th className="py-1.5 px-2 font-normal">Bairro</th>
+                <th className="py-1.5 px-2 font-normal text-right">Temp. (°C)</th>
+                <th className="py-1.5 px-2 font-normal text-right">Sensação (°C)</th>
+                <th className="py-1.5 px-2 font-normal text-center">Classe</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/40 font-mono">
+              {sorted.map((z, idx) => {
+                const isSelected = z.id === selected.id;
+                const rColor = ratingDefinitions[z.rating]?.color || heatVar(z.temp);
+                return (
+                  <tr
+                    key={z.id}
+                    onClick={() => onSelect(z)}
+                    className={`transition-colors cursor-pointer ${
+                      isSelected
+                        ? "bg-secondary/90 font-bold"
+                        : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <td className="py-1.5 px-2 text-muted-foreground">{idx + 1}</td>
+                    <td className="py-1.5 px-2 font-sans font-medium text-foreground">
+                      {z.name}
+                    </td>
+                    <td className="py-1.5 px-2 text-right">{z.temp.toFixed(1).replace(".", ",")}</td>
+                    <td className="py-1.5 px-2 text-right text-muted-foreground">
+                      {z.feels.toFixed(1).replace(".", ",")}
+                    </td>
+                    <td className="py-1.5 px-2 text-center">
+                      <span
+                        className="inline-flex h-5 w-5 items-center justify-center rounded-md font-display text-[11px] font-bold shadow-xs mx-auto"
+                        style={{
+                          background: `color-mix(in oklab, ${rColor} 20%, transparent)`,
+                          color: rColor,
+                          border: `1px solid color-mix(in oklab, ${rColor} 45%, transparent)`,
+                        }}
+                      >
+                        {z.rating}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TemperatureHistoryCard({
+  zone,
+  onOpenComparison,
+}: {
+  zone: Zone;
+  onOpenComparison?: () => void;
+}) {
+  // Gera dados dos últimos 7 dias para a zona selecionada
+  const historyData = [
+    { date: "18/06", temp: Number((zone.temp - 1.8).toFixed(1)), feels: Number((zone.feels - 2.2).toFixed(1)) },
+    { date: "19/06", temp: Number((zone.temp - 0.9).toFixed(1)), feels: Number((zone.feels - 1.1).toFixed(1)) },
+    { date: "20/06", temp: Number((zone.temp - 1.4).toFixed(1)), feels: Number((zone.feels - 1.6).toFixed(1)) },
+    { date: "21/06", temp: Number((zone.temp - 0.4).toFixed(1)), feels: Number((zone.feels - 0.5).toFixed(1)) },
+    { date: "22/06", temp: Number((zone.temp + 1.2).toFixed(1)), feels: Number((zone.feels + 1.8).toFixed(1)), isPeak: true },
+    { date: "23/06", temp: Number((zone.temp - 0.2).toFixed(1)), feels: Number((zone.feels - 0.3).toFixed(1)) },
+    { date: "24/06", temp: Number(zone.temp.toFixed(1)), feels: Number(zone.feels.toFixed(1)) },
+  ];
+
+  const temps = historyData.map((d) => d.temp);
+  const minVal = 24;
+  const maxVal = 40;
+  const range = maxVal - minVal;
+
+  const pointsTemp = historyData
+    .map((d, i) => {
+      const x = (i / (historyData.length - 1)) * 100;
+      const y = 100 - ((d.temp - minVal) / range) * 100;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  const pointsFeels = historyData
+    .map((d, i) => {
+      const x = (i / (historyData.length - 1)) * 100;
+      const y = 100 - ((d.feels - minVal) / range) * 100;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  const avgTemp = Number((temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1));
+  const maxTemp = Math.max(...temps);
+  const peakItem = historyData.find((d) => d.isPeak) || historyData[4];
+
+  return (
+    <section className="panel p-4 flex flex-col justify-between h-full shadow-xs" data-tour="history-card">
+      <div>
+        <div className="flex items-center justify-between pb-2 border-b border-border/60">
+          <div>
+            <h3 className="text-xs sm:text-sm font-bold text-foreground">
+              Histórico de temperatura — {zone.name}
+            </h3>
+            <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-0.5">
+              <span className="flex items-center gap-1 font-mono">
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                <span>Temperatura</span>
+              </span>
+              <span className="flex items-center gap-1 font-mono">
+                <span className="h-2 w-2 rounded-full bg-cyan-500" />
+                <span>Sensação térmica</span>
+              </span>
+            </div>
+          </div>
+          <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-2 py-0.5 rounded border border-border/60">
+            Últimos 7 dias
+          </span>
+        </div>
+
+        {/* Gráfico de Linhas Duplo com Grid Cartesiana */}
+        <div className="relative mt-3 h-36 w-full">
+          {/* Linhas de grade horizontal */}
+          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+            <div className="border-b border-foreground w-full" />
+            <div className="border-b border-foreground w-full" />
+            <div className="border-b border-foreground w-full" />
+            <div className="border-b border-foreground w-full" />
+          </div>
+
+          {/* Marcadores do Eixo Y */}
+          <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between font-mono text-[9px] text-muted-foreground pointer-events-none pr-1">
+            <span>40°</span>
+            <span>35°</span>
+            <span>30°</span>
+            <span>25°</span>
+          </div>
+
+          {/* SVG com curvas */}
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            className="h-full w-full pl-6 overflow-visible"
+          >
+            {/* Curva Sensação Térmica (Cyan) */}
+            <polyline
+              fill="none"
+              stroke="#06b6d4"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              points={pointsFeels}
+              className="drop-shadow-xs"
+            />
+
+            {/* Curva Temperatura (Amber/Orange) */}
+            <polyline
+              fill="none"
+              stroke="#f97316"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              points={pointsTemp}
+              className="drop-shadow-xs"
+            />
+
+            {/* Pontos da curva */}
+            {historyData.map((d, i) => {
+              const x = (i / (historyData.length - 1)) * 100;
+              const yT = 100 - ((d.temp - minVal) / range) * 100;
+              const yF = 100 - ((d.feels - minVal) / range) * 100;
+              return (
+                <g key={i}>
+                  <circle cx={x} cy={yF} r="2.2" fill="#06b6d4" className="stroke-background stroke-1" />
+                  <circle cx={x} cy={yT} r="2.2" fill="#f97316" className="stroke-background stroke-1" />
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* Tooltip destacado no dia de pico */}
+          {peakItem && (
+            <div
+              className="absolute -top-1 rounded-md bg-card/95 border border-border px-2 py-0.5 text-[10px] font-mono shadow-md backdrop-blur-xs pointer-events-none transform -translate-x-1/2"
+              style={{ left: "68%" }}
+            >
+              <span className="font-bold text-amber-500">{peakItem.temp}°C</span>
+              <span className="text-muted-foreground ml-1">({peakItem.date})</span>
+            </div>
+          )}
+        </div>
+
+        {/* Eixo X com as datas */}
+        <div className="grid grid-cols-7 gap-1 text-center pl-6 pt-1 font-mono text-[10px] text-muted-foreground">
+          {historyData.map((d, idx) => (
+            <span key={idx} className={d.isPeak ? "font-bold text-amber-500" : ""}>
+              {d.date}
+            </span>
+          ))}
+        </div>
+
+        {/* Faixa inferior de resumo consolidado */}
+        <div className="mt-3 grid grid-cols-4 gap-2 border-t border-border/60 pt-2.5 text-center font-mono">
+          <div>
+            <p className="text-[9px] uppercase text-muted-foreground">Média</p>
+            <p className="text-xs font-bold text-foreground">{avgTemp.toFixed(1).replace(".", ",")} °C</p>
+          </div>
+          <div>
+            <p className="text-[9px] uppercase text-muted-foreground">Máxima</p>
+            <p className="text-xs font-bold text-rose-500">{maxTemp.toFixed(1).replace(".", ",")} °C</p>
+          </div>
+          <div>
+            <p className="text-[9px] uppercase text-muted-foreground">Variação</p>
+            <p className="text-xs font-bold text-foreground">↑ 2,3 °C</p>
+          </div>
+          <div>
+            <p className="text-[9px] uppercase text-muted-foreground">Tendência</p>
+            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Estável</p>
+          </div>
+        </div>
+
+        {/* Botão de consulta por período (7, 14 ou 30 dias) que abre Comparação & Histórico */}
+        {onOpenComparison && (
+          <div className="mt-3 pt-2.5 border-t border-border/60">
+            <button
+              type="button"
+              onClick={onOpenComparison}
+              className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card/80 hover:bg-secondary hover:border-primary/50 py-2 px-3 text-xs font-semibold text-primary transition-all cursor-pointer shadow-xs group"
+              title="Consultar histórico detalhado por período (7, 14 ou 30 dias) na tela Comparação & Histórico"
+            >
+              <CalendarRange className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform" />
+              <span>Consultar por período (7, 14 ou 30 dias)</span>
+              <ArrowRight className="h-3.5 w-3.5 ml-auto text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+            </button>
+          </div>
+        )}
+      </div>
     </section>
   );
 }
@@ -774,238 +948,317 @@ function MapPanel({
   activeLayer: "calor" | "vegetal" | "vulnerabilidade";
   onChangeLayer: (layer: "calor" | "vegetal" | "vulnerabilidade") => void;
 }) {
-  const activeZones = zonesList || zones;
-  const layers = [
-    { id: "calor", label: "Calor" },
-    { id: "vegetal", label: "Cobertura vegetal" },
-    { id: "vulnerabilidade", label: "Vulnerabilidade" },
-  ] as const;
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [visibleLayers, setVisibleLayers] = useState({
+    bairros: true,
+    estacoes: true,
+    ilhas: true,
+    redeViaria: true,
+    hidrografia: true,
+  });
 
-  /**
-   * Lógica de cálculo cromático por camada (Épico 1):
-   * - Calor: regras de temperatura e bioclimáticas de A a E (ratingDefinitions)
-   * - Vegetal: escala verde florestal (canopyVar)
-   * - Vulnerabilidade: tonalidades de alerta social (vulnVar)
-   */
+  const activeZones = zonesList || zones;
+
+  const toggleLayer = (layerKey: keyof typeof visibleLayers) => {
+    setVisibleLayers((prev) => ({ ...prev, [layerKey]: !prev[layerKey] }));
+  };
+
   const getZoneColor = (z: Zone) => {
     if (activeLayer === "calor") return ratingDefinitions[z.rating]?.color || heatVar(z.temp);
     if (activeLayer === "vegetal") return canopyVar(z.canopy);
     return vulnVar(z.vuln);
   };
 
-  const getZoneLabel = (z: Zone) => {
-    if (activeLayer === "calor") return `${z.name} · ${z.temp.toFixed(1).replace(".", ",")}° (${z.rating})`;
-    if (activeLayer === "vegetal") return `${z.name} · ${z.canopy}% copa`;
-    return `${z.name} · IVS ${z.vuln}`;
-  };
-
-  // Condição de pulso crítico: calor extremo (Classe E ou >=36°C), déficit de árvore (<=10%) ou altíssima vulnerabilidade (>=75)
-  const shouldPulse = (z: Zone) => {
-    if (activeLayer === "calor") return z.rating === "E" || z.temp >= 36;
-    if (activeLayer === "vegetal") return z.canopy <= 10;
-    return z.vuln >= 75;
-  };
-
   return (
-    <section className="panel overflow-hidden" data-tour="map-panel">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-4 py-3">
-        <div>
-          <h2 className="text-sm font-semibold">Mapa térmico · Região Metropolitana do Recife</h2>
-          <p className="text-[11px] text-muted-foreground">
+    <section
+      className={`panel overflow-hidden transition-all duration-300 ${
+        isMaximized
+          ? "fixed inset-4 z-50 shadow-2xl bg-background flex flex-col"
+          : "relative"
+      }`}
+      data-tour="map-panel"
+    >
+      {/* Top Header of Map */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-border/70 px-4 py-2.5 bg-card/40">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs sm:text-sm font-bold text-foreground truncate">
+              Mapa térmico — Região Metropolitana do Recife
+            </h2>
+            <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.2 text-[10px] font-mono font-medium text-emerald-600 dark:text-emerald-400 shrink-0">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Ao vivo
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
             {activeLayer === "calor" && "Exibindo anomalias de temperatura de superfície e ilhas de calor"}
             {activeLayer === "vegetal" && "Exibindo densidade de copa arbórea e refúgios térmicos"}
             {activeLayer === "vulnerabilidade" && "Exibindo Índice de Vulnerabilidade Social (IVS) da população exposta"}
           </p>
-          <div className="flex items-center gap-1.5 mt-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse shrink-0" />
-            <span className="font-mono text-[10px] text-sky-400 font-medium">
-              Dados ao Vivo (Open-Meteo + Landsat 8/9)
-            </span>
-          </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Barra homogênea de ferramentas alinhada à direita */}
+        <div className="flex items-center flex-wrap gap-2 shrink-0 self-start xl:self-auto">
           {/* Seletor rápido de foco territorial */}
-          <div className="flex items-center gap-1 text-xs">
-            <span className="text-muted-foreground text-[11px] hidden xs:inline">Bairro:</span>
+          <div className="flex items-center gap-1.5 rounded-lg border border-border/80 bg-background/80 px-2.5 py-1 text-xs shadow-xs">
+            <span className="text-muted-foreground text-[11px] font-medium">Bairro:</span>
             <select
               value={selected.id}
               onChange={(e) => {
                 const found = activeZones.find((z) => z.id === e.target.value);
                 if (found) onSelect(found);
               }}
-              className="rounded border border-border bg-background px-2 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer max-w-[120px] sm:max-w-none"
+              className="bg-transparent text-xs text-foreground font-semibold focus:outline-none cursor-pointer pr-1"
             >
               {activeZones.map((z) => (
-                <option key={z.id} value={z.id}>
+                <option key={z.id} value={z.id} className="bg-popover text-popover-foreground">
                   {z.name}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Seletor de camadas – exclui "Calor" pois já estamos nessa camada */}
-          <div data-tour="map-layers">
-            <MapLayerSwitcher activeLayer={activeLayer} onChangeLayer={onChangeLayer} excludeLayers={["calor"]} />
+          {/* Lentes / Camadas do mapa com design unificado */}
+          <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-lg border border-border/70 shadow-xs" data-tour="map-layers">
+            <button
+              type="button"
+              onClick={() => onChangeLayer("calor")}
+              className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
+                activeLayer === "calor"
+                  ? "bg-amber-500 text-white font-bold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Temperatura
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeLayer("vegetal")}
+              className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
+                activeLayer === "vegetal"
+                  ? "bg-emerald-600 text-white font-bold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Cobertura vegetal
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeLayer("vulnerabilidade")}
+              className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer flex items-center gap-1 ${
+                activeLayer === "vulnerabilidade"
+                  ? "bg-rose-500 text-white font-bold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <HeartPulse className="h-3 w-3" />
+              <span>Vulnerabilidade</span>
+            </button>
           </div>
+
+          {/* Botão de maximizar / restaurar */}
+          <button
+            type="button"
+            onClick={() => setIsMaximized((prev) => !prev)}
+            className="h-8 w-8 flex items-center justify-center rounded-lg border border-border/80 bg-background/80 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shadow-xs"
+            title={isMaximized ? "Restaurar tamanho normal" : "Maximizar mapa para tela cheia"}
+          >
+            {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
         </div>
       </div>
 
-      <div className="relative h-[380px] sm:h-[490px]">
-        {/* malha viária esquemática do Recife */}
-        <RecifeStreetMesh className="absolute inset-0 h-full w-full" />
+      {/* Viewport do Mapa Interativo */}
+      <div
+        className={`relative overflow-hidden ${
+          isMaximized ? "flex-1 min-h-[500px]" : "h-[420px] sm:h-[490px]"
+        }`}
+      >
+        {/* Controles de Zoom Flutuantes no Canto Superior Esquerdo */}
+        <div className="absolute top-3.5 left-3.5 z-10 flex flex-col gap-1 rounded-lg border border-border/80 bg-card/90 p-1 backdrop-blur-md shadow-md">
+          <button
+            onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.6))}
+            className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-foreground transition-colors cursor-pointer"
+            title="Aumentar zoom"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.85))}
+            className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-foreground transition-colors cursor-pointer"
+            title="Diminuir zoom"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => {
+              setZoomLevel(1);
+              const santoAmaro = activeZones.find((z) => z.id === "santo-amaro");
+              if (santoAmaro) onSelect(santoAmaro);
+            }}
+            className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-foreground transition-colors cursor-pointer"
+            title="Centralizar no Recife"
+          >
+            <Crosshair className="h-3.5 w-3.5 text-cyan-500" />
+          </button>
+        </div>
 
-        {activeZones.map((z) => {
-          const active = z.id === selected.id;
-          const color = getZoneColor(z);
-          const isPulsing = shouldPulse(z);
+        {/* Card Flutuante de Legenda e Filtros de Camadas no Lado Direito */}
+        <div className="absolute top-3.5 right-3.5 z-10 rounded-xl border border-border/80 bg-card/90 p-3 backdrop-blur-md shadow-lg max-w-[210px] text-xs">
+          <div className="font-semibold text-[11px] text-foreground mb-2">
+            Temperatura de superfície (°C)
+          </div>
 
-          return (
-            <button
-              key={z.id}
-              onClick={() => onSelect(z)}
-              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform hover:scale-105 focus:outline-none cursor-pointer"
-              style={{ left: `${z.x}%`, top: `${z.y}%`, width: z.size, height: z.size }}
-              aria-label={`${z.name} - Classe ${z.rating}`}
+          {/* Barra Gradiente da Legenda Térmica */}
+          <div
+            className="h-2.5 w-full rounded-full shadow-inner"
+            style={{
+              background:
+                "linear-gradient(90deg, #06b6d4 0%, #10b981 25%, #eab308 50%, #f97316 75%, #ef4444 100%)",
+            }}
+          />
+          <div className="mt-1 flex justify-between font-mono text-[9px] text-muted-foreground px-0.5">
+            <span>28°</span>
+            <span>32°</span>
+            <span>36°</span>
+            <span>40°</span>
+            <span>45°</span>
+          </div>
+
+          {/* Checkboxes de Camadas Operacionais */}
+          <div className="mt-3 pt-2.5 border-t border-border/60 space-y-1.5 font-sans">
+            {[
+              { key: "bairros", label: "Bairros" },
+              { key: "estacoes", label: "Estações meteorológicas" },
+              { key: "ilhas", label: "Ilhas de calor" },
+              { key: "redeViaria", label: "Rede viária" },
+              { key: "hidrografia", label: "Hidrografia" },
+            ].map(({ key, label }) => {
+              const checked = visibleLayers[key as keyof typeof visibleLayers];
+              return (
+                <label
+                  key={key}
+                  className="flex items-center gap-2 cursor-pointer select-none text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleLayer(key as keyof typeof visibleLayers)}
+                    className="rounded border-border text-cyan-600 focus:ring-0 cursor-pointer h-3.5 w-3.5 rounded-xs"
+                  />
+                  <span>{label}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Rótulo Oceano Atlântico sobre a orla */}
+        <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none select-none text-[10px] sm:text-xs font-mono tracking-[0.25em] text-cyan-700/35 dark:text-cyan-400/30 uppercase font-semibold text-center leading-loose">
+          OCEANO<br />ATLÂNTICO
+        </div>
+
+        {/* Escala Gráfica no Canto Inferior */}
+        <div className="absolute bottom-3.5 right-28 z-10 font-mono text-[9px] text-muted-foreground/80 flex flex-col items-center pointer-events-none select-none">
+          <div className="flex justify-between w-28 text-[9px]">
+            <span>0</span>
+            <span>2</span>
+            <span>4</span>
+            <span>6 km</span>
+          </div>
+          <div className="w-28 h-1 border-b-2 border-l-2 border-r-2 border-muted-foreground/60 mt-0.5" />
+        </div>
+
+        {/* Canvas de Ruas e Camadas com escala de zoom */}
+        <div
+          className="absolute inset-0 transition-transform duration-200"
+          style={{ transform: `scale(${zoomLevel})`, transformOrigin: "center center" }}
+        >
+          {visibleLayers.redeViaria && (
+            <RecifeStreetMesh className="absolute inset-0 h-full w-full" />
+          )}
+
+          {/* Mancha térmica / halos de calor suavizados no mapa */}
+          {visibleLayers.ilhas && (
+            <svg
+              className="absolute inset-0 h-full w-full pointer-events-none"
+              preserveAspectRatio="none"
+              viewBox="0 0 100 100"
             >
-              <span
-                className="absolute inset-0 rounded-full blur-xl"
-                style={{
-                  background: `radial-gradient(circle, color-mix(in oklab, ${color} 70%, transparent) 0%, transparent 68%)`,
-                }}
-              />
-              <span
-                className="absolute inset-[38%] rounded-full flex items-center justify-center font-display text-[11px] font-black shadow-md transition-all select-none"
-                style={{
-                  background: color,
-                  color: z.rating === "B" || z.rating === "C" ? "#0f172a" : "#ffffff",
-                  boxShadow: active
-                    ? "0 0 0 3px var(--foreground), 0 0 14px color-mix(in oklab, var(--foreground) 50%, transparent)"
-                    : "0 2px 5px rgba(0,0,0,0.35)",
-                  opacity: 0.95,
-                }}
-              >
-                {activeLayer === "calor" ? z.rating : ""}
-              </span>
-              {isPulsing && (
-                <span
-                  className="absolute inset-[36%] rounded-full pulse-ring"
-                  style={{ background: color }}
-                />
-              )}
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 translate-y-4 whitespace-nowrap font-mono text-[11px] text-foreground font-semibold px-1.5 py-0.5 rounded bg-background/90 border border-border/60 shadow-xs backdrop-blur-xs">
-                {getZoneLabel(z)}
-              </span>
-            </button>
-          );
-        })}
+              <defs>
+                <radialGradient id="heatHaloCentral" cx="47%" cy="38%" r="32%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.55" />
+                  <stop offset="35%" stopColor="#f97316" stopOpacity="0.42" />
+                  <stop offset="65%" stopColor="#eab308" stopOpacity="0.25" />
+                  <stop offset="90%" stopColor="#10b981" stopOpacity="0.1" />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="heatHaloSouth" cx="62%" cy="78%" r="20%">
+                  <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
+                  <stop offset="70%" stopColor="#10b981" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="heatHaloWest" cx="24%" cy="28%" r="20%">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
+                  <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              <circle cx="47" cy="38" r="32" fill="url(#heatHaloCentral)" />
+              <circle cx="62" cy="78" r="20" fill="url(#heatHaloSouth)" />
+              <circle cx="24" cy="28" r="20" fill="url(#heatHaloWest)" />
+            </svg>
+          )}
 
-        {/* Legenda Dinâmica de Acordo com a Camada Ativa */}
-        <div className={`absolute bottom-3 left-3 rounded-lg border border-border/80 bg-background/90 backdrop-blur-md shadow-md z-10 transition-all ${activeLayer === "calor" ? "p-2 max-w-[130px]" : "p-3 max-w-xs"}`}>
-          {activeLayer === "calor" && (
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between border-b border-border/60 pb-1 gap-2">
-                <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground font-bold">
-                  Escala Térmica
-                </span>
-                <span className="font-mono text-[8px] text-sky-400 font-semibold">A–E</span>
-              </div>
+          {/* Pinos de monitoramento nos bairros com anel concêntrico de destaque */}
+          {visibleLayers.bairros &&
+            activeZones.map((z) => {
+              const active = z.id === selected.id;
+              const color = getZoneColor(z);
+              const isPeak = z.id === "santo-amaro" || z.temp >= 36;
 
-              {/* Barra vertical com as 5 classes de E (topo, crítico) a A (base, ameno) */}
-              <div className="flex flex-col gap-1 py-0.5">
-                {(["E", "D", "C", "B", "A"] as const).map((r) => {
-                  const def = ratingDefinitions[r];
-                  return (
-                    <div
-                      key={r}
-                      className="flex items-center gap-1.5 px-0.5 py-0.5 rounded hover:bg-muted/40 transition-colors"
-                      title={`${def.name}: ${def.shortDesc} (Sensação ${r === "A" ? "≤32°C" : r === "B" ? "≤35°C" : r === "C" ? "≤38,5°C" : r === "D" ? "≤42°C" : ">42°C"})`}
-                    >
+              return (
+                <div
+                  key={z.id}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-auto"
+                  style={{ left: `${z.x}%`, top: `${z.y}%` }}
+                >
+                  {/* Círculo concêntrico pulsante para bairros críticos ou selecionado */}
+                  {(active || isPeak) && (
+                    <>
                       <span
-                        className="flex h-4 w-4 shrink-0 items-center justify-center rounded font-display text-[9px] font-black shadow-xs select-none"
-                        style={{
-                          background: def.color,
-                          color: r === "B" || r === "C" ? "#0f172a" : "#ffffff",
-                        }}
-                      >
-                        {r}
-                      </span>
-                      <span className="font-mono text-[10px] font-semibold text-foreground/90 whitespace-nowrap">
-                        {r === "E" && ">42°"}
-                        {r === "D" && "≤42°"}
-                        {r === "C" && "≤38,5°"}
-                        {r === "B" && "≤35°"}
-                        {r === "A" && "≤32°"}
-                      </span>
-                      <span className="font-mono text-[8px] text-muted-foreground hidden sm:inline capitalize">
-                        {r === "E" && "Crítico"}
-                        {r === "D" && "Alerta"}
-                        {r === "C" && "Atenção"}
-                        {r === "B" && "Seguro"}
-                        {r === "A" && "Refúgio"}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-14 w-14 rounded-full border border-rose-500/50 animate-ping pointer-events-none"
+                      />
+                      <span
+                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-rose-500/60 pointer-events-none"
+                      />
+                    </>
+                  )}
 
-          {activeLayer === "vegetal" && (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Cobertura arbórea (copa)
-                </p>
-                <button
-                  onClick={() => onChangeLayer("vegetal")}
-                  className="text-[10px] text-primary hover:underline ml-2 cursor-pointer font-semibold"
-                >
-                  Abrir Simulador Completo →
-                </button>
-              </div>
-              <div
-                className="h-2 w-52 rounded-full"
-                style={{
-                  background:
-                    "linear-gradient(90deg, oklch(0.78 0.12 95), oklch(0.75 0.14 125), var(--canopy))",
-                }}
-              />
-              <div className="mt-1 flex justify-between font-mono text-[10px] text-muted-foreground">
-                <span>5% (crítico)</span>
-                <span>30% (meta)</span>
-                <span>60%+ (resiliente)</span>
-              </div>
-            </>
-          )}
-
-          {activeLayer === "vulnerabilidade" && (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Índice de Vulnerabilidade Social (IVS)
-                </p>
-                <button
-                  onClick={() => onChangeLayer("vulnerabilidade")}
-                  className="text-[10px] text-destructive hover:underline ml-2 cursor-pointer font-semibold"
-                >
-                  Abrir Tela de Saúde →
-                </button>
-              </div>
-              <div
-                className="h-2 w-52 rounded-full"
-                style={{
-                  background:
-                    "linear-gradient(90deg, var(--accent), var(--heat-3), var(--heat-5))",
-                }}
-              />
-              <div className="mt-1 flex justify-between font-mono text-[10px] text-muted-foreground">
-                <span>0 (baixo risco)</span>
-                <span>50</span>
-                <span>100 (alta vulnerab.)</span>
-              </div>
-            </>
-          )}
+                  {/* Marcador em Botão com Tag e Temperatura */}
+                  <button
+                    onClick={() => onSelect(z)}
+                    className={`group relative flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-md transition-all duration-150 cursor-pointer ${
+                      active
+                        ? "bg-slate-900 text-white ring-2 ring-rose-500 scale-105 shadow-xl"
+                        : "bg-slate-900/85 text-white/90 hover:bg-slate-900 hover:scale-105 backdrop-blur-xs border border-white/20"
+                    }`}
+                  >
+                    <span
+                      className="h-2.5 w-2.5 rounded-full shrink-0 shadow-xs"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="font-sans font-medium text-[11px] whitespace-nowrap text-white">
+                      {z.name}
+                    </span>
+                    <span className="font-mono text-[11px] font-bold text-amber-300">
+                      {z.temp.toFixed(1).replace(".", ",")}°
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
         </div>
       </div>
     </section>
@@ -1453,217 +1706,227 @@ function ZoneDetail({
   };
 
   const rows = [
-    { label: "Temperatura", value: `${zone.temp.toFixed(1)} °C` },
-    { label: "Sensação térmica", value: `${zone.feels.toFixed(1)} °C` },
-    { label: "Umidade relativa", value: `${zone.humidity}%` },
-    { label: "Cobertura vegetal", value: `${zone.canopy}%` },
-    { label: "Vulnerabilidade social", value: `${zone.vuln}/100` },
+    { label: "Temperatura", value: `${zone.temp.toFixed(1).replace(".", ",")} °C`, icon: Thermometer, iconColor: "text-amber-500" },
+    { label: "Sensação térmica", value: `${zone.feels.toFixed(1).replace(".", ",")} °C`, icon: Flame, iconColor: "text-rose-500" },
+    { label: "Umidade relativa", value: `${zone.humidity}%`, icon: Droplets, iconColor: "text-sky-500" },
+    { label: "Cobertura vegetal", value: `${zone.canopy}%`, icon: Trees, iconColor: "text-emerald-500" },
+    { label: "Vulnerabilidade social", value: `${zone.vuln}/100`, icon: HeartPulse, iconColor: "text-rose-400" },
   ];
 
   return (
-    <section className="panel p-4" data-tour="zone-detail">
-      {/* Cabeçalho do Bairro Selecionado com Classificação em Destaque */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-base font-bold tracking-tight">{zone.name}</h2>
-          <p className="font-mono text-[11px] text-muted-foreground">Microterritório selecionado no mapa</p>
-          <div className="mt-1 flex items-center gap-1.5">
-            <span
-              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold"
-              style={{
-                background: `color-mix(in oklab, ${ratingInfo.color} 18%, transparent)`,
-                color: ratingInfo.color,
-              }}
-            >
-              Classe {zone.rating} · {ratingInfo.name}
-            </span>
-          </div>
-        </div>
-
-        {/* Badge Visual da Classificação + Significado abaixo do E */}
-        <div className="flex flex-col items-center shrink-0">
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-xl font-display text-2xl font-bold shadow-sm"
-            style={{
-              background: `color-mix(in oklab, ${ratingInfo.color} 22%, transparent)`,
-              color: ratingInfo.color,
-              border: `1.5px solid color-mix(in oklab, ${ratingInfo.color} 40%, transparent)`,
-            }}
-            title={`Classificação ${zone.rating}: ${ratingInfo.name}`}
-          >
-            {zone.rating}
-          </div>
-          <button
-            onClick={() => setShowRatingScale((v) => !v)}
-            className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors cursor-pointer group notranslate"
-            translate="no"
-            title="Significado das classificações (A a E)"
-          >
-            <Info className="h-3.5 w-3.5 text-primary group-hover:text-primary shrink-0" />
-            <span className="font-medium underline-offset-2 group-hover:underline notranslate" translate="no">
-              significado
-            </span>
-            {showRatingScale ? <ChevronUp className="h-2.5 w-2.5 shrink-0" /> : <ChevronDown className="h-2.5 w-2.5 shrink-0" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Matriz Completa das Classificações A-E (visível ao expandir) */}
-      {showRatingScale && (
-        <div className="mt-2.5 mb-1 space-y-1.5 rounded-lg border border-border/80 bg-background/80 p-2.5 text-xs shadow-inner">
-          <div className="flex items-center justify-between border-b border-border/60 pb-1.5 text-[10px] font-mono text-muted-foreground uppercase">
-            <span>Classificação de Risco Térmico</span>
-            <span>Sensação & Vegetação</span>
-          </div>
-          {(["A", "B", "C", "D", "E"] as const).map((r) => {
-            const def = ratingDefinitions[r];
-            const isCurrent = r === zone.rating;
-            return (
-              <div
-                key={r}
-                className={`flex items-start gap-2.5 rounded-md p-1.5 transition-colors ${isCurrent
-                  ? "bg-primary/15 border border-primary/40 font-medium"
-                  : "hover:bg-muted/40"
-                  }`}
+    <section className="panel p-4 sm:p-5 flex flex-col justify-between h-full shadow-xs" data-tour="zone-detail">
+      <div>
+        {/* Cabeçalho do Bairro Selecionado com Classificação em Destaque */}
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground">{zone.name}</h2>
+            <p className="font-mono text-[11px] text-muted-foreground">Microterritório selecionado no mapa</p>
+            <div className="mt-1 flex items-center gap-1.5">
+              <span
+                className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold"
+                style={{
+                  background: `color-mix(in oklab, ${ratingInfo.color} 18%, transparent)`,
+                  color: ratingInfo.color,
+                }}
               >
-                <span
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded font-display text-xs font-bold"
-                  style={{
-                    background: `color-mix(in oklab, ${def.color} 25%, transparent)`,
-                    color: def.color,
-                  }}
-                >
-                  {r}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-foreground">{def.name}</span>
-                    {isCurrent && (
-                      <span className="rounded bg-primary px-1.5 py-0.2 text-[9px] font-mono font-bold text-primary-foreground">
-                        Bairro atual
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
-                    {def.fullDesc}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Tabela de Indicadores */}
-      <dl className="mt-3 divide-y divide-border/60">
-        {rows.map((r) => (
-          <div key={r.label} className="flex justify-between py-1.5 text-sm">
-            <dt className="text-muted-foreground text-xs">{r.label}</dt>
-            <dd className="font-mono text-xs font-medium">{r.value}</dd>
-          </div>
-        ))}
-      </dl>
-
-      {/* ÁREA DE RECOMENDAÇÃO OPERACIONAL PARA ÓRGÃO PÚBLICO EM ALTO DESTAQUE */}
-      <div className="mt-4 overflow-hidden rounded-xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-background to-card p-3.5 shadow-md relative">
-        <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/20 text-amber-500 ring-1 ring-amber-500/30">
-              <ShieldAlert className="h-4 w-4" />
-            </span>
-            <div className="flex flex-col">
-              <span className="text-[9px] font-mono uppercase tracking-wider text-amber-500 font-bold">
-                Recomendação Operacional
-              </span>
-              <span className="text-xs font-bold text-foreground">
-                {organRec.organ}
+                Classe {zone.rating} · {ratingInfo.name}
               </span>
             </div>
           </div>
-          <span
-            className={`rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider ${organRec.urgency === "Imediata"
-              ? "bg-destructive text-destructive-foreground animate-pulse"
-              : organRec.urgency === "Alta"
-                ? "bg-amber-500/20 text-amber-500 ring-1 ring-amber-500/40"
-                : "bg-primary/20 text-primary"
-              }`}
-          >
-            {organRec.urgency === "Imediata" ? "Despacho Imediato" : organRec.urgency}
-          </span>
+
+          {/* Badge Visual da Classificação + Significado abaixo */}
+          <div className="flex flex-col items-center shrink-0">
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-xl font-display text-2xl font-bold shadow-sm"
+              style={{
+                background: `color-mix(in oklab, ${ratingInfo.color} 22%, transparent)`,
+                color: ratingInfo.color,
+                border: `1.5px solid color-mix(in oklab, ${ratingInfo.color} 40%, transparent)`,
+              }}
+              title={`Classificação ${zone.rating}: ${ratingInfo.name}`}
+            >
+              {zone.rating}
+            </div>
+            <button
+              onClick={() => setShowRatingScale((v) => !v)}
+              className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors cursor-pointer group notranslate"
+              translate="no"
+              title="Significado das classificações (A a E)"
+            >
+              <Info className="h-3.5 w-3.5 text-primary group-hover:text-primary shrink-0" />
+              <span className="font-medium underline-offset-2 group-hover:underline notranslate" translate="no">
+                significado
+              </span>
+              {showRatingScale ? <ChevronUp className="h-2.5 w-2.5 shrink-0" /> : <ChevronDown className="h-2.5 w-2.5 shrink-0" />}
+            </button>
+          </div>
         </div>
 
-        <div className="mt-2.5 space-y-1">
-          <p className="text-xs font-semibold text-foreground leading-snug">
-            {organRec.action}
-          </p>
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            {organRec.description}
-          </p>
+        {/* Matriz Completa das Classificações A-E (visível ao expandir) */}
+        {showRatingScale && (
+          <div className="mt-2.5 mb-2 space-y-1.5 rounded-lg border border-border/80 bg-background/80 p-2.5 text-xs shadow-inner">
+            <div className="flex items-center justify-between border-b border-border/60 pb-1.5 text-[10px] font-mono text-muted-foreground uppercase">
+              <span>Classificação de Risco Térmico</span>
+              <span>Sensação & Vegetação</span>
+            </div>
+            {(["A", "B", "C", "D", "E"] as const).map((r) => {
+              const def = ratingDefinitions[r];
+              const isCurrent = r === zone.rating;
+              return (
+                <div
+                  key={r}
+                  className={`flex items-start gap-2.5 rounded-md p-1.5 transition-colors ${isCurrent
+                    ? "bg-primary/15 border border-primary/40 font-medium"
+                    : "hover:bg-muted/40"
+                    }`}
+                >
+                  <span
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded font-display text-xs font-bold"
+                    style={{
+                      background: `color-mix(in oklab, ${def.color} 25%, transparent)`,
+                      color: def.color,
+                    }}
+                  >
+                    {r}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-foreground">{def.name}</span>
+                      {isCurrent && (
+                        <span className="rounded bg-primary px-1.5 py-0.2 text-[9px] font-mono font-bold text-primary-foreground">
+                          Bairro atual
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
+                      {def.fullDesc}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Tabela de Indicadores com Ícones e Espaçamento Organizado */}
+        <dl className="mt-3.5 divide-y divide-border/60">
+          {rows.map((r) => {
+            const Icon = r.icon;
+            return (
+              <div key={r.label} className="flex items-center justify-between py-2 sm:py-2.5 text-xs sm:text-sm">
+                <dt className="text-muted-foreground text-xs flex items-center gap-2">
+                  <Icon className={`h-3.5 w-3.5 ${r.iconColor || "text-muted-foreground"} shrink-0`} />
+                  <span>{r.label}</span>
+                </dt>
+                <dd className="font-mono text-xs sm:text-sm font-semibold text-foreground">
+                  {r.value}
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+
+        {/* ÁREA DE RECOMENDAÇÃO OPERACIONAL PARA ÓRGÃO PÚBLICO EM ALTO DESTAQUE */}
+        <div className="mt-4 overflow-hidden rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-background to-card p-3 sm:p-3.5 shadow-md relative">
+          <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
+            <div className="flex items-center gap-1.5">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-500/20 text-amber-500">
+                <AlertTriangle className="h-3.5 w-3.5" />
+              </span>
+              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600 dark:text-amber-400 font-bold">
+                Recomendação Operacional
+              </span>
+            </div>
+            <span className="rounded-full bg-rose-500 text-white px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider shadow-xs">
+              Despacho Imediato
+            </span>
+          </div>
+
+          <div className="mt-2.5 flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+              <Truck className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 space-y-1">
+              <h4 className="text-xs sm:text-sm font-bold text-foreground">
+                Defesa Civil & Secretaria de Saúde
+              </h4>
+              <p className="text-[11px] font-medium text-foreground/90 leading-tight">
+                Despacho de caminhões-pipa e agentes comunitários
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Priorizar o envio emergencial para áreas de baixa renda. Ações de suporte local e orientação sobre prevenção.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Ações de atalho direto para Cobertura Vegetal e Vulnerabilidade do Bairro */}
-      <div className="mt-3.5 grid grid-cols-2 gap-2">
-        {onOpenVegetalView && (
+      {/* Bloco Inferior de Botões de Ação Perfeitamente Alinhados */}
+      <div className="mt-4 pt-3 border-t border-border/50 space-y-2">
+        {/* Ações de atalho direto para Cobertura Vegetal e Vulnerabilidade do Bairro */}
+        <div className="grid grid-cols-2 gap-2">
+          {onOpenVegetalView && (
+            <button
+              id="zone-detail-vegetal-btn"
+              onClick={onOpenVegetalView}
+              className="flex items-center justify-center gap-1.5 rounded-lg border border-canopy/40 bg-canopy/10 py-2 sm:py-2.5 px-2 text-xs font-semibold text-canopy hover:bg-canopy/20 transition-all cursor-pointer shadow-xs"
+              title={`Abrir Cobertura Vegetal e Simulador para ${zone.name}`}
+            >
+              <Trees className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Cobertura vegetal</span>
+            </button>
+          )}
+          {onOpenVulnView && (
+            <button
+              id="zone-detail-vuln-btn"
+              onClick={onOpenVulnView}
+              className="flex items-center justify-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 py-2 sm:py-2.5 px-2 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all cursor-pointer shadow-xs"
+              title={`Abrir Vulnerabilidade e Saúde para ${zone.name}`}
+            >
+              <HeartPulse className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Vulnerabilidade</span>
+            </button>
+          )}
+        </div>
+
+        {/* Ações Avançadas: Clima NASA POWER e Análise Ambiental */}
+        <div className="grid grid-cols-2 gap-2">
+          {onOpenNasaPower && (
+            <button
+              id="zone-detail-nasa-btn"
+              onClick={onOpenNasaPower}
+              className="flex items-center justify-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/10 py-2 px-2 text-xs font-medium text-sky-400 hover:bg-sky-500/20 transition-all cursor-pointer shadow-xs"
+              title={`Consultar dados climáticos da NASA POWER para ${zone.name}`}
+            >
+              <CloudRain className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Clima NASA</span>
+            </button>
+          )}
+          {onOpenEnvironmentalAnalysis && (
+            <button
+              id="zone-detail-env-btn"
+              onClick={onOpenEnvironmentalAnalysis}
+              className="flex items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 py-2 px-2 text-xs font-medium text-primary hover:bg-primary/20 transition-all cursor-pointer shadow-xs"
+              title={`Ver Análise Ambiental MapBiomas / Landsat`}
+            >
+              <TrendingDown className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">MapBiomas</span>
+            </button>
+          )}
+        </div>
+
+        {/* Ação de atalho para comparação de bairros (Épico 1) */}
+        {onOpenComparison && (
           <button
-            id="zone-detail-vegetal-btn"
-            onClick={onOpenVegetalView}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-canopy/40 bg-canopy/10 py-2 px-2 text-xs font-semibold text-canopy hover:bg-canopy/20 transition-all cursor-pointer shadow-xs"
-            title={`Abrir Cobertura Vegetal e Simulador para ${zone.name}`}
+            onClick={onOpenComparison}
+            className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card/80 hover:bg-secondary hover:border-primary/50 py-2 text-xs font-semibold text-primary transition-all cursor-pointer shadow-xs"
+            title="Comparar este bairro com outro em gráfico temporal"
           >
-            <Trees className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Cobertura vegetal</span>
-          </button>
-        )}
-        {onOpenVulnView && (
-          <button
-            id="zone-detail-vuln-btn"
-            onClick={onOpenVulnView}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 py-2 px-2 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all cursor-pointer shadow-xs"
-            title={`Abrir Vulnerabilidade e Saúde para ${zone.name}`}
-          >
-            <HeartPulse className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Vulnerabilidade</span>
+            <ArrowLeftRight className="h-3.5 w-3.5 text-primary" />
+            <span>Comparar este bairro com outro</span>
           </button>
         )}
       </div>
-
-      {/* Ações Avançadas: Clima NASA POWER e Análise Ambiental */}
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        {onOpenNasaPower && (
-          <button
-            id="zone-detail-nasa-btn"
-            onClick={onOpenNasaPower}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/10 py-1.5 px-2 text-xs font-medium text-sky-400 hover:bg-sky-500/20 transition-all cursor-pointer shadow-xs"
-            title={`Consultar dados climáticos da NASA POWER para ${zone.name}`}
-          >
-            <CloudRain className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Clima NASA</span>
-          </button>
-        )}
-        {onOpenEnvironmentalAnalysis && (
-          <button
-            id="zone-detail-env-btn"
-            onClick={onOpenEnvironmentalAnalysis}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 py-1.5 px-2 text-xs font-medium text-primary hover:bg-primary/20 transition-all cursor-pointer shadow-xs"
-            title={`Ver Análise Ambiental MapBiomas / Landsat`}
-          >
-            <TrendingDown className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">MapBiomas</span>
-          </button>
-        )}
-      </div>
-
-      {/* Ação de atalho para comparação de bairros (Épico 1) */}
-      {onOpenComparison && (
-        <button
-          onClick={onOpenComparison}
-          className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-md border border-border bg-card/60 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors cursor-pointer"
-        >
-          <ArrowLeftRight className="h-3.5 w-3.5" />
-          <span>Comparar este bairro com outro</span>
-        </button>
-      )}
     </section>
   );
 }
@@ -1923,56 +2186,95 @@ function InsightsPanel() {
     {
       id: "dossel-protetor",
       tag: "Eficiência Arbórea",
-      badgeClass: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
-      title: "Disparidade de 13,2 °C entre Bairros",
+      icon: Trees,
+      iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
+      badgeClass: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+      title: "Disparidade de 13,2 °C entre bairros",
       desc: "A cobertura de copa em Dois Irmãos (64%) arrefece o microclima em 13,2 °C em relação ao solo impermeabilizado de Santo Amaro.",
       metric: "-2,1 °C a cada +10% de árvores",
     },
     {
       id: "janela-critica",
       tag: "Sobrecarga Humana",
-      badgeClass: "bg-amber-500/15 text-amber-500 border-amber-500/30",
-      title: "Pico de Exposição: 13h00 às 16h30",
+      icon: Users,
+      iconColor: "text-amber-500 bg-amber-500/15 border-amber-500/30",
+      badgeClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+      title: "Pico de exposição: 13h00 às 16h30",
       desc: "Cruzamento de radiação e baixa umidade relativa (58%) gera risco crítico de desidratação e estresse cardiovascular em pedestres expostos.",
-      metric: "318 mil cidadãos expostos",
+      metric: "318 mil pessoas expostas",
+    },
+    {
+      id: "brisa-costeira",
+      tag: "Resiliência Marítima",
+      icon: ShieldCheck,
+      iconColor: "text-cyan-500 bg-cyan-500/15 border-cyan-500/30",
+      badgeClass: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-500/30",
+      title: "Amortecimento microclimático litorâneo",
+      desc: "Correntes de brisa marítima atenuam a sensação térmica na orla de Boa Viagem em até 3,4 °C em comparação à ilha impermeabilizada central.",
+      metric: "-3,4 °C na faixa costeira",
     },
   ];
 
   return (
-    <section className="panel p-4 flex flex-col justify-between">
+    <section className="panel p-4 shadow-xs" data-tour="insights-panel">
       <div>
-        <div className="flex items-center gap-2 border-b border-border/60 pb-2.5 mb-3">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/15 text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-          </span>
-          <h2 className="text-sm font-semibold">Insights</h2>
+        <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-bold text-foreground">Insights & Inteligência Territorial</h2>
+            <span className="text-[11px] text-muted-foreground hidden md:inline">
+              · Análise cruzada de sensores orbitais, dados meteorológicos e vulnerabilidade humana
+            </span>
+          </div>
+          <button
+            onClick={() =>
+              toast.info("Insights & Inteligência Climática", {
+                description:
+                  "Exibindo correlações completas entre sensoriamento orbital Landsat 8/9, dados Open-Meteo e Censo IBGE.",
+              })
+            }
+            className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+          >
+            <span>Ver todos</span>
+            <span>→</span>
+          </button>
         </div>
 
-        <ul className="space-y-2.5">
-          {insights.map((item) => (
-            <li
-              key={item.id}
-              className="rounded-lg border border-border/70 bg-card/60 p-2.5 transition-all hover:bg-card hover:border-primary/40 shadow-xs"
-            >
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <span
-                  className={`rounded border px-1.5 py-0.2 font-mono text-[9px] font-semibold uppercase tracking-wider ${item.badgeClass}`}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {insights.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.id}
+                className="rounded-xl border border-border/70 bg-card/60 p-3.5 transition-all hover:bg-card hover:border-primary/40 shadow-xs flex items-start gap-3"
+              >
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg border shrink-0 mt-0.5 ${item.iconColor}`}
                 >
-                  {item.tag}
-                </span>
-                <span className="font-mono text-[10px] font-bold text-foreground">
-                  {item.metric}
-                </span>
+                  <Icon className="h-4.5 w-4.5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span
+                      className={`rounded border px-1.5 py-0.2 font-mono text-[9px] font-semibold uppercase tracking-wider ${item.badgeClass}`}
+                    >
+                      {item.tag}
+                    </span>
+                    <span className="font-mono text-[10px] font-bold text-foreground">
+                      {item.metric}
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-foreground leading-snug">
+                    {item.title}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
+                    {item.desc}
+                  </p>
+                </div>
               </div>
-              <p className="text-xs font-semibold text-foreground leading-snug">
-                {item.title}
-              </p>
-              <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
-                {item.desc}
-              </p>
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
