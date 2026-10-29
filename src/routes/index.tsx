@@ -80,13 +80,13 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Radar Climático" },
+      { title: "Radar Climático Recife | Monitoramento de Ilhas de Calor e Alertas B2G — Arboris" },
       {
         name: "description",
         content:
           "Dashboard Arboris para gestores públicos: mapa de ilhas de calor, alertas antecipados de ondas de calor e priorização de infraestrutura verde no Recife.",
       },
-      { property: "og:title", content: "Radar Climático | Arboris" },
+      { property: "og:title", content: "Radar Climático Recife | Monitoramento de Ilhas de Calor e Alertas B2G — Arboris" },
       {
         property: "og:description",
         content:
@@ -228,7 +228,7 @@ function Dashboard() {
             onOpenAlerts={() => setActiveTab("alertas")}
           />
 
-          <main className="p-3.5 sm:p-5 lg:p-6 space-y-4 max-w-[1600px] w-full mx-auto pb-14">
+          <main id="main-content" role="main" aria-label="Painel operacional do Radar Climático do Recife" className="p-3.5 sm:p-5 lg:p-6 space-y-4 max-w-[1600px] w-full mx-auto pb-14">
             {/* Visualização Padrão: Operação em Tempo Real (Mapa Térmico & Camadas) */}
             {activeTab === "tempo-real" && (
               <>
@@ -403,12 +403,12 @@ function Dashboard() {
             </div>
           )}
         </main>
-        <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground bg-card/20">
+        <footer role="contentinfo" aria-label="Rodapé institucional da plataforma Radar Climático Arboris" className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground bg-card/20">
           <div className="mx-auto max-w-4xl px-4 flex flex-col items-center gap-4">
             <img
               src={isDark ? "/logo-arboris.png" : "/logo-arboris2.png"}
-              alt="Logo Arboris"
-              className="h-16 object-contain"
+              alt="Logotipo Arboris — Plataforma Integrada de Monitoramento de Ilhas de Calor e Clima Urbano no Recife"
+              width={180} height={64} loading="lazy" decoding="async" className="h-16 object-contain"
             />
 
             <Button
@@ -495,7 +495,7 @@ function Kpis({ weather }: { weather?: RealtimeWeatherSnapshot | null }) {
   const totalCount = weather?.zones.length || 8;
 
   return (
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-tour="kpi-macro">
+    <section aria-label="Indicadores chave de desempenho térmico e vulnerabilidade do Recife" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-tour="kpi-macro">
       {/* 1. Temperatura Média e Sensação Térmica da Cidade */}
       <div className="panel p-4 flex flex-col justify-between min-h-[124px] transition-all hover:border-amber-500/40 shadow-xs">
         <div className="flex items-start justify-between gap-3">

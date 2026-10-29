@@ -108,28 +108,28 @@ export function TopHeader({
     const iconType = weatherSnapshot?.weatherIcon || "sun";
     const desc = weatherSnapshot?.weatherDescription || "Ensolarado";
 
-    let icon = <SunMedium className="h-4 w-4 text-amber-500 shrink-0" />;
+    let icon = <SunMedium className="h-4 w-4 text-amber-500 shrink-0" aria-hidden="true" />;
     switch (iconType) {
       case "cloud-sun":
-        icon = <CloudSun className="h-4 w-4 text-amber-500 shrink-0" />;
+        icon = <CloudSun className="h-4 w-4 text-amber-500 shrink-0" aria-hidden="true" />;
         break;
       case "cloud":
-        icon = <Cloud className="h-4 w-4 text-slate-400 shrink-0" />;
+        icon = <Cloud className="h-4 w-4 text-slate-400 shrink-0" aria-hidden="true" />;
         break;
       case "rain":
-        icon = <CloudRain className="h-4 w-4 text-sky-500 shrink-0" />;
+        icon = <CloudRain className="h-4 w-4 text-sky-500 shrink-0" aria-hidden="true" />;
         break;
       case "cloud-lightning":
-        icon = <CloudLightning className="h-4 w-4 text-purple-500 shrink-0" />;
+        icon = <CloudLightning className="h-4 w-4 text-purple-500 shrink-0" aria-hidden="true" />;
         break;
       case "sun":
       default:
-        icon = <SunMedium className="h-4 w-4 text-amber-500 shrink-0" />;
+        icon = <SunMedium className="h-4 w-4 text-amber-500 shrink-0" aria-hidden="true" />;
         break;
     }
 
     return (
-      <span title={`Clima atual: ${desc}`} className="inline-flex items-center">
+      <span title={`Clima atual no Recife: ${desc}`} aria-label={`Condição climática atual: ${desc}`} className="inline-flex items-center">
         {icon}
       </span>
     );
@@ -142,17 +142,21 @@ export function TopHeader({
     : [];
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border/80 bg-background/85 backdrop-blur-md px-4 sm:px-6 py-2.5">
+    <header
+      role="banner"
+      aria-label="Cabeçalho operacional do Radar Climático Recife"
+      className="sticky top-0 z-20 border-b border-border/80 bg-background/85 backdrop-blur-md px-4 sm:px-6 py-2.5"
+    >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        {/* LADO ESQUERDO: Botão Mobile + Títulos e Slogan */}
+        {/* LADO ESQUERDO: Botão Mobile + H1 Único Semântico Focado na Palavra-Chave Principal */}
         <div className="flex items-center gap-2.5 min-w-0" data-tour="header-title">
           <button
             onClick={onToggleMobileMenu}
             type="button"
             className="lg:hidden p-1.5 rounded-lg border border-border bg-card/80 text-foreground hover:bg-card focus:outline-none cursor-pointer"
-            aria-label="Abrir menu de navegação"
+            aria-label="Abrir menu lateral de navegação do Radar Climático"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
 
           <div className="flex flex-col min-w-0">
@@ -165,28 +169,43 @@ export function TopHeader({
           </div>
         </div>
 
-        {/* CENTRO: BARRA DE PESQUISA */}
-        <div className="relative flex-1 max-w-md hidden md:block mx-3">
+        {/* CENTRO: BARRA DE PESQUISA SEMÂNTICA */}
+        <div
+          role="search"
+          aria-label="Busca de bairros do Recife, microterritórios e indicadores térmicos"
+          className="relative flex-1 max-w-md hidden md:block mx-3"
+        >
           <div className="relative flex items-center">
-            <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
             <input
               ref={searchInputRef}
-              type="text"
+              type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
               placeholder="Buscar bairro, região ou indicador..."
+              aria-label="Buscar bairro do Recife, região ou indicador de calor urbano"
+              aria-expanded={searchFocused && filteredZones.length > 0}
+              aria-controls="header-zone-search-results"
               className="w-full rounded-xl border border-border bg-card/60 pl-8 pr-8 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:bg-card shadow-xs transition-all"
             />
-            <kbd className="absolute right-2.5 rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground border border-border/60 pointer-events-none">
+            <kbd
+              aria-hidden="true"
+              className="absolute right-2.5 rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground border border-border/60 pointer-events-none"
+            >
               /
             </kbd>
           </div>
 
           {/* Dropdown de resultados de busca de bairros */}
           {searchFocused && filteredZones.length > 0 && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 rounded-xl border border-border bg-card p-1.5 shadow-2xl z-50 animate-in fade-in max-h-56 overflow-y-auto">
+            <div
+              id="header-zone-search-results"
+              role="listbox"
+              aria-label="Resultados de bairros monitorados no Recife"
+              className="absolute left-0 right-0 top-full mt-1.5 rounded-xl border border-border bg-card p-1.5 shadow-2xl z-50 animate-in fade-in max-h-56 overflow-y-auto"
+            >
               <p className="text-[10px] font-mono uppercase text-muted-foreground px-2 py-1">
                 Bairros correspondentes ({filteredZones.length})
               </p>
@@ -194,6 +213,8 @@ export function TopHeader({
                 <button
                   key={z.id}
                   type="button"
+                  role="option"
+                  aria-selected={false}
                   onMouseDown={() => {
                     onSelectZone(z);
                     setSearchQuery("");
@@ -228,16 +249,18 @@ export function TopHeader({
             onClick={onSyncWeather}
             disabled={isSyncingWeather}
             type="button"
+            aria-live="polite"
+            aria-label={`Status da rede de telemetria climática: On line às ${currentTime} em ${currentDate}. Clique para sincronizar dados meteorológicos`}
             className="flex items-center gap-2 sm:gap-2.5 rounded-xl border border-border/80 bg-card/75 px-2.5 sm:px-3 py-1.5 text-xs transition-colors hover:bg-card cursor-pointer shadow-xs"
             title="Conexão com estações meteorológicas (clique para sincronizar)"
           >
             {/* Status On line em destaque esmeralda */}
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" aria-hidden="true" />
               <span>On line</span>
             </span>
 
-            <div className="h-4 w-px bg-border/80" />
+            <div className="h-4 w-px bg-border/80" aria-hidden="true" />
 
             {/* Hora e Data em tempo real */}
             <div className="flex flex-col text-right leading-tight font-mono">
@@ -260,10 +283,11 @@ export function TopHeader({
             onClick={toggleTheme}
             type="button"
             className="flex h-8.5 w-8.5 items-center justify-center rounded-full border border-border bg-card/60 transition-colors hover:bg-card focus:outline-none cursor-pointer"
-            aria-label="Alternar modo claro/escuro"
+            aria-label={isDark ? "Ativar Modo Claro no painel" : "Ativar Modo Escuro no painel"}
+            aria-pressed={isDark}
             title={isDark ? "Mudar para Modo Claro" : "Mudar para Modo Escuro"}
           >
-            <Contrast className="h-4 w-4 text-foreground/80 hover:text-foreground transition-transform hover:rotate-180 duration-300" />
+            <Contrast className="h-4 w-4 text-foreground/80 hover:text-foreground transition-transform hover:rotate-180 duration-300" aria-hidden="true" />
           </button>
 
           {/* Menu de Perfil do Operador */}
@@ -272,9 +296,11 @@ export function TopHeader({
               onClick={() => setMenuOpen(!menuOpen)}
               type="button"
               className="flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-2 py-1 transition-all hover:bg-card hover:border-primary/50 focus:outline-none cursor-pointer shadow-xs"
-              aria-label="Menu da conta de usuário"
+              aria-label="Abrir menu de perfil do operador da Defesa Civil"
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary font-display text-xs font-bold text-primary-foreground shadow-xs">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary font-display text-xs font-bold text-primary-foreground shadow-xs" aria-hidden="true">
                 {user?.avatarInitials ?? "JG"}
               </div>
               <div className="hidden xl:flex flex-col text-left">
@@ -285,7 +311,7 @@ export function TopHeader({
                   {user?.role ? user.role.slice(0, 24) : "Coordenador de Operações"}
                 </span>
               </div>
-              <ChevronDown className="h-3 w-3 text-muted-foreground ml-0.5" />
+              <ChevronDown className="h-3 w-3 text-muted-foreground ml-0.5" aria-hidden="true" />
             </button>
 
             {menuOpen && (
@@ -293,11 +319,16 @@ export function TopHeader({
                 <div
                   className="fixed inset-0 z-40"
                   onClick={() => setMenuOpen(false)}
+                  aria-hidden="true"
                 />
-                <div className="absolute right-0 mt-2 w-72 rounded-xl border border-border bg-card p-2 shadow-2xl z-50 animate-in fade-in">
+                <div
+                  role="menu"
+                  aria-label="Opções da conta do operador"
+                  className="absolute right-0 mt-2 w-72 rounded-xl border border-border bg-card p-2 shadow-2xl z-50 animate-in fade-in"
+                >
                   <div className="px-3 py-2 border-b border-border/60">
                     <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                      <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                      <ShieldCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                       {user?.name ?? "Jorge Gonçalves"}
                     </p>
                     <p className="text-[11px] text-muted-foreground font-mono truncate mt-0.5">
@@ -311,13 +342,14 @@ export function TopHeader({
                   <div className="py-1">
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() => {
                         setMenuOpen(false);
                         onOpenContactModal();
                       }}
                       className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-xs text-foreground transition-colors hover:bg-muted cursor-pointer"
                     >
-                      <Edit3 className="h-3.5 w-3.5 text-primary" />
+                      <Edit3 className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                       <div className="flex flex-col">
                         <span className="font-medium">Alterar dados de contato</span>
                         <span className="text-[10px] text-muted-foreground">Telefone e perfil</span>
@@ -325,15 +357,16 @@ export function TopHeader({
                     </button>
                   </div>
 
-                  <div className="my-1 border-t border-border/60" />
+                  <div className="my-1 border-t border-border/60" aria-hidden="true" />
 
                   <div className="py-0.5">
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={handleLogout}
                       className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-xs text-destructive transition-colors hover:bg-destructive/10 cursor-pointer"
                     >
-                      <LogOut className="h-3.5 w-3.5" />
+                      <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                       <span className="font-medium">Sair da conta</span>
                     </button>
                   </div>

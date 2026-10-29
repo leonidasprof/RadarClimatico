@@ -64,20 +64,26 @@ export function SidebarNav({
               onClick={onCloseMobile}
               type="button"
               className="absolute right-0 top-0 lg:hidden rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-              aria-label="Fechar menu"
+              aria-label="Fechar menu de navegação"
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
           )}
 
           <button
             onClick={() => onSelectTab("tempo-real")}
+            type="button"
+            aria-label="Ir para o painel inicial de monitoramento térmico em tempo real do Recife"
             className="flex flex-col items-center justify-center focus:outline-none cursor-pointer group text-center"
             title="Ir para o início do Radar Climático"
           >
             <img
               src={isDark ? "/logo-arboris.png" : "/logo-arboris2.png"}
-              alt="Logo Radar Climático Arboris"
+              alt="Logotipo Radar Climático Arboris — Monitoramento de Ilhas de Calor e Clima Urbano no Recife"
+              width={160}
+              height={80}
+              fetchPriority="high"
+              decoding="async"
               className="h-16 xl:h-20 w-auto object-contain transition-transform group-hover:scale-105"
             />
             <span className="mt-1 font-mono text-[11px] sm:text-xs font-bold tracking-[0.3em] text-foreground/90 uppercase">
@@ -87,7 +93,11 @@ export function SidebarNav({
         </div>
 
         {/* 2. MENUS DE NAVEGAÇÃO VERTICAL */}
-        <nav className="mt-3.5 space-y-1" data-tour="sidebar-nav">
+        <nav
+          aria-label="Menu principal de módulos do Radar Climático"
+          className="mt-3.5 space-y-1"
+          data-tour="sidebar-nav"
+        >
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             const Icon = item.icon;
@@ -95,6 +105,9 @@ export function SidebarNav({
             return (
               <button
                 key={item.id}
+                type="button"
+                aria-current={isActive ? "page" : undefined}
+                aria-label={`Abrir módulo ${item.label}${item.badge ? ` (${item.badge} alertas ativos)` : ""}`}
                 onClick={() => {
                   if (item.id === "relatorios") {
                     if (onOpenReports) onOpenReports();
@@ -112,6 +125,7 @@ export function SidebarNav({
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <Icon
+                    aria-hidden="true"
                     className={`h-4 w-4 shrink-0 transition-transform group-hover:scale-110 ${
                       isActive
                         ? "text-cyan-600 dark:text-cyan-400"
@@ -123,6 +137,7 @@ export function SidebarNav({
 
                 {item.badge !== undefined && item.badge > 0 && (
                   <span
+                    aria-label={`${item.badge} alertas pendentes`}
                     className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
                       isActive
                         ? "bg-cyan-600 text-white"
@@ -143,14 +158,18 @@ export function SidebarNav({
         <PernambucoMinimap />
 
         {/* 4. DADOS ATUALIZADOS */}
-        <div className="rounded-xl border border-border/80 bg-card/60 p-2.5 text-xs backdrop-blur-xs shadow-xs space-y-1.5" data-tour="sidebar-sources">
+        <section
+          aria-label="Status de sincronização de fontes de dados climáticas e satélites"
+          className="rounded-xl border border-border/80 bg-card/60 p-2.5 text-xs backdrop-blur-xs shadow-xs space-y-1.5"
+          data-tour="sidebar-sources"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 font-semibold text-[11px] text-foreground">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" aria-hidden="true" />
               <span>Dados atualizados</span>
             </div>
             <span className="font-mono text-[10px] text-muted-foreground flex items-center gap-0.5">
-              <Clock className="h-3 w-3 text-cyan-500" />
+              <Clock className="h-3 w-3 text-cyan-500" aria-hidden="true" />
               ↳ {weatherSnapshot?.fetchedAt || currentTime}
             </span>
           </div>
@@ -160,7 +179,7 @@ export function SidebarNav({
             <p className="hover:text-foreground transition-colors">Landsat 8/9</p>
             <p className="hover:text-foreground transition-colors">MapBiomas · NASA POWER</p>
           </div>
-        </div>
+        </section>
 
         {/* 5. RODAPÉ DA PLATAFORMA COM VERSÃO DO MVP */}
         <div className="pt-1 text-center font-mono text-[10px] text-muted-foreground space-y-0.5">
@@ -175,23 +194,30 @@ export function SidebarNav({
   return (
     <>
       {/* DESKTOP SIDEBAR FIXA */}
-      <aside className="hidden lg:flex w-64 xl:w-72 shrink-0 border-r border-border/80 bg-card/75 dark:bg-card/50 backdrop-blur-md sticky top-0 h-screen z-30 flex-col">
+      <aside
+        aria-label="Barra lateral de comando do Radar Climático"
+        className="hidden lg:flex w-64 xl:w-72 shrink-0 border-r border-border/80 bg-card/75 dark:bg-card/50 backdrop-blur-md sticky top-0 h-screen z-30 flex-col"
+      >
         {content}
       </aside>
 
       {/* MOBILE / TABLET OVERLAY DRAWER */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu de navegação móvel">
           {/* Backdrop escurecido com clique para fechar */}
           <div
             className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity animate-in fade-in"
             onClick={onCloseMobile}
+            aria-hidden="true"
           />
 
           {/* Drawer lateral deslizando da esquerda */}
-          <div className="relative w-72 max-w-[85vw] h-full bg-card border-r border-border shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200">
+          <aside
+            aria-label="Menu lateral móvel do Radar Climático"
+            className="relative w-72 max-w-[85vw] h-full bg-card border-r border-border shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200"
+          >
             {content}
-          </div>
+          </aside>
         </div>
       )}
     </>

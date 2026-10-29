@@ -4,7 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Radar Climático</title>
+  <title>Radar Climático Recife | Monitoramento de Ilhas de Calor IoT e Gestão Pública B2G — Arboris</title>
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="theme-color" content="#0b1320">
+  <link rel="canonical" href="https://radarclimatico.vercel.app/site_arboris/index.html">
 
   <!-- SEO Meta Tags -->
   <meta name="description"
@@ -14,11 +17,22 @@
   <meta name="author" content="Equipe Arboris">
 
   <!-- Open Graph / Social Media -->
-  <meta property="og:title" content="Radar Climático">
+  <meta property="og:title" content="Radar Climático Recife | Monitoramento de Ilhas de Calor IoT e Gestão Pública B2G — Arboris">
+  <meta property="og:site_name" content="Radar Climático — Arboris">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:url" content="https://radarclimatico.vercel.app/site_arboris/index.html">
   <meta property="og:description"
     content="Monitorar hoje, proteger amanhã. Inteligência climática em tempo real para a cidade do Recife.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="icon.png">
+  <meta property="og:image" content="https://radarclimatico.vercel.app/site_arboris/icon.png">
+  <meta property="og:image:alt" content="Logotipo do Radar Climático Recife — Monitoramento de Ilhas de Calor Urbano pela Equipe Arboris">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Radar Climático Recife | Monitoramento de Ilhas de Calor IoT e Gestão Pública B2G — Arboris">
+  <meta name="twitter:description" content="Monitorar hoje, proteger amanhã: telemetria urbana IoT em ônibus, satélites orbitais e alertas antecipados de ondas de calor para a Defesa Civil do Recife.">
+  <meta name="twitter:image" content="https://radarclimatico.vercel.app/site_arboris/icon.png">
+  <meta name="twitter:image:alt" content="Radar Climático Recife — Inteligência Microclimática B2G da Equipe Arboris">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="icon.png">
@@ -32,7 +46,74 @@
     rel="stylesheet">
 
   <!-- Main Stylesheet -->
+  <link rel="preload" as="style" href="style.css">
+  <link rel="preload" as="image" href="icon.png" fetchpriority="high">
+  <link rel="preload" as="image" href="fundo_escuro.png" fetchpriority="high">
+  <link rel="preconnect" href="https://clareia1.vercel.app">
   <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://radarclimatico.vercel.app/site_arboris/index.html#organization",
+        "name": "Equipe Arboris — Radar Climático (CESAR / COP Recife)",
+        "url": "https://radarclimatico.vercel.app/site_arboris/index.html",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://radarclimatico.vercel.app/site_arboris/icon.png",
+          "width": 512,
+          "height": 512
+        },
+        "email": "radarclimatico@recife.pe.gov.br",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Av. Cais do Apolo, 925 - Bairro do Recife",
+          "addressLocality": "Recife",
+          "addressRegion": "PE",
+          "addressCountry": "BR"
+        },
+        "sameAs": [
+          "https://www.instagram.com/arboristeam/",
+          "https://arboris.fider.io/"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://radarclimatico.vercel.app/site_arboris/index.html#website",
+        "url": "https://radarclimatico.vercel.app/site_arboris/index.html",
+        "name": "Radar Climático Recife — Monitoramento de Ilhas de Calor B2G",
+        "description": "Sistema B2G pioneiro de monitoramento e alerta de ilhas de calor urbanas no Recife desenvolvido pela Equipe Arboris (CESAR/COP).",
+        "inLanguage": "pt-BR",
+        "publisher": {
+          "@id": "https://radarclimatico.vercel.app/site_arboris/index.html#organization"
+        }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://radarclimatico.vercel.app/#software",
+        "name": "Radar Climático Recife — Plataforma Arboris v2.0 MVP",
+        "applicationCategory": "GovernmentApplication, EnvironmentalMonitoringApplication",
+        "operatingSystem": "Web",
+        "url": "https://radarclimatico.vercel.app/",
+        "description": "Painel gerencial B2G de telemetria IoT e sensoriamento orbital para monitoramento de ilhas de calor urbano, alertas da Defesa Civil e priorização de infraestrutura verde no Recife.",
+        "author": {
+          "@id": "https://radarclimatico.vercel.app/site_arboris/index.html#organization"
+        },
+        "areaServed": {
+          "@type": "City",
+          "name": "Recife"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "BRL"
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 
 <body>
@@ -49,7 +130,7 @@
         <div class="radar-ping ring-3"></div>
         <div class="radar-sweep-beam"></div>
         <div class="preloader-icon-box">
-          <img src="icon.png" alt="Radar Climático Logo" class="preloader-crab-img">
+          <img src="icon.png" alt="Emblema do caranguejo CLIMA do Radar Climático Recife — Monitoramento de Ilhas de Calor Urbano" width="96" height="96" fetchpriority="high" decoding="async" class="preloader-crab-img">
         </div>
       </div>
       <div class="preloader-brand">
@@ -66,15 +147,15 @@
   <!-- ======================================================== -->
   <!-- NAVBAR / CABEÇALHO SUPERIOR FIXO                         -->
   <!-- ======================================================== -->
-  <header class="navbar" id="navbar">
+  <header class="navbar" id="navbar" role="banner" aria-label="Cabeçalho principal do portal Radar Climático Recife">
     <div class="navbar-container">
       <!-- Logo Dinâmica (Alterna fundo_escuro / fundo_claro conforme tema) -->
       <a href="#inicio" class="nav-brand" aria-label="Ir para o início">
-        <img src="fundo_escuro.png" alt="Radar Climático - Prefeitura do Recife" id="navLogo" class="nav-logo-img">
+        <img src="fundo_escuro.png" alt="Logotipo Radar Climático Arboris — Monitoramento de Ilhas de Calor para a Prefeitura do Recife" width="180" height="52" fetchpriority="high" decoding="async" id="navLogo" class="nav-logo-img">
       </a>
 
       <!-- Menu de Navegação Desktop -->
-      <nav class="nav-menu" id="navMenu">
+      <nav class="nav-menu" id="navMenu" aria-label="Navegação principal das seções do Radar Climático">
         <ul class="nav-links">
           <li><a href="#inicio" class="nav-link active">Início</a></li>
           <li><a href="#contexto" class="nav-link">Contexto</a></li>
@@ -127,7 +208,7 @@
     </div>
   </header>
 
-  <main>
+  <main id="main-content" role="main" aria-label="Conteúdo principal do Portal Radar Climático Recife">
     <!-- ======================================================== -->
     <!-- SEÇÃO 1: HERO (INÍCIO) COM RADAR GRÁFICO DINÂMICO       -->
     <!-- ======================================================== -->
@@ -274,7 +355,7 @@
 
             <!-- Emblema Principal: Caranguejo do Radar Climático -->
             <div class="radar-crab-badge">
-              <img src="icon.png" alt="Radar Climático com Caranguejo" class="radar-crab-illustration">
+              <img src="icon.png" alt="Ilustração do caranguejo CLIMA no radar de monitoramento térmico de ilhas de calor do Recife" width="180" height="180" fetchpriority="high" decoding="async" class="radar-crab-illustration">
             </div>
 
             <!-- Flutuantes de Dados em Tempo Real com Seletor Interativo de Bairros -->
@@ -627,7 +708,7 @@
             <span class="beacon-mini"></span> RECIFE • MAPEAMENTO TÉRMICO ESTRATÉGICO
           </div>
           <img src="https://clareia1.vercel.app/upscale_tenebroso.png"
-            alt="Recife - Mapa Estratégico de Microclima Urbano" class="map-image-zoomable" id="mapMainImage">
+            alt="Mapa Estratégico de Microclima Urbano e Ilhas de Calor nos Bairros do Recife — Plataforma Arboris" width="1200" height="675" loading="lazy" decoding="async" class="map-image-zoomable" id="mapMainImage">
           <div class="map-zoom-hint">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
@@ -756,7 +837,7 @@
             <div class="profile-avatar-wrapper">
               <img
                 src="https://img.magnific.com/fotos-gratis/retrato-de-homem-negro-isolado_53876-40305.jpg?semt=ais_hybrid&w=740&q=80"
-                alt="Jorge Gonçalves - Gestor da Defesa Civil" class="profile-img">
+                alt="Jorge Gonçalves — Persona Gestor Operacional da Defesa Civil do Recife no Radar Climático" width="240" height="240" loading="lazy" decoding="async" class="profile-img">
               <div class="avatar-badge-icon" title="Servidor Público Municipal">🏛️</div>
             </div>
             <h3 class="profile-name">Jorge Gonçalves</h3>
@@ -859,11 +940,11 @@
               <div class="hw-img-box">
                 <img
                   src="https://images.tcdn.com.br/img/img_prod/1248315/datalogger_wifi_temperatura_e_umidade_monitoramento_online_com_alertas_via_app_1111_1_00a9d62d25d5135092008da097016ee2_20251020103214.png"
-                  alt="Datalogger TDE">
+                  alt="Sensor Datalogger IoT WiFi RCW-800W TDE para monitoramento de temperatura urbana no Recife" width="320" height="240" loading="lazy" decoding="async">
                 <span class="img-label">O Hardware</span>
               </div>
               <div class="hw-img-box">
-                <img src="https://clareia1.vercel.app/onibus_IOT.png" alt="Aplicação no Ônibus">
+                <img src="https://clareia1.vercel.app/onibus_IOT.png" alt="Ônibus urbano do Recife equipado com sensor IoT para mapeamento dinâmico de ilhas de calor" width="320" height="240" loading="lazy" decoding="async">
                 <span class="img-label label-orange">Aplicação Prática</span>
               </div>
             </div>
@@ -893,11 +974,11 @@
               <div class="hw-img-box">
                 <img
                   src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkQ0zvb2IGrsdMrb5ousB-kpP_B-67Wc37IZKZ81Deg3B4JZiE8GDxIhN_&s=10"
-                  alt="Datalogger THE">
+                  alt="Sensor Datalogger IoT WiFi RCW-800W THE para aferição de temperatura e umidade relativa em estações fixas" width="320" height="240" loading="lazy" decoding="async">
                 <span class="img-label">O Hardware</span>
               </div>
               <div class="hw-img-box">
-                <img src="https://clareia1.vercel.app/parada_iot.png" alt="Aplicação na Parada">
+                <img src="https://clareia1.vercel.app/parada_iot.png" alt="Parada de ônibus do Recife com estação fixa IoT de monitoramento microclimático" width="320" height="240" loading="lazy" decoding="async">
                 <span class="img-label label-orange">Aplicação Prática</span>
               </div>
             </div>
@@ -931,7 +1012,7 @@
 
           <!-- Imagem Preview do Dashboard -->
           <div class="dashboard-preview-container">
-            <img src="https://clareia1.vercel.app/dash_radar.png" alt="Dashboard do Radar Climático Interativo"
+            <img src="https://clareia1.vercel.app/dash_radar.png" alt="Painel Gerencial MVP do Radar Climático Recife com mapa de ilhas de calor e alertas em tempo real" width="1200" height="675" loading="lazy" decoding="async"
               class="dashboard-preview-img" id="dashPreviewImg">
             <div class="dash-floating-tag">
               <span class="dash-tag-status"></span>
@@ -1032,7 +1113,7 @@
           <div class="community-banner-content">
             <div class="community-fider-pill">
               <img src="https://demo.fidercdn.com/static/images/logos/7YKAe8s9IAm3OuqDfscIuDRzuC46ib8MM7fUXunSkRVcnCunoL3eHIqgFXWUrrn5-logo.png?size=200"
-                alt="Fider Logo" class="fider-mini-logo">
+                alt="Logotipo Fider — Portal Aberto de Sugestões e Votação Comunitária do Radar Climático Arboris" width="40" height="40" loading="lazy" decoding="async" class="fider-mini-logo">
               <span>Portal de Votação & Sugestões no Fider</span>
             </div>
 
@@ -1099,7 +1180,7 @@
             <span class="doodle doodle-1">+</span>
             <div class="shape-bg color-1">
               <div class="photo-container">
-                <img src="https://clareia1.vercel.app/odir.png" alt="Odir - Gestor de Projetos">
+                <img src="https://clareia1.vercel.app/odir.png" alt="Odir — Gestor de Projetos da Equipe Arboris (Radar Climático Recife)" width="180" height="180" loading="lazy" decoding="async">
               </div>
             </div>
             <h3 class="member-name">Odir</h3>
@@ -1111,7 +1192,7 @@
             <span class="doodle doodle-2">{ }</span>
             <div class="shape-bg color-2">
               <div class="photo-container">
-                <img src="https://clareia1.vercel.app/leonardo.png" alt="Leonardo - Tech Lead">
+                <img src="https://clareia1.vercel.app/leonardo.png" alt="Leonardo — Tech Lead da Equipe Arboris (Radar Climático Recife)" width="180" height="180" loading="lazy" decoding="async">
               </div>
             </div>
             <h3 class="member-name">Leonardo</h3>
@@ -1123,7 +1204,7 @@
             <span class="doodle doodle-1">/</span>
             <div class="shape-bg color-3">
               <div class="photo-container">
-                <img src="https://clareia1.vercel.app/patrick.png" alt="Patrick - Social Media e Dados">
+                <img src="https://clareia1.vercel.app/patrick.png" alt="Patrick — Especialista em Social Media e Dados da Equipe Arboris" width="180" height="180" loading="lazy" decoding="async">
               </div>
             </div>
             <h3 class="member-name">Patrick</h3>
@@ -1135,7 +1216,7 @@
             <span class="doodle doodle-2">#</span>
             <div class="shape-bg color-4">
               <div class="photo-container">
-                <img src="https://clareia1.vercel.app/leonidas.png" alt="Leônidas - Dev - Designer">
+                <img src="https://clareia1.vercel.app/leonidas.png" alt="Leônidas — Desenvolvedor e Designer da Equipe Arboris (Radar Climático Recife)" width="180" height="180" loading="lazy" decoding="async">
               </div>
             </div>
             <h3 class="member-name">Leônidas</h3>
@@ -1147,7 +1228,7 @@
             <span class="doodle doodle-1">&lt;&gt;</span>
             <div class="shape-bg color-5">
               <div class="photo-container">
-                <img src="https://clareia1.vercel.app/thays.png" alt="Ariely - Pesquisadora">
+                <img src="https://clareia1.vercel.app/thays.png" alt="Ariely — Pesquisadora de Clima Urbano da Equipe Arboris" width="180" height="180" loading="lazy" decoding="async">
               </div>
             </div>
             <h3 class="member-name">Ariely</h3>
@@ -1159,7 +1240,7 @@
             <span class="doodle doodle-2">*</span>
             <div class="shape-bg color-6">
               <div class="photo-container">
-                <img src="https://clareia1.vercel.app/ariely.png" alt="Thaís - Analista Financeira">
+                <img src="https://clareia1.vercel.app/ariely.png" alt="Thaís — Analista Financeira B2G da Equipe Arboris" width="180" height="180" loading="lazy" decoding="async">
               </div>
             </div>
             <h3 class="member-name">Thaís</h3>
@@ -1193,7 +1274,7 @@
           <article class="news-card reveal-fade-up">
             <div class="news-img-box">
               <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=700&q=80"
-                alt="Recife em atenção">
+                alt="Alerta de onda de calor e temperaturas elevadas nos bairros críticos do Recife" width="700" height="420" loading="lazy" decoding="async">
               <span class="news-badge badge-alerta">ALERTA</span>
             </div>
             <div class="news-body">
@@ -1211,7 +1292,7 @@
           <article class="news-card reveal-fade-up">
             <div class="news-img-box">
               <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=700&q=80"
-                alt="Médias históricas de calor">
+                alt="Monitoramento da orla e médias históricas de calor urbano no Recife via sensores IoT" width="700" height="420" loading="lazy" decoding="async">
               <span class="news-badge badge-dados">DADOS</span>
             </div>
             <div class="news-body">
@@ -1229,7 +1310,7 @@
           <article class="news-card reveal-fade-up">
             <div class="news-img-box">
               <img src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=700&q=80"
-                alt="Prefeitura intensifica ações">
+                alt="Equipes da Prefeitura do Recife e Defesa Civil em ações de mitigação térmica e hidratação" width="700" height="420" loading="lazy" decoding="async">
               <span class="news-badge badge-acoes">AÇÕES</span>
             </div>
             <div class="news-body">
@@ -1247,7 +1328,7 @@
           <article class="news-card reveal-fade-up">
             <div class="news-img-box">
               <img src="https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=700&q=80"
-                alt="Previsão para os próximos 7 dias">
+                alt="Previsão microclimática de 7 dias e índices de insolação nas microrregiões do Recife" width="700" height="420" loading="lazy" decoding="async">
               <span class="news-badge badge-previsao">PREVISÃO</span>
             </div>
             <div class="news-body">
@@ -1278,7 +1359,7 @@
           </div>
           <form class="newsletter-form" id="newsletterForm">
             <input type="text" placeholder="Seu melhor e-mail ou WhatsApp" class="newsletter-input" required
-              id="newsletterInput">
+              id="newsletterInput" aria-label="Informe seu e-mail ou WhatsApp para receber alertas de calor do Recife">
             <button type="submit" class="newsletter-submit-btn">
               <span>CADASTRAR</span>
             </button>
@@ -1292,7 +1373,7 @@
   <!-- ======================================================== -->
   <!-- MODAL INTERATIVO: ALERTAS ATIVOS E TELEMETRIA URBANA     -->
   <!-- ======================================================== -->
-  <div class="modal-backdrop" id="alertsModal" aria-hidden="true">
+  <div class="modal-backdrop" id="alertsModal" role="dialog" aria-modal="true" aria-label="Alertas Ativos de Calor Urbano no Recife" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-header">
         <div class="modal-title-box">
@@ -1354,17 +1435,17 @@
   <!-- ======================================================== -->
   <!-- MODAL DE ZOOM PARA O MAPA ESTRATÉGICO                    -->
   <!-- ======================================================== -->
-  <div class="modal-backdrop" id="mapZoomModal" aria-hidden="true">
+  <div class="modal-backdrop" id="mapZoomModal" role="dialog" aria-modal="true" aria-label="Mapa Estratégico de Microclima Urbano em Alta Resolução" aria-hidden="true">
     <div class="modal-dialog modal-dialog-lg">
       <div class="modal-header">
         <div class="modal-title-box">
           <span class="beacon-mini"></span>
           <h3>Recife • Mapa Estratégico de Microclima Urbano</h3>
         </div>
-        <button class="modal-close-btn" id="closeMapZoomModal">&times;</button>
+        <button class="modal-close-btn" id="closeMapZoomModal" aria-label="Fechar visualização ampliada do mapa">&times;</button>
       </div>
       <div class="modal-body-scrollable">
-        <img src="https://clareia1.vercel.app/upscale_tenebroso.png" alt="Mapa Estratégico em Alta Resolução"
+        <img src="https://clareia1.vercel.app/upscale_tenebroso.png" alt="Mapa Estratégico de Microclima Urbano e Ilhas de Calor do Recife em Alta Resolução" width="1600" height="900" loading="lazy" decoding="async"
           class="map-zoomed-view">
       </div>
     </div>
@@ -1389,13 +1470,13 @@
   <!-- ======================================================== -->
   <!-- 12. RODAPÉ (FOOTER) REFINADO COM PARCEIROS E CONTATOS    -->
   <!-- ======================================================== -->
-  <footer class="site-footer">
+  <footer class="site-footer" role="contentinfo" aria-label="Rodapé institucional do Portal Radar Climático Recife">
     <div class="footer-wrapper content-wrapper">
       <div class="footer-top-grid">
         <!-- Coluna 1: Marca & Apresentação -->
         <div class="footer-col-brand">
           <div class="footer-brand-logo">
-            <img src="fundo_escuro.png" alt="Radar Climático" class="footer-logo-img" id="footerLogo">
+            <img src="fundo_escuro.png" alt="Logotipo Radar Climático Recife — Equipe Arboris (CESAR e COP Recife)" width="180" height="52" loading="lazy" decoding="async" class="footer-logo-img" id="footerLogo">
           </div>
           <p class="footer-mission-text">
             Solução de tecnologia climática e sensoriamento IoT para a gestão pública municipal do Recife. Desenvolvido
@@ -1404,7 +1485,7 @@
         </div>
 
         <!-- Coluna 2: Navegação -->
-        <div class="footer-col-links">
+        <div class="footer-col-links" role="navigation" aria-label="Links de navegação institucional do rodapé">
           <h4 class="footer-heading">Navegação</h4>
           <ul class="footer-nav-list">
             <li><a href="#inicio">Início</a></li>
@@ -1473,22 +1554,22 @@
           <h4 class="footer-heading">Parceiros & Ecossistema</h4>
           <div class="partners-logos-grid">
             <div class="partner-card" title="CESAR School">
-              <img src="https://www.cesar.school/wp-content/themes/alfama/assets/img/logo_cesar.png" alt="CESAR">
+              <img src="https://www.cesar.school/wp-content/themes/alfama/assets/img/logo_cesar.png" alt="Logotipo CESAR School — Centro de Estudos e Sistemas Avançados do Recife" width="120" height="48" loading="lazy" decoding="async">
             </div>
             <div class="partner-card" title="Prefeitura do Recife">
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Brasao_do_Recife.svg/960px-Brasao_do_Recife.svg.png?utm_source=pt.wikipedia.org&utm_campaign=index&utm_content=thumbnail"
-                alt="Prefeitura do Recife">
+                alt="Brasão Oficial da Prefeitura da Cidade do Recife — Parceiro Institucional B2G" width="96" height="96" loading="lazy" decoding="async">
             </div>
             <div class="partner-card" title="COP Recife">
               <img
                 src="https://cop.recife.pe.gov.br/portal/sharing/rest/content/items/816e44228a954f5eb4372c238d33ab63/resources/images/widget_730/1721998007624.png"
-                alt="COP Recife">
+                alt="Logotipo Centro de Operações do Recife (COP Recife) — Monitoramento Urbano" width="120" height="48" loading="lazy" decoding="async">
             </div>
             <div class="partner-card partner-circle" title="Inovação Urbana">
               <img
                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGjYgbLp-muH9KYadFImtw477JbH6TCln360u_MMphQ4Dc1EaP-2mkQmM&s=10"
-                alt="Inovação Urbana">
+                alt="Selo Ecossistema de Inovação Urbana e Resiliência Climática do Recife" width="96" height="96" loading="lazy" decoding="async">
             </div>
           </div>
         </div>
