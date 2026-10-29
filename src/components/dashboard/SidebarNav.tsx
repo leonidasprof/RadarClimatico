@@ -55,7 +55,7 @@ export function SidebarNav({
   ];
 
   const content = (
-    <div className="flex h-full flex-col justify-between overflow-y-auto no-scrollbar p-3.5 space-y-4">
+    <div className="flex h-full flex-col justify-between overflow-y-auto subtle-scrollbar p-3.5 space-y-4">
       {/* 1. TOPO: LOGO OFICIAL CENTRALIZADA COM ARBORIS ABAIXO */}
       <div>
         <div className="flex flex-col items-center justify-center text-center pb-3 border-b border-border/70 relative">
