@@ -1705,6 +1705,26 @@ function ZoneDetail({
   onOpenEnvironmentalAnalysis?: () => void;
 }) {
   const [showRatingScale, setShowRatingScale] = useState(false);
+  const [checkWater, setCheckWater] = useState(false);
+  const [checkAgents, setCheckAgents] = useState(false);
+  const [actionConfirmed, setActionConfirmed] = useState(false);
+
+  useEffect(() => {
+    setCheckWater(false);
+    setCheckAgents(false);
+    setActionConfirmed(false);
+  }, [zone.id]);
+
+  const isChecklistComplete = checkWater && checkAgents;
+
+  const handleConfirmOperationalAction = () => {
+    if (!isChecklistComplete) return;
+    setActionConfirmed(true);
+    toast.success(`Ação preventiva confirmada para ${zone.name}!`, {
+      description:
+        "Validação operacional concluída e encaminhada à Defesa Civil e Secretaria de Saúde.",
+    });
+  };
 
   const ratingInfo = ratingDefinitions[zone.rating];
   const organRec = zoneOrganRecommendations[zone.id] || {
@@ -1818,11 +1838,11 @@ function ZoneDetail({
         )}
 
         {/* Tabela de Indicadores com Ícones e Espaçamento Organizado */}
-        <dl className="mt-3.5 divide-y divide-border/60">
+        <dl className="mt-2.5 divide-y divide-border/60">
           {rows.map((r) => {
             const Icon = r.icon;
             return (
-              <div key={r.label} className="flex items-center justify-between py-2 sm:py-2.5 text-xs sm:text-sm">
+              <div key={r.label} className="flex items-center justify-between py-1.5 sm:py-2 text-xs sm:text-sm">
                 <dt className="text-muted-foreground text-xs flex items-center gap-2">
                   <Icon className={`h-3.5 w-3.5 ${r.iconColor || "text-muted-foreground"} shrink-0`} />
                   <span>{r.label}</span>
@@ -1836,7 +1856,7 @@ function ZoneDetail({
         </dl>
 
         {/* ÁREA DE RECOMENDAÇÃO OPERACIONAL PARA ÓRGÃO PÚBLICO EM ALTO DESTAQUE */}
-        <div className="mt-4 overflow-hidden rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-background to-card p-3 sm:p-3.5 shadow-md relative">
+        <div className="mt-3 overflow-hidden rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-background to-card p-3 shadow-md relative">
           <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
             <div className="flex items-center gap-1.5">
               <span className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-500/20 text-amber-500">
@@ -1846,8 +1866,8 @@ function ZoneDetail({
                 Recomendação Operacional
               </span>
             </div>
-            <span className="rounded-full bg-rose-500 text-white px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider shadow-xs">
-              Despacho Imediato
+            <span className="rounded-full bg-amber-500 text-white px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider shadow-xs">
+              AÇÃO PREVENTIVA
             </span>
           </div>
 
@@ -1867,11 +1887,119 @@ function ZoneDetail({
               </p>
             </div>
           </div>
+
+          {/* Checklist de Validação Operacional (Human-in-the-Loop) com Estética Glassmorphism */}
+          <div className="mt-2.5 rounded-lg border border-border/60 dark:border-white/10 bg-background/60 dark:bg-slate-900/45 backdrop-blur-md p-2.5 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-semibold">
+                Validação Operacional
+              </span>
+              <span className="text-[10px] font-mono text-muted-foreground">
+                {(checkWater ? 1 : 0) + (checkAgents ? 1 : 0)}/2 verificados
+              </span>
+            </div>
+
+            {/* Item 1: Abastecimento de água */}
+            <label
+              className={`flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[11px] transition-all cursor-pointer select-none border ${
+                checkWater
+                  ? "bg-cyan-500/10 border-cyan-500/40 text-foreground font-medium"
+                  : "bg-card/40 border-transparent text-muted-foreground hover:text-foreground hover:bg-card/70"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={checkWater}
+                onChange={(e) => {
+                  setCheckWater(e.target.checked);
+                  if (!e.target.checked) setActionConfirmed(false);
+                }}
+                className="sr-only"
+              />
+              <span
+                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded transition-all ${
+                  checkWater
+                    ? "bg-cyan-500 border border-cyan-400 text-white shadow-[0_0_10px_rgba(6,182,212,0.55)]"
+                    : "border border-muted-foreground/50 bg-background/80"
+                }`}
+              >
+                {checkWater && <Check className="h-3 w-3 stroke-[3]" />}
+              </span>
+              <span className="leading-snug">
+                Confirmar quebra no abastecimento de água local.
+              </span>
+            </label>
+
+            {/* Item 2: Disponibilidade de agentes de saúde */}
+            <label
+              className={`flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[11px] transition-all cursor-pointer select-none border ${
+                checkAgents
+                  ? "bg-orange-500/10 border-orange-500/40 text-foreground font-medium"
+                  : "bg-card/40 border-transparent text-muted-foreground hover:text-foreground hover:bg-card/70"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={checkAgents}
+                onChange={(e) => {
+                  setCheckAgents(e.target.checked);
+                  if (!e.target.checked) setActionConfirmed(false);
+                }}
+                className="sr-only"
+              />
+              <span
+                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded transition-all ${
+                  checkAgents
+                    ? "bg-orange-500 border border-orange-400 text-white shadow-[0_0_10px_rgba(249,115,22,0.55)]"
+                    : "border border-muted-foreground/50 bg-background/80"
+                }`}
+              >
+                {checkAgents && <Check className="h-3 w-3 stroke-[3]" />}
+              </span>
+              <span className="leading-snug">
+                Validar disponibilidade de agentes de saúde na região.
+              </span>
+            </label>
+          </div>
+
+          {/* Botão Principal de Ação Condicional no Rodapé do Card */}
+          <div className="mt-2.5 pt-2 border-t border-amber-500/20">
+            <button
+              type="button"
+              disabled={!isChecklistComplete}
+              onClick={handleConfirmOperationalAction}
+              className={`w-full flex items-center justify-center gap-1.5 rounded-lg py-2 px-3 text-xs font-bold transition-all ${
+                !isChecklistComplete
+                  ? "bg-muted text-muted-foreground opacity-50 cursor-not-allowed border border-border/60"
+                  : actionConfirmed
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25 cursor-pointer"
+                    : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/30 active:scale-[0.99] cursor-pointer"
+              }`}
+            >
+              {actionConfirmed ? (
+                <>
+                  <CheckCheck className="h-3.5 w-3.5 shrink-0" />
+                  <span>Ação Confirmada</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                  <span>Confirmar Ação</span>
+                </>
+              )}
+            </button>
+          </div>
+          <div className="hidden">
+            <div>
+              <p>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Bloco Inferior de Botões de Ação Perfeitamente Alinhados */}
-      <div className="mt-4 pt-3 border-t border-border/50 space-y-2">
+      <div className="mt-3 pt-2.5 border-t border-border/50 space-y-2">
         {/* Ações de atalho direto para Cobertura Vegetal e Vulnerabilidade do Bairro */}
         <div className="grid grid-cols-2 gap-2">
           {onOpenVegetalView && (
