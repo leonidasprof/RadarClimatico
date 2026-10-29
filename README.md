@@ -31,11 +31,11 @@ A engenharia e a governança de dados do Radar Climático Arboris seguem padrõe
 
 | Documento | Descrição e Finalidade | Audiência Primária |
 |:---|:---|:---|
-| 📘 **[`/docs/MANUAL_DO_USUARIO.md`](docs/MANUAL_DO_USUARIO.md)** | **Manual do Usuário:** Guia oficial de operação para gestores públicos, Defesa Civil e técnicos sobre cada menu, mapa e função do sistema. | Gestores Públicos, Defesa Civil, Agentes de Saúde |
+| 📘 **[`/docs/MANUAL_DO_USUARIO.md`](docs/MANUAL_DO_USUARIO.md)** | **Manual do Usuário (v2.1.0):** Guia oficial de operação para gestores públicos, Defesa Civil e técnicos sobre cada menu, mapa, validação *Human-in-the-Loop*, relatórios e tour guiado `CLIMA`. | Gestores Públicos, Defesa Civil, Agentes de Saúde |
 | 📖 **[`/docs/API_CATALOG.md`](docs/API_CATALOG.md)** | **Catálogo de APIs:** Especificação exaustiva de todas as APIs externas (Open-Meteo, NASA POWER, Landsat, Sentinel, MapBiomas, IBGE) com 27 parâmetros técnicos. | Desenvolvedores, Arquitetos, DevOps |
 | 🛰️ **[`/docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md)** | **Fontes de Dados:** Documentação detalhada dos fluxos orbitais (Landsat 8/9, Sentinel-2, GEE), bases censitárias (IBGE) e séries biofísicas. | Cientistas de Dados, Engenheiros Geoespaciais |
 | 🗺️ **[`/docs/DEPENDENCY_MAP.md`](docs/DEPENDENCY_MAP.md)** | **Mapa de Dependências:** Rastreabilidade ponta a ponta (Serviço → API → Módulo → Dashboard → Usuário) com fluxograma Mermaid. | Arquitetos, DevOps, Gestores de Mudança |
-| 🧠 **[`/docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md)** | **Memória do Projeto:** Registros de Decisões Arquiteturais (ADRs 001 a 005), formulações biofísicas e regras de negócio. | Novos Integrantes (Onboarding), Tech Leads |
+| 🧠 **[`/docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md)** | **Memória do Projeto (v2.1.0):** Registros de Decisões Arquiteturais (ADRs 001 a 011), formulações biofísicas, SEO técnico e regras de negócio. | Novos Integrantes (Onboarding), Tech Leads |
 | 📜 **[`CHANGELOG.md`](CHANGELOG.md)** | **Histórico de Versões:** Registro contínuo de lançamentos, adições e correções no padrão *Keep a Changelog*. | Toda a equipe, Gestores, Investidores |
 
 ---
@@ -50,13 +50,13 @@ Recife é uma das capitais mais vulneráveis do Brasil a eventos climáticos ext
 
 ## 🚀 Funcionalidades do Sistema
 
-### 1. 🌡️ Mapa Térmico e Monitoramento em Tempo Real
+### 1. 🌡️ Mapa Térmico, Monitoramento em Tempo Real & Validação *Human-in-the-Loop*
 * **Malha Urbana Vetorial:** Renderização dinâmica das principais artérias viárias, hidrografia do Rio Capibaribe e Beberibe, e pontos focais de monitoramento.
 * **Seletores Integrados de Camadas:** Alternância instantânea no próprio mapa entre:
-  * **Calor:** Anomalias térmicas de superfície e sensação térmica calibrada.
+  * **Calor:** Anomalias térmicas de superfície e sensação térmica calibrada (`apparent_temperature` Open-Meteo).
   * **Cobertura Vegetal:** Densidade de copa arbórea e índice NDVI orbital.
   * **Vulnerabilidade:** Índice de Vulnerabilidade Social (IVS) da população exposta.
-* **Classificação Térmica de Bairros (Classes A a E):** Categorização de estresse bioclimático com recomendações operacionais dedicadas por órgão público (Defesa Civil, EMLURB, CTTU, Saúde).
+* **Classificação Térmica de Bairros (Classes A a E) & Recomendação Operacional:** Categorização de estresse bioclimático com tag **`AÇÃO PREVENTIVA`** e bloco de **Validação Operacional (*Human-in-the-Loop*)** em *glassmorphism*, exigindo que o operador confirme dois requisitos críticos (*quebra no abastecimento de água local* e *disponibilidade de agentes de saúde na região*) antes de liberar o botão condicional **"Confirmar Ação"**.
 
 ### 2. 🌿 Cobertura Vegetal & Simulador de Arrefecimento
 * **Mosaico Orbital Multiespectral (NDVI):** Visualização de manchas verdes e densidade de copa com resolução de 10m (padrão Sentinel-2).
@@ -73,10 +73,11 @@ Recife é uma das capitais mais vulneráveis do Brasil a eventos climáticos ext
 * **Curva Epidemiológica Cruzada:** Gráfico interativo com eixo duplo cruzando a temperatura máxima semanal com a taxa de admissões e atendimentos de emergência nas UPAs da Região Metropolitana.
 * **Diagnóstico Diário de Risco:** Marcadores analíticos nos dias críticos ($>35 \text{ °C}$) indicando limiares de alerta para o sistema hospitalar.
 
-### 4. 📊 Comparação Territorial & Séries Históricas
+### 4. 📊 Comparação Territorial, Alertas, Relatórios & Tour Guiado (`CLIMA`)
 * **Análise Comparativa Bairro A × Bairro B:** Confronto de métricas entre territórios com perfis térmicos contrastantes (ex.: Santo Amaro vs. Casa Forte ou Dois Irmãos).
-* **Dashboard Verde:** Priorização de áreas de intervenção e status de implantação de infraestrutura verde.
-* **Gestão Operacional de Alertas:** Central de despacho rápido para Defesa Civil com registro de histórico e emissão de notificações de emergência.
+* **Central de Alertas do Dia & Histórico:** Painel operacional alinhado com abas *Alertas do dia* e *Histórico*, botão direto **`+ Novo Alerta`** e encaminhamento automático de ocorrências despachadas.
+* **Gerador de Relatórios Executivos (`ReportsModal`):** Exportação sob demanda de dossiês técnicos e séries históricas em **PDF Executivo** ou **Planilha CSV**.
+* **Assistente Virtual `CLIMA` (Tour Guiado Interativo):** Mascote caranguejo cibernético flutuante com áudio sintetizado e **Menu Principal do Tour** contendo 13 etapas gerais e 6 funcionalidades internas guiadas por *spotlight* retangular.
 
 ---
 
@@ -118,28 +119,30 @@ Arboris/
 │   ├── API_CATALOG.md      # Catálogo exaustivo de APIs (Open-Meteo, NASA POWER, Landsat, etc.)
 │   ├── DATA_SOURCES.md     # Documentação detalhada das fontes orbitais, biofísicas e censitárias
 │   ├── DEPENDENCY_MAP.md   # Mapeamento Serviço → API → Módulo → Dashboard → Usuário (Mermaid)
-│   └── PROJECT_MEMORY.md   # Memória do projeto, ADRs (001 a 005) e regras de negócio biofísicas
-├── public/                 # Ativos estáticos e logotipos do Radar Climático
+│   └── PROJECT_MEMORY.md   # Memória do projeto, ADRs (001 a 011) e regras de negócio biofísicas
+├── public/                 # Ativos estáticos, SEO (sitemap.xml, robots.txt) e Portal Institucional
+│   └── site_arboris/       # Landing Page Institucional B2G + Integração Fider (index.html)
 ├── src/
 │   ├── components/
 │   │   ├── alerts/         # Modais de reporte e envio operacional de alertas
 │   │   ├── auth/           # Modais de perfil e contato institucional
-│   │   ├── dashboard/      # Telas de Cobertura Vegetal, Vulnerabilidade, NASA POWER e Análise Ambiental
+│   │   ├── dashboard/      # SidebarNav, TopHeader, ReportsModal, PernambucoMinimap e Views analíticas
 │   │   ├── history/        # Telas de Comparação Territorial A x B
+│   │   ├── tour/           # Assistente Virtual CLIMA (ClimaMascot, ClimaTourOverlay, tourStepsData)
 │   │   ├── ui/             # Componentes reutilizáveis baseados em Radix UI
 │   │   └── RecifeStreetMesh.tsx # Malha esquemática de vias e hidrografia do Recife
-│   ├── context/            # Provedores de Autenticação e Tema (Dark/Light)
+│   ├── context/            # Provedores de Autenticação, Tema (Dark/Light) e Tour Guiado (TourContext)
 │   ├── lib/
 │   │   ├── geo-services/   # Serviços de APIs (Open-Meteo, NASA POWER, biofísica e analytics)
 │   │   ├── radar-data.ts   # Modelagem de dados, séries de sensores, IVS, NDVI e funções de simulação
 │   │   └── utils.ts        # Utilitários de classes e cálculos
 │   ├── routes/
-│   │   ├── __root.tsx      # Layout mestre global
+│   │   ├── __root.tsx      # Layout mestre global com metadados SEO e JSON-LD Schema.org
 │   │   ├── index.tsx       # Dashboard principal (Tempo Real, Histórico, Verde, NASA, Ambiental, etc.)
 │   │   └── login.tsx       # Tela de autenticação institucional
 │   ├── router.tsx          # Inicialização do TanStack Router
 │   ├── server.ts           # Configuração do handler SSR TanStack Start
-│   └── styles.css          # Design tokens, paletas térmicas e utilitários globais
+│   └── styles.css          # Design tokens, paletas térmicas e scrollbars customizadas
 ├── CHANGELOG.md            # Histórico de lançamentos e versões no padrão Keep a Changelog
 ├── package.json            # Dependências e scripts de execução
 ├── tsconfig.json           # Configurações do compilador TypeScript
@@ -187,8 +190,8 @@ Arboris/
   * Dashboard operacional com monitoramento térmico em tempo real.
   * Módulo de Cobertura Vegetal com sensoriamento NDVI e Simulador de Arrefecimento.
   * Módulo de Vulnerabilidade Social integrado com dados epidemiológicos e demanda das UPAs.
-  * Classificação de bairros (Classes A-E) e recomendações operacionais para órgãos municipais.
-  * Disparo de alertas antecipados e cruzamento territorial entre bairros.
+  * Classificação de bairros (Classes A-E), recomendações operacionais e checklist de validação *Human-in-the-Loop*.
+  * Disparo de alertas antecipados, geração de relatórios executivos e Tour Guiado pelo mascote `CLIMA`.
 
 * **Release 2 (Próximas Fases):**
   * Integração com a API do aplicativo cidadão *Conecta Recife*.

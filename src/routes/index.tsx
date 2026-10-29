@@ -1705,11 +1705,13 @@ function ZoneDetail({
   onOpenEnvironmentalAnalysis?: () => void;
 }) {
   const [showRatingScale, setShowRatingScale] = useState(false);
+  const [showValidationPanel, setShowValidationPanel] = useState(false);
   const [checkWater, setCheckWater] = useState(false);
   const [checkAgents, setCheckAgents] = useState(false);
   const [actionConfirmed, setActionConfirmed] = useState(false);
 
   useEffect(() => {
+    setShowValidationPanel(false);
     setCheckWater(false);
     setCheckAgents(false);
     setActionConfirmed(false);
@@ -1720,6 +1722,7 @@ function ZoneDetail({
   const handleConfirmOperationalAction = () => {
     if (!isChecklistComplete) return;
     setActionConfirmed(true);
+    setShowValidationPanel(false);
     toast.success(`Ação preventiva confirmada para ${zone.name}!`, {
       description:
         "Validação operacional concluída e encaminhada à Defesa Civil e Secretaria de Saúde.",
@@ -1888,107 +1891,156 @@ function ZoneDetail({
             </div>
           </div>
 
-          {/* Checklist de Validação Operacional (Human-in-the-Loop) com Estética Glassmorphism */}
-          <div className="mt-2.5 rounded-lg border border-border/60 dark:border-white/10 bg-background/60 dark:bg-slate-900/45 backdrop-blur-md p-2.5 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-semibold">
-                Validação Operacional
-              </span>
-              <span className="text-[10px] font-mono text-muted-foreground">
-                {(checkWater ? 1 : 0) + (checkAgents ? 1 : 0)}/2 verificados
-              </span>
+          {/* Gatilho "Validar Operação" ou Bloco Expandido de Validação Operacional (Human-in-the-Loop) */}
+          {!showValidationPanel ? (
+            <div className="mt-3 pt-2.5 border-t border-amber-500/20">
+              <button
+                type="button"
+                onClick={() => setShowValidationPanel(true)}
+                className={`w-full flex items-center justify-center gap-1.5 rounded-lg py-2 px-3 text-xs font-bold transition-all cursor-pointer ${
+                  actionConfirmed
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/25"
+                    : "bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/40 shadow-xs"
+                }`}
+              >
+                {actionConfirmed ? (
+                  <>
+                    <CheckCheck className="h-3.5 w-3.5 shrink-0" />
+                    <span>Ação Confirmada · Rever Validação</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                    <span>Validar Operação</span>
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0 ml-0.5" />
+                  </>
+                )}
+              </button>
             </div>
+          ) : (
+            <>
+              {/* Checklist de Validação Operacional (Human-in-the-Loop) com Estética Glassmorphism */}
+              <div className="mt-2.5 rounded-lg border border-border/60 dark:border-white/10 bg-background/60 dark:bg-slate-900/45 backdrop-blur-md p-2.5 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-semibold">
+                    Validação Operacional
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono text-muted-foreground">
+                      {(checkWater ? 1 : 0) + (checkAgents ? 1 : 0)}/2 verificados
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowValidationPanel(false)}
+                      className="inline-flex items-center gap-0.5 text-[10px] font-mono text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      title="Recolher validação operacional"
+                    >
+                      <ChevronUp className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
 
-            {/* Item 1: Abastecimento de água */}
-            <label
-              className={`flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[11px] transition-all cursor-pointer select-none border ${
-                checkWater
-                  ? "bg-cyan-500/10 border-cyan-500/40 text-foreground font-medium"
-                  : "bg-card/40 border-transparent text-muted-foreground hover:text-foreground hover:bg-card/70"
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={checkWater}
-                onChange={(e) => {
-                  setCheckWater(e.target.checked);
-                  if (!e.target.checked) setActionConfirmed(false);
-                }}
-                className="sr-only"
-              />
-              <span
-                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded transition-all ${
-                  checkWater
-                    ? "bg-cyan-500 border border-cyan-400 text-white shadow-[0_0_10px_rgba(6,182,212,0.55)]"
-                    : "border border-muted-foreground/50 bg-background/80"
-                }`}
-              >
-                {checkWater && <Check className="h-3 w-3 stroke-[3]" />}
-              </span>
-              <span className="leading-snug">
-                Confirmar quebra no abastecimento de água local.
-              </span>
-            </label>
+                {/* Etapa 1 (Confirmar): Abastecimento de água */}
+                <label
+                  className={`flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[11px] transition-all cursor-pointer select-none border ${
+                    checkWater
+                      ? "bg-cyan-500/10 border-cyan-500/40 text-foreground font-medium"
+                      : "bg-card/40 border-transparent text-muted-foreground hover:text-foreground hover:bg-card/70"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checkWater}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setCheckWater(checked);
+                      if (!checked) {
+                        setCheckAgents(false);
+                        setActionConfirmed(false);
+                      }
+                    }}
+                    className="sr-only"
+                  />
+                  <span
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded transition-all ${
+                      checkWater
+                        ? "bg-cyan-500 border border-cyan-400 text-white shadow-[0_0_10px_rgba(6,182,212,0.55)]"
+                        : "border border-muted-foreground/50 bg-background/80"
+                    }`}
+                  >
+                    {checkWater && <Check className="h-3 w-3 stroke-[3]" />}
+                  </span>
+                  <span className="leading-snug">
+                    1. Confirmar quebra no abastecimento de água local.
+                  </span>
+                </label>
 
-            {/* Item 2: Disponibilidade de agentes de saúde */}
-            <label
-              className={`flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[11px] transition-all cursor-pointer select-none border ${
-                checkAgents
-                  ? "bg-orange-500/10 border-orange-500/40 text-foreground font-medium"
-                  : "bg-card/40 border-transparent text-muted-foreground hover:text-foreground hover:bg-card/70"
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={checkAgents}
-                onChange={(e) => {
-                  setCheckAgents(e.target.checked);
-                  if (!e.target.checked) setActionConfirmed(false);
-                }}
-                className="sr-only"
-              />
-              <span
-                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded transition-all ${
-                  checkAgents
-                    ? "bg-orange-500 border border-orange-400 text-white shadow-[0_0_10px_rgba(249,115,22,0.55)]"
-                    : "border border-muted-foreground/50 bg-background/80"
-                }`}
-              >
-                {checkAgents && <Check className="h-3 w-3 stroke-[3]" />}
-              </span>
-              <span className="leading-snug">
-                Validar disponibilidade de agentes de saúde na região.
-              </span>
-            </label>
-          </div>
+                {/* Etapa 2 (Validar): Disponibilidade de agentes de saúde (habilitada após Etapa 1) */}
+                <label
+                  className={`flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[11px] transition-all select-none border ${
+                    !checkWater
+                      ? "bg-card/20 border-transparent text-muted-foreground/50 cursor-not-allowed opacity-60"
+                      : checkAgents
+                        ? "bg-orange-500/10 border-orange-500/40 text-foreground font-medium cursor-pointer"
+                        : "bg-card/40 border-transparent text-muted-foreground hover:text-foreground hover:bg-card/70 cursor-pointer"
+                  }`}
+                  title={!checkWater ? "Confirme primeiro o item 1 acima para liberar a validação" : undefined}
+                >
+                  <input
+                    type="checkbox"
+                    disabled={!checkWater}
+                    checked={checkAgents}
+                    onChange={(e) => {
+                      if (!checkWater) return;
+                      setCheckAgents(e.target.checked);
+                      if (!e.target.checked) setActionConfirmed(false);
+                    }}
+                    className="sr-only"
+                  />
+                  <span
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded transition-all ${
+                      checkAgents
+                        ? "bg-orange-500 border border-orange-400 text-white shadow-[0_0_10px_rgba(249,115,22,0.55)]"
+                        : "border border-muted-foreground/50 bg-background/80"
+                    }`}
+                  >
+                    {checkAgents && <Check className="h-3 w-3 stroke-[3]" />}
+                  </span>
+                  <span className="leading-snug">
+                    2. Validar disponibilidade de agentes de saúde na região.
+                  </span>
+                </label>
+              </div>
 
-          {/* Botão Principal de Ação Condicional no Rodapé do Card */}
-          <div className="mt-2.5 pt-2 border-t border-amber-500/20">
-            <button
-              type="button"
-              disabled={!isChecklistComplete}
-              onClick={handleConfirmOperationalAction}
-              className={`w-full flex items-center justify-center gap-1.5 rounded-lg py-2 px-3 text-xs font-bold transition-all ${
-                !isChecklistComplete
-                  ? "bg-muted text-muted-foreground opacity-50 cursor-not-allowed border border-border/60"
-                  : actionConfirmed
-                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25 cursor-pointer"
-                    : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/30 active:scale-[0.99] cursor-pointer"
-              }`}
-            >
-              {actionConfirmed ? (
-                <>
-                  <CheckCheck className="h-3.5 w-3.5 shrink-0" />
-                  <span>Ação Confirmada</span>
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-                  <span>Confirmar Ação</span>
-                </>
-              )}
-            </button>
-          </div>
+              {/* Botão Principal de Ação Condicional no Rodapé do Card */}
+              <div className="mt-2.5 pt-2 border-t border-amber-500/20">
+                <button
+                  type="button"
+                  disabled={!isChecklistComplete}
+                  onClick={handleConfirmOperationalAction}
+                  className={`w-full flex items-center justify-center gap-1.5 rounded-lg py-2 px-3 text-xs font-bold transition-all ${
+                    !isChecklistComplete
+                      ? "bg-muted text-muted-foreground opacity-50 cursor-not-allowed border border-border/60"
+                      : actionConfirmed
+                        ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25 cursor-pointer"
+                        : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/30 active:scale-[0.99] cursor-pointer"
+                  }`}
+                >
+                  {actionConfirmed ? (
+                    <>
+                      <CheckCheck className="h-3.5 w-3.5 shrink-0" />
+                      <span>Ação Confirmada</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                      <span>Confirmar Ação</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
           <div className="hidden">
             <div>
               <p>

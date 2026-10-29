@@ -1,217 +1,235 @@
 # Manual do Usuário · Radar Climático Arboris
 > **Documento:** Guia Oficial de Operação e Uso do Sistema  
-> **Versão:** 2.0.0  
-> **Data:** Outubro de 2026  
+> **Versão:** 2.1.0  
+> **Data:** 29 de Outubro de 2026  
 > **Público-Alvo:** Gestores Públicos, Coordenadores da Defesa Civil (CODECIR), Agentes de Saúde Pública (UPAs), Técnicos da EMLURB, Planejadores Urbanos e Operadores do COP-ARIES.
 
 ---
 
 ## 1. Bem-vindo ao Radar Climático Arboris
 
-O **Radar Climático Arboris** é uma plataforma de inteligência geoespacial e microclimática desenvolvida para auxiliar a administração pública e as defesas civis a **detectar, antecipar, comunicar e mitigar as ilhas de calor e eventos climáticos extremos no Recife**.
+O **Radar Climático Arboris** é uma plataforma B2G (*Business to Government*) de inteligência geoespacial e microclimática desenvolvida para auxiliar a administração pública e as defesas civis a **detectar, antecipar, comunicar e mitigar as ilhas de calor e eventos climáticos extremos no Recife**.
 
-O sistema combina dados orbitais de satélites (NASA Landsat 8/9, ESA Sentinel-2), previsões meteorológicas públicas em tempo real (Open-Meteo), séries de radiação solar (NASA POWER), dados censitários (IBGE) e o fluxo de atendimentos das Unidades de Pronto Atendimento (UPAs).
+O sistema combina dados orbitais de satélites (NASA Landsat 8/9, ESA Sentinel-2), previsões meteorológicas públicas em tempo real (Open-Meteo), séries de radiação solar (NASA POWER), mapeamento de cobertura vegetal (MapBiomas Coleção 11), dados censitários (IBGE Censo 2022) e o fluxo de atendimentos das Unidades de Pronto Atendimento (UPAs).
 
-Este manual foi elaborado para orientar você, passo a passo, sobre **o que cada menu, botão, gráfico e mapa faz**, permitindo que você tome decisões rápidas e embasadas para proteger a população recifense.
+Este manual foi elaborado para orientar você, passo a passo, sobre **o que cada menu, botão, checklist operacional, gráfico, mapa e assistente virtual faz**, permitindo tomar decisões rápidas, seguras e embasadas para proteger a população recifense.
 
 ---
 
 ## 2. Visão Geral da Interface
 
-Ao acessar o sistema, a tela divide-se em quatro grandes áreas visuais:
-1. **Barra Superior (Header):** Controle de sessão, relógio de tempo real, status dos sensores e alternância de tema visual.
-2. **Menu Principal de Navegação (Abas):** Acesso aos diferentes módulos especializados do sistema.
-3. **Área Central (Mapas e Gráficos):** Monitoramento térmico espacial, simulações de plantio de árvores e curvas diárias.
-4. **Painel Lateral Direito (Ações Operacionais):** Detalhamento instantâneo do bairro selecionado e central de alertas de ondas de calor.
+Ao acessar o sistema (após autenticar-se na **Central de Operações** em `/login`), a tela divide-se em cinco áreas principais:
+1. **Barra Lateral Esquerda (`SidebarNav`):** Centro de comando com os 8 módulos da plataforma, minimapa geográfico de Pernambuco, status das APIs em tempo real e barra de rolagem sutil (`subtle-scrollbar`).
+2. **Barra Superior (`TopHeader`):** Título oficial, barra de pesquisa de bairros com atalho `/`, quadrinho unificado de status (`On line` + hora + data + ícone climático dinâmico), alternador de tema Claro/Escuro e menu de perfil do operador.
+3. **Área Central (KPIs, Mapa Térmico, Índice e Curva de 7 Dias):** Diagnóstico macro em 4 cartões, mapa interativo da RMR e quadros comparativos alinhados.
+4. **Coluna Operacional Direita (`AlertsPanel` + `ZoneDetail`):** Central de Alertas do Dia/Histórico e ficha detalhada do microterritório com **Recomendação Operacional** e **Checklist de Validação (*Human-in-the-Loop*)**.
+5. **Assistente Virtual `CLIMA` (Mascote Guia):** Caranguejo guardião interativo no canto inferior direito que conduz tours guiados passo a passo por toda a plataforma.
 
 ---
 
-## 3. Barra Superior (Header)
+## 3. Barra Superior (`TopHeader`)
 
-Localizada no topo de todas as páginas, a barra superior oferece contexto operacional imediato:
+Localizada de forma fixa no topo do painel, a barra superior oferece contexto operacional imediato:
 
 | Elemento | O que faz / Como usar |
 |:---|:---|
-| **Logo Arboris & Brasão do Recife** | Identificação institucional do projeto em parceria com a Prefeitura do Recife e CESAR School. |
-| **Relógio "Ao vivo · HH:MM"** | Exibe a hora local exata e reativa do Recife, confirmando que o sistema está em monitoramento contínuo. |
-| **Indicadores "8 online" e "0 offline"** | Exibem a quantidade de sensores e dataloggers IoT ativos em campo ou indisponíveis (correspondentes aos bairros estudados), com leitura operacional direta e sem carimbo de minutos. |
-| **Botão Modo Claro / Modo Escuro (Sol/Lua)** | Alterna entre o tema escuro (ideal para centros de operações noturnos ou baixa luminosidade) e o tema claro (otimizado para ambientes iluminados e relatórios diurnos). |
-| **Botão de Contato / Suporte** | Abre canal direto com os desenvolvedores e suporte técnico da plataforma. |
-| **Perfil do Operador & Sair** | Mostra o usuário logado (ex.: Coordenador da Defesa Civil) e permite encerrar a sessão com segurança. |
+| **Título & Slogan Institucional** | Exibe o título oficial **`SISTEMA DE MONITORAMENTO E ALERTA DE ILHAS DE CALOR`** e o lema **`MONITORAR HOJE, PROTEGER AMANHÃ`**. |
+| **Barra de Busca Territorial (`/`)** | Permite pesquisar rapidamente qualquer bairro monitorado. Pressione a tecla **`/`** em qualquer momento para focar instantaneamente no campo de busca e selecionar o bairro desejado na lista suspensa (que já exibe temperatura e Classe A–E). |
+| **Quadrinho Unificado: `● On line` + Hora + Data + Clima** | Exibe a pílula verde pulsante **`On line`**, o relógio em tempo real (`HH:mm`), a data atual por extenso e o ícone meteorológico dinâmico (Sol, Parcialmente Nublado, Nublado, Chuva ou Tempestade) sincronizado via API Open-Meteo. **Clique neste quadrinho** a qualquer momento para forçar uma nova sincronização imediata com as estações meteorológicas. |
+| **Botão Alternar Modo Claro / Escuro (`Contrast`)** | Botão circular com ícone de contraste que alterna instantaneamente entre o **Modo Claro** (padrão diurno de alta legibilidade) e o **Modo Escuro** (ideal para salas de comando e operação noturna). |
+| **Menu de Perfil do Operador** | Exibe as iniciais, nome e cargo do operador logado (ex.: *Jorge Gonçalves · Coordenador de Operações*). Ao clicar, abre o menu suspenso com o departamento (*Defesa Civil / CODECIR*), a opção **"Alterar dados de contato"** (abre modal para atualizar telefone/perfil) e **"Sair da conta"**. |
 
 ---
 
-## 4. Menu Principal de Navegação (Abas Superiores)
+## 4. Barra Lateral Esquerda (`SidebarNav`) e Módulos do Sistema
 
-O sistema conta com 7 módulos de trabalho selecionáveis a qualquer momento:
+A barra lateral esquerda possui rolagem suave e discreta (linha cinza sutil) e organiza os **8 módulos principais** do Radar Climático, além do minimapa estadual e status das fontes de dados:
 
+```text
+[ Tempo real ]
+[ Comparação & Histórico ]
+[ Dashboard Verde ]
+[ Clima NASA POWER ]
+[ MapBiomas & Landsat ]
+[ Alertas ]
+[ Índice Térmico ]
+[ Relatórios ]
 ```
-[ Tempo Real ]  [ Histórico ]  [ Dashboard Verde ]  [ Clima NASA ]  [ Análise Ambiental ]  [ Alertas ]  [ Índice ]
-```
 
-### 4.1. Aba `Tempo Real` (Visão Central Padrão)
-- **Estrutura de Layout (Sidebar + Grid 8x4 Alinhada):**
-  - **Sidebar Lateral Esquerda:** Contém a logo adaptativa oficial, menus verticais de navegação rápida, o mapa silhueta do Estado de Pernambuco com ponto pulsante demarcando a localização litorânea exata do Recife (8.05° S, 34.88° O), o carimbo de `Dados atualizados` com horário real (`↳ HH:mm`) e lista de APIs ativas (`Open-Meteo API`, `Landsat 8/9`, `MapBiomas · NASA POWER`), além do rodapé de versão do MVP.
-  - **Barra Superior (`TopHeader`):** Exibe o nome oficial do sistema (`SISTEMA DE MONITORAMENTO E ALERTA DE ILHAS DE CALOR`), a praça (`RECIFE / PE · PLATAFORMA ARBORIS`), o slogan institucional `“MONITORAR HOJE, PROTEGER AMANHÃ”`, campo de busca com atalho de teclado `/`, status em alto contraste no tema claro (`● On line` em pílula esmeralda), relógio em tempo real, data diária automática em português e ícone meteorológico dinâmico (Sol, Nublado, Chuva, Tempestade) sincronizado automaticamente aos códigos WMO da API pública Open-Meteo.
-  - **Grid 8x4 Perfeitamente Alinhada:** Na coluna esquerda (8 colunas), o Mapa Térmico do Recife com controles de zoom flutuantes (`+`, `-`, `⌖`), legenda flutuante com gradiente de 28° a 45° e filtros de camadas, e escala gráfica. Diretamente abaixo do mapa, dois quadros de mesma altura perfeitamente alinhados: `Índice Térmico por bairro` (tabela com temperaturas, sensação e classes) e `Histórico de temperatura — Santo Amaro` (gráfico de curvas duplas de temperatura e sensação térmica de 7 dias com métricas de Média, Máxima, Variação e Tendência). Na coluna direita (4 colunas), os Alertas do Dia, Detalhes Territoriais com recomendação operacional e botões de atalho, e o painel de Insights ecológicos.
-- **Cartões de Indicadores Estratégicos (KPIs):**
-  1. **Temp. média da cidade & Sensação Térmica:** Exibe a temperatura média da cidade ao vivo e a **Sensação Térmica da Cidade** integrada em destaque, alimentada pelo parâmetro aberto `apparent_temperature` da API pública Open-Meteo, acompanhada de indicador de tendência, ícone de termômetro e sparkline âmbar.
-  2. **Maior temperatura do dia:** Durante as 24 horas do dia, este bloco informa a temperatura real mais alta registrada na cidade até o momento (ex.: Santo Amaro). Avalia estritamente as horas já decorridas hoje e as leituras em tempo real, sem antecipar previsões de horários futuros. Pela manhã ou em períodos com temperaturas amenas/moderadas (< 32 °C), o sistema não rotula como pico, exibindo o status de "Máxima até o momento". O termo "Pico registrado hoje" só é ativado caso a temperatura alcance patamares elevados (≥ 32 °C). Caso a temperatura caia no decorrer da noite, o valor mais alto alcançado à tarde permanece gravado até as 23:59. À meia-noite (00:00), o marcador reseta para o novo ciclo diário.
-  3. **Zonas em criticidade:** Quantidade de microterritórios monitorados operando nas classes D ou E de estresse térmico, acompanhada de ícone de triângulo de alerta e minigráfico de barras.
-  4. **População exposta:** Estimativa de cidadãos residentes em áreas críticas com alta vulnerabilidade social associada (cruzamento com Censo IBGE 2022), com ícone de grupo de pessoas ciano e barra de densidade.
-- **Quando usar:** No dia a dia de monitoramento e durante a tomada de decisões imediatas de despacho de equipes.
+### 4.1. Módulo `Tempo real` (Visão Operacional Padrão)
+- **Cartões de Indicadores Estratégicos (KPIs Macro no Topo):**
+  1. **Temperatura média da cidade & Sensação:** Exibe a temperatura média atual do Recife, a variação em relação à média e, logo abaixo em destaque, a **Sensação Térmica média (`apparent_temp`)** calculada pela API Open-Meteo.
+  2. **Maior temperatura do dia:** Informa a máxima real registrada hoje nas horas já decorridas e o bairro recordista (ex.: *Santo Amaro (12h)*). Abaixo de 32 °C exibe *"Máxima até o momento"*; ao atingir ≥ 32 °C ativa o rótulo *"Pico registrado hoje"*.
+  3. **Zonas em criticidade:** Quantidade de microterritórios operando nas classes severas **D** ou **E** em relação ao total monitorado.
+  4. **População exposta:** Estimativa de moradores expostos ao estresse térmico cruzada com vulnerabilidade social (Censo IBGE 2022).
+- **Grid Principal 8x4 Alinhada:**
+  - **À esquerda (8 colunas):** Mapa Térmico Interativo no topo e, logo abaixo, dois painéis lado a lado: **Índice Térmico por Bairro** (tabela classificatória clicável) e **Histórico de Temperatura** (gráfico de curva dupla de 7 dias comparando Temperatura × Sensação Térmica, com botão inferior *"Consultar por período (7, 14 ou 30 dias)"*).
+  - **À direita (4 colunas):** **Central de Alertas** no topo e **Detalhes do Microterritório (`ZoneDetail`)** abaixo.
+  - **Base horizontal (12 colunas):** Painel de **Insights & Inteligência Territorial** cruzando cobertura arbórea, janela crítica de calor (13h às 16h30) e efeito da brisa marítima.
 
-### 4.2. Aba `Histórico` (Séries Temporais e Comparação)
-- **Finalidade:** Permite comparar o comportamento térmico de dois bairros ao longo de diferentes períodos (últimos 3 dias, 7 dias, 14 dias ou 30 dias).
-- **Como usar:** Selecione o Bairro A no menu à esquerda e o Bairro B à direita. O sistema confronta as curvas de temperatura, o déficit de sombra e as anomalias registradas.
+### 4.2. Módulo `Comparação & Histórico`
+- **Finalidade:** Permite comparar lado a lado o comportamento térmico de dois bairros (**Bairro A × Bairro B**) em múltiplos níveis temporais (*Drill-down* por Ano, Mês e janelas de 3, 7, 14 ou 30 dias).
+- **Como usar:** Escolha o Bairro A à esquerda e o Bairro B à direita para confrontar curvas históricas, amplitudes térmicas e disparidades de cobertura vegetal.
 
-### 4.3. Aba `Dashboard Verde` (Infraestrutura Urbana)
-- **Finalidade:** Painel voltado aos técnicos de meio ambiente e EMLURB para priorizar ações de plantio e arborização viária.
-- **Como usar:** Visualize quais bairros estão mais distantes da meta da Organização Mundial da Saúde (OMS) de 30% de copa contínua e planeje intervenções de mitigação.
+### 4.3. Módulo `Dashboard Verde`
+- **Finalidade:** Painel de planejamento florestal urbano para a EMLURB e Secretaria de Meio Ambiente.
+- **Como usar:** Identifique o maior refúgio térmico, a zona de maior déficit arbóreo e simule intervenções de plantio para atingir a meta de 30% de cobertura vegetal recomendada pela OMS.
 
-### 4.4. Aba `Clima NASA` (NASA POWER Dashboard)
-- **Finalidade:** Consulta dados consolidados da agência espacial americana (NASA) sobre radiação solar incidente ($MJ/m^2/dia$), pressão barométrica, umidade do ar e vento a 10 metros de altitude.
-- **Recurso especial:** Botão **"Exportar Dados Clima (.CSV)"** para baixar a planilha oficial para estudos acadêmicos ou relatórios de governo.
+### 4.4. Módulo `Clima NASA POWER`
+- **Finalidade:** Monitora séries oficiais da NASA (*Langley Research Center*) para o Recife: Temperatura a 2m (`T2M`), Precipitação Corrigida (`PRECTOTCORR`), Velocidade do Vento a 10m (`WS10M`) e Pressão Atmosférica (`PS`).
+- **Recurso especial:** Botão **"Exportar Dados Clima (.CSV)"** compatível com Excel, Python/Pandas e Google Colab para fundamentar termos de referência e relatórios públicos.
 
-### 4.5. Aba `Análise Ambiental` (MapBiomas & Biofísica)
-- **Finalidade:** Apresenta a modelagem científica do Projeto Arboris. Mostra a taxa de cobertura vegetal da Região Metropolitana do Recife (25,13% segundo a Coleção 11 do MapBiomas) e o modelo de regressão linear que correlaciona a densidade de copas com a queda na temperatura de superfície ($r = -0.638$).
+### 4.5. Módulo `MapBiomas & Landsat` (Análise Ambiental)
+- **Finalidade:** Laboratório biofísico do Arboris que cruza a Coleção 11 do MapBiomas (25,13% de cobertura vegetal na RMR) com a radiometria termal do satélite Landsat 8/9 ($r = -0.638$), permitindo exportar a grade espacial de 1 km do Recife em `.CSV`.
 
-### 4.6. Aba `Alertas` (Visão Expandida)
-- **Finalidade:** Abre a central de despacho operacional em tela cheia para coordenadores da Defesa Civil gerenciarem todas as ocorrências de calor da cidade.
+### 4.6. Módulo `Alertas` (Visão Expandida)
+- **Finalidade:** Abre a Central de Alertas em tela cheia (grade de 3 colunas) para gerenciamento massivo de ocorrências pela Defesa Civil.
 
-### 4.7. Aba `Índice` (Matriz Classificatória A a E)
-- **Finalidade:** Tabela técnica que explica o que significa cada classificação bioclimática (de "Classe A - Excelente conforto térmico" até "Classe E - Emergência / Risco Crítico de insolação").
+### 4.7. Módulo `Índice Térmico`
+- **Finalidade:** Exibe a matriz completa de classificação microclimática (**Classes A a E**) de todos os bairros monitorados do Recife.
+
+### 4.8. Módulo `Relatórios` (`ReportsModal`)
+- **Finalidade:** Abre o gerador de **Relatórios Executivos e Técnicos** da plataforma, permitindo exportar sínteses gerenciais para a Defesa Civil, EMLURB e Secretaria de Saúde.
 
 ---
 
 ## 5. O Mapa Térmico e Seletores de Camadas
 
-O mapa central é totalmente interativo. No canto superior direito do mapa, você encontra três camadas estratégicas:
-
-```
-[ Calor ]  [ Cobertura vegetal ]  [ Vulnerabilidade ]
-```
-
-### 5.1. Camada "Calor" (Mapa Térmico Padrão)
-- **O que exibe:** Círculos representativos dos bairros com cores térmicas (azul para áreas frescas, amarelo para moderadas e vermelho-escuro pulsante para picos de calor excessivo).
-- **Como interagir:** Clique em qualquer círculo de bairro (ex.: Santo Amaro ou Boa Viagem). O painel lateral direito e as recomendações se ajustam imediatamente para o bairro clicado.
+No cabeçalho do **Mapa térmico real**, você dispõe de uma barra de ferramentas unificada à direita:
+1. **Seletor Rápido `Bairro:`** Menu suspenso para focar diretamente em qualquer bairro monitorado.
+2. **Seletor de Lentes / Camadas:**
+   ```text
+   [ Temperatura ]  [ Cobertura vegetal ]  [ Vulnerabilidade ]
+   ```
+3. **Botão Maximizar / Tela Cheia (`⛶`):** Expande o mapa sobre toda a tela para análise detalhada em salas de situação.
+4. **Controles Flutuantes do Mapa:**
+   - **Canto superior esquerdo:** Botões de Zoom (`+`, `-`) e botão **Centralizar no Recife (`⌖`)**.
+   - **Canto superior direito:** Card flutuante com a barra gradiente de **Temperatura de superfície (28° a 45°)** e **5 checkboxes de camadas operacionais** (*Bairros*, *Estações meteorológicas*, *Ilhas de calor*, *Rede viária* e *Hidrografia*) que podem ser ligados ou desligados individualmente.
 
 ---
 
 ## 6. Módulo de Vulnerabilidade Social (IVS)
 
-Ao clicar no botão **"Vulnerabilidade"** (no seletor de camadas do mapa ou no detalhe do bairro), o sistema carrega o **Mapa Territorial de Vulnerabilidade Social e Saúde**.
+Ao clicar na lente **"Vulnerabilidade"** (no topo do mapa ou nos botões de atalho do bairro), o sistema abre o **Mapa Territorial de Vulnerabilidade Social e Saúde**.
 
-### 6.1. Como funciona a Fixação do Bairro Principal (Bairro A)
-1. **Fixação Automática:** O bairro que você estava visualizando na tela principal (por exemplo, **Santo Amaro**) torna-se automaticamente o **Bairro Fixado (A)**.
-2. O sistema exibe um badge identificador: `Vulnerabilidade Social · Santo Amaro [Bairro Fixado]`.
-3. Todos os cartões de indicadores do topo (IVS, atendimentos de emergência nas UPAs, população de baixa renda em risco e internações) passam a refletir os dados deste bairro fixado.
-
-### 6.2. Como Fazer Comparações Diretas pelo Mapa
-1. O mapa territorial exibe a malha viária, os rios e os pinos de todos os bairros.
-2. **Clique em qualquer outro bairro no mapa** (por exemplo, clique em **Casa Forte**, **Dois Irmãos** ou **Boa Viagem**).
-3. **O que acontece:**
-   - O bairro fixado (A) permanece fixo no lugar;
-   - O bairro que você clicou torna-se o **Bairro Comparado (B)**;
-   - Uma **linha pontilhada luminosa (ciano com ponto pulsante)** sairá do bairro fixado (A) apontando diretamente para o bairro que você clicou (B);
-   - A tabela lateral de contraste social e saúde compara instantaneamente a diferença de vulnerabilidade entre eles (ex.: Santo Amaro IVS 76 vs Casa Forte IVS 24, indicando uma disparidade de +52 pontos).
-
-### 6.3. Botão Inverter Bairros (`⇄`)
-- Caso queira transformar o Bairro B em bairro principal fixado, clique no botão **`⇄`** ao lado dos seletores de bairro. As posições e indicadores serão invertidos na mesma hora.
-
-### 6.4. Legenda da Escala IVS
-- Para não cobrir os bairros do sul da cidade (como Ibura e Boa Viagem), a **Escala de Vulnerabilidade (0 a 100)** fica posicionada em uma barra limpa **diretamente abaixo do mapa**:
-  - `0 a 39 (Ciano):` Baixa vulnerabilidade social (infraestrutura adequada e refúgio térmico);
-  - `40 a 69 (Amarelo):` Vulnerabilidade moderada (requer atenção preventiva);
-  - `70 a 100 (Vermelho):` Vulnerabilidade crítica / emergencial (alto déficit de saneamento, aglomerações e população exposta ao calor).
+### 6.1. Fixação Automática do Bairro Principal (Bairro A) e Comparação Direta (Bairro B)
+1. O bairro selecionado na tela principal torna-se automaticamente o **Bairro Fixado (A)**.
+2. **Clique em qualquer outro bairro no mapa** para defini-lo como **Bairro Comparado (B)**.
+3. Uma **linha pontilhada luminosa em ciano** conecta instantaneamente o Bairro A ao Bairro B, enquanto a tabela lateral calcula a disparidade de IVS, atendimentos nas UPAs e população exposta.
+4. Use o botão **Inverter Bairros (`⇄`)** caso deseje permutar o Bairro A pelo Bairro B.
 
 ---
 
-## 7. Módulo de Cobertura Vegetal & Simulador de Arrefecimento
+## 7. Módulo de Cobertura Vegetal & Simulador de Plantio
 
-Ao selecionar a camada **"Cobertura vegetal"**, você acessa a ferramenta de planejamento ambiental baseada no satélite Sentinel-2.
-
-### 7.1. O que você visualiza
-- O mapa exibe as **manchas verdes de dossel arbóreo** (NDVI orbital com resolução de 10 metros).
-- Áreas como o Parque Estadual de Dois Irmãos e Poço da Panela aparecem em verde denso, enquanto Santo Amaro e Centro aparecem em tons claros indicando deserto verde.
-
-### 7.2. Como usar o Simulador de Plantio de Árvores
-1. Na coluna lateral direita, localize o controle deslizante **"Acréscimo de Arborização"**.
-2. Arraste o cursor de **0%** até **+40%**.
-3. **Resultados calculados em tempo real:**
-   - **Queda de Temperatura de Superfície:** Redução estimada em graus Celsius (ex.: $-2.4\text{ °C}$);
-   - **Alívio na Sensação Térmica:** Queda percebida pelos pedestres (ex.: $-3.0\text{ °C}$);
-   - **Mudas Necessárias:** Quantidade de árvores nativas que a EMLURB precisa plantar naquele território;
-   - **Sombreamento Criado:** Área de sombra contínua gerada em metros quadrados ($m^2$);
-   - **Sequestro de Carbono:** Volume anual estimado de $\text{CO}_2$ absorvido (toneladas/ano).
+Ao selecionar a lente **"Cobertura vegetal"**, você acessa o mosaico de dossel arbóreo (baseado no satélite Sentinel-2 com resolução de 10m) e o **Simulador Interativo de Arrefecimento**:
+- Arraste o controle deslizante **"Acréscimo de Arborização"** de **0% a +40%** para calcular em tempo real:
+  - **Queda na Temperatura de Superfície (°C)** e **Alívio na Sensação Térmica (°C)**;
+  - **Quantidade de Mudas Nativas Necessárias**;
+  - **Área de Sombra Nova ($m^2$)** e **Sequestro Anual de $\text{CO}_2$ (ton/ano)**.
 
 ---
 
-## 8. Central de Alertas Operacionais
+## 8. Central de Alertas Operacionais (`AlertsPanel`)
 
-A **Central de Alertas** foi desenhada para operação ágil pela Defesa Civil (CODECIR) e órgãos de resgate.
+Localizada no topo da coluna direita da tela principal (e também disponível em tela cheia no menu `Alertas`), a Central de Alertas possui cabeçalho compacto em linha única:
 
-### 8.1. Modo "Alertas do Dia"
-- Exibe as **ocorrências do dia em aberto** geradas dinamicamente via limiares térmicos ou registradas manualmente.
-- Cada alerta informa:
-  - Severidade: **Crítico** (vermelho), **Alto** (laranja) ou **Moderado** (amarelo);
-  - Bairro afetado, data e horário da detecção (carimbo temporal);
-  - Temperatura no momento do disparo vs. temperatura atual (com aviso de alteração brusca de tempo);
-  - Janela de risco operacional (ex.: janela 13h20 – 16h00);
-  - Botão **"Disparar notificação"**.
+```text
+[ ● Alertas do dia (N) | 🕒 Histórico ]          [ + Novo Alerta ]
+```
 
-### 8.2. Como Despachar um Alerta
-1. Localize o alerta crítico pendente.
-2. Clique no botão azul **"Disparar notificação"**.
-3. O sistema despacha a mensagem para o rádio da Defesa Civil e o aplicativo operacional, marcando o alerta com o selo verde **"Despachado"**.
-4. O alerta despachado sai automaticamente da lista do dia e é transferido para o **Histórico**.
+### 8.1. Aba "Alertas do dia" e Filtros de Severidade
+- Exibe o contador de ocorrências ativas pendentes de despacho.
+- Quando há alertas ativos, você pode filtrá-los rapidamente pelas pílulas **Todos**, **Crítico**, **Alto** ou **Moderado**.
+- Cada cartão de alerta exibe o bairro, o horário da detecção, o comparativo entre a temperatura do disparo e a temperatura atual, a janela de risco (ex.: `janela 13h20–16h00`) e o botão **"Disparar notificação"**.
+- Ao clicar em **"Disparar notificação"**, o alerta é transmitido às equipes de campo e movido automaticamente para a aba **Histórico**.
 
-### 8.3. Tela "Nenhum alerta crítico no dia de hoje"
-- Quando todos os alertas forem atendidos ou a cidade estiver em condições normais de conforto térmico, o painel exibirá uma mensagem clara de tranquilidade:
-  - Ícone de escudo verde: **"Nenhum alerta crítico no dia de hoje"**;
-  - Texto informativo: *"Todas as estações e microterritórios do Recife estão operando dentro dos limiares térmicos toleráveis da Defesa Civil."*;
-  - Botão de acesso rápido: **"Ver Histórico de Alertas"**.
+### 8.2. Estado Seguro ("Nenhum alerta crítico no dia de hoje")
+- Quando não há alertas pendentes (`Alertas do dia 0`), o painel exibe o card verde de conformidade da Defesa Civil com dois botões alinhados lado a lado na base:
+  - **`Ver Histórico de Alertas (N)`**: alterna imediatamente para os alertas já despachados.
+  - **`+ Registrar Alerta`**: abre o modal para cadastro manual de uma nova ocorrência.
 
-### 8.4. Modo "Histórico de Alertas"
-- Clique no botão **"Histórico"** no cabeçalho dos alertas.
-- Aqui ficam arquivadas todas as ocorrências despachadas nas últimas 24 horas, permitindo auditoria, controle de tempo de resposta e relatórios operacionais.
-
-### 8.5. Como Registrar um Novo Alerta Manualmente
-- Clique no botão vermelho **"+ Novo Alerta"** no topo da lista.
-- Uma janela se abrirá para você escolher o bairro, a severidade e digitar as observações de campo dos agentes ou denúncias de cidadãos.
+### 8.3. Botão "+ Novo Alerta"
+- Posicionado sempre à direita da aba **Histórico**, permite registrar a qualquer momento uma nova ocorrência ou anomalia térmica observada em campo.
 
 ---
 
-## 9. Painel Lateral: Recomendações por Órgão Público
+## 9. Detalhes do Microterritório & Validação Operacional (*Human-in-the-Loop*)
 
-Ao selecionar qualquer bairro, o painel lateral direito sintetiza recomendações operacionais dedicadas para cada órgão municipal:
+Logo abaixo da Central de Alertas, o painel **Detalhes do Microterritório (`ZoneDetail`)** apresenta o diagnóstico completo do bairro selecionado:
 
-- **Defesa Civil (CODECIR):** Monitoramento de pedestres vulneráveis, instalação de pontos de hidratação e rondas com viaturas em áreas sem sombra.
-- **EMLURB:** Priorização de arborização de calçadas, manutenção de canteiros e irrigação de praças em horários de menor evaporação.
-- **CTTU:** Ajuste de tempos semafóricos em cruzamentos críticos para reduzir o tempo de exposição de pedestres e motociclistas sob sol direto.
-- **Secretaria de Saúde:** Alerta de prontidão nas UPAs de referência territorial para casos de síncope, desidratação e pico hipertensivo associado ao estresse térmico.
+### 9.1. Cabeçalho Classificatório e Indicadores Biofísicos
+- Exibe o nome do bairro, a pílula `Classe [A–E] · [Nível]` e o selo quadrado com a letra da classe.
+- Clique em **`ⓘ significado`** abaixo do selo para expandir ou recolher a matriz explicativa completa das Classes **A** a **E**.
+- Lista os 5 indicadores vitais do bairro: **Temperatura (°C)**, **Sensação térmica (°C)**, **Umidade relativa (%)**, **Cobertura vegetal (%)** e **Vulnerabilidade social (0–100)**.
+
+### 9.2. Bloco "Recomendação Operacional" com Tag `AÇÃO PREVENTIVA`
+- Destaca a diretriz recomendada para a **Defesa Civil & Secretaria de Saúde** (ex.: *Despacho de caminhões-pipa e agentes comunitários*), acompanhada no canto superior direito pela tag âmbar **`AÇÃO PREVENTIVA`**, garantindo coerência visual com o protocolo de atenção e prevenção territorial.
+
+### 9.3. Botão "Validar Operação" e Checklist de "Validação Operacional" (*Human-in-the-Loop*)
+Por padrão, o bloco exibe a recomendação operacional explicada de forma limpa e apresenta abaixo o botão **`Validar Operação`**. Ao clicar em **`Validar Operação`**, abre-se o sub-bloco translúcido (*glassmorphism*) **Validação Operacional (`0/2 verificados`)** em duas etapas sequenciais:
+1. **Etapa 1 — Confirmar (Destaque Cyan Neon):** *"1. Confirmar quebra no abastecimento de água local."*
+2. **Etapa 2 — Validar (Destaque Laranja Neon, liberada após confirmar a Etapa 1):** *"2. Validar disponibilidade de agentes de saúde na região."*
+
+### 9.4. Botão Condicional "Confirmar Ação"
+- Dentro da **Validação Operacional** expandida, o botão **`Confirmar Ação`** inicia **desabilitado (bloqueado e com opacidade reduzida)**.
+- **Regra de Liberação:** O operador precisa primeiro **confirmar** o item 1 e depois **validar** o item 2 (`2/2 verificados`) para que o botão **`Confirmar Ação`** adquira sua cor total de destaque e fique clicável.
+- Ao clicar em **`Confirmar Ação`**, o sistema registra a validação humana, exibe uma notificação de confirmação, recolhe o checklist e altera o estado do botão principal para **`✓ Ação Confirmada · Rever Validação`** (em verde esmeralda).
+- Sempre que você seleciona outro bairro no mapa, o fluxo é reiniciado automaticamente para uma nova validação independente.
+
+### 9.5. Botões de Atalho Rápido (Rodapé do Card)
+Na base do card do microterritório, 5 botões dão acesso instantâneo às lentes analíticas daquele bairro:
+- **`Cobertura vegetal`** | **`Vulnerabilidade`**
+- **`Clima NASA`** | **`MapBiomas`**
+- **`⇄ Comparar este bairro com outro`**
 
 ---
 
-## 10. Perguntas Frequentes (FAQ)
+## 10. Assistente Virtual `CLIMA` (Tour Guiado Interativo)
+
+O **CLIMA** é o caranguejo guardião do Recife e assistente virtual integrado ao Radar Climático para guiar novos operadores e gestores:
+
+1. **Botão Flutuante ("Falar com o CLIMA"):** Sempre disponível no canto inferior direito da tela. Clique nele a qualquer momento para iniciar ou retomar a apresentação guiada.
+2. **Convite Inicial:** Ao entrar no sistema, o CLIMA pergunta se você deseja conhecer o Radar Climático (*"Vamos"* ou *"Não, explorar sozinho"*).
+3. **Spotlight Retangular Preciso & Pop-up Laranja:** Durante o tour, o sistema ilumina exatamente o painel explicado com um contorno laranja retangular nítido (alinhado ao formato dos blocos) e exibe o balão explicativo do CLIMA com botões **`Voltar`**, **`Próximo`** e **`Menu Principal`**.
+4. **Menu Principal do Tour:** Ao clicar em **`Menu Principal`** no balão do CLIMA, abre-se uma janela escura gamificada (com barra de rolagem estilizada no tema da janela) contendo duas abas:
+   - **`Passo a Passo Geral (13)`:** Navegue diretamente para qualquer um dos 13 pontos da visão em tempo real (Boas-vindas, Sidebar, Minimapa PE, Fontes de Dados, Status On line/Tema/Perfil, KPIs, Mapa Térmico, Camadas, Índice Térmico, Histórico 7 Dias, Central de Alertas, Detalhes do Microterritório e Insights).
+   - **`Funcionalidades Internas (6)`:** Salte diretamente para os módulos avançados (MapBiomas & Landsat, Dashboard Verde, Clima NASA POWER, Comparação & Histórico, Vulnerabilidade Social IVS e Cobertura Arbórea NDVI).
+5. **Efeitos Sonoros:** No rodapé do Menu Principal do Tour, você pode alternar entre **`Efeitos sonoros: Ativados`** e **`Efeitos sonoros: Mudos`**.
+
+---
+
+## 11. Portal Institucional (`site_arboris`) e Comunidade Fider
+
+No rodapé do painel principal, o botão **`Acessar Portal Radar Climático`** abre o site institucional do projeto (`/site_arboris/index.html`), que apresenta:
+- O contexto urbano das ilhas de calor no Recife e os 6 bairros piloto (*Boa Viagem, Imbiribeira, São José/Centro, Madalena/Torre, Várzea e Ibura*);
+- A especificação de hardware dos **Dataloggers IoT RCW-800W (TDE móvel em ônibus e THE fixo em paradas)**;
+- O acesso ao **Portal da Comunidade no Fider (`https://arboris.fider.io/`)**, onde gestores e cidadãos podem sugerir melhorias, relatar problemas e votar nas próximas funcionalidades do roadmap;
+- A seção de **Últimas Notícias**, cadastro de alertas via WhatsApp/e-mail e botão flutuante de contato direto no WhatsApp.
+
+---
+
+## 12. Perguntas Frequentes (FAQ)
+
+### P: Por que o botão "Confirmar Ação" no detalhe do bairro está desabilitado?
+**R:** Por segurança operacional (*Human-in-the-Loop*). Para habilitar o botão **"Confirmar Ação"**, marque primeiro as duas caixas de verificação da **Validação Operacional** (*"Confirmar quebra no abastecimento de água local"* e *"Validar disponibilidade de agentes de saúde na região"*).
 
 ### P: Os dados de temperatura do mapa são atualizados automaticamente?
-**R:** Sim. O sistema consulta automaticamente a API meteorológica pública a cada ciclo e calibra os valores para cada bairro de acordo com sua densidade vegetal e albedo. Você também pode clicar no botão de recarregar clima caso deseje forçar uma sincronização manual.
+**R:** Sim. O sistema consulta automaticamente a API meteorológica pública Open-Meteo e calibra os valores para cada bairro de acordo com sua densidade vegetal e albedo. Você também pode clicar no quadrinho **`On line · HH:mm`** no topo direito para sincronizar manualmente.
 
 ### P: O sistema funciona se a internet cair temporariamente?
-**R:** Sim. O Radar Climático Arboris possui tecnologia *Offline-First*. Se a conexão cair, o sistema continuará operando utilizando os dados em cache e os modelos biofísicos armazenados no navegador.
-
-### P: Como faço para emitir um relatório para a imprensa ou secretarias?
-**R:** Você pode acessar a aba **"Clima NASA"** e clicar em **"Exportar Dados Clima (.CSV)"** para obter as planilhas consolidadas, ou capturar telas diretamente dos módulos de Vulnerabilidade e Dashboard Verde.
+**R:** Sim. O Radar Climático Arboris possui arquitetura *Offline-First*. Se a conexão oscilar, o sistema permanece 100% funcional utilizando os snapshots biofísicos calibrados e o cache local.
 
 ---
 
-## 11. Contatos e Suporte Técnico
+## 13. Contatos e Suporte Técnico
 
 Para dúvidas operacionais, solicitação de treinamento ou reporte de instabilidades no sistema:
 
-- **Central COP-ARIES / Defesa Civil:** Canal direto via painel de administração.
+- **Central COP-ARIES / Defesa Civil:** Canal direto via painel de administração (`radarclimatico@recife.pe.gov.br`).
 - **Equipe de Engenharia Arboris (CESAR School):**
-  - Gestão e Operações: `ogaf@cesar.school`
-  - Liderança Técnica: `lma@cesar.school`
-  - Dev, Design e Experiência do Usuário: `lls@cesar.school`
+  - Gestão e Operações: `ogaf@cesar.school` (Odir Gonçalves)
+  - Liderança Técnica: `lma@cesar.school` (Leonardo Maranhão)
+  - Dev, Design e Experiência do Usuário: `lls@cesar.school` (Leônidas Leandro)
+  - Pesquisa e Dados: `adt@cesar.school` (Ariely Dias) · `pjmc@cesar.school` (Patrick Cruz)
+  - Análise Financeira B2G: `tsbs@cesar.school` (Thaís Soares)

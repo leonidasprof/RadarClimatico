@@ -48,12 +48,23 @@ function getInitials(name: string): string {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("preview") === "1") {
+      return DEFAULT_DEMO_USER;
+    }
+    return null;
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   // Ao abrir o app, garante que o usuário inicie deslogado para exibir a tela de login
+  // (exceto quando carregado como vitrine ao vivo ?preview=1 no portal institucional)
   useEffect(() => {
     try {
+      if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("preview") === "1") {
+        setUser(DEFAULT_DEMO_USER);
+        setIsLoading(false);
+        return;
+      }
       localStorage.removeItem(AUTH_STORAGE_KEY);
     } catch {
       // ignore

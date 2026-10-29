@@ -1,8 +1,8 @@
 # Memória do Projeto (Project Memory) · Radar Climático Arboris
 > **Documento:** `/docs/PROJECT_MEMORY.md`  
 > **Classificação:** Corporativa / Enterprise Architecture  
-> **Versão:** 1.0.0  
-> **Data de Atualização:** 19/10/2026  
+> **Versão:** 2.1.0  
+> **Data de Atualização:** 29/10/2026  
 > **Status:** Ativo / Fonte Única de Verdade Arquitetural  
 > **Público-Alvo:** Engenheiros de Software, Arquitetos, Liderança Técnica, Novos Integrantes (Onboarding)
 
@@ -143,6 +143,42 @@ Recife apresenta um dos maiores índices de vulnerabilidade climática da Améri
   5. **Responsividade & Mascote CLIMA:**
      - Gaveta lateral retrátil no mobile e tablet acionada pelo menu hambúrguer.
      - Preservação dos seletores `data-tour` para garantir a funcionalidade ininterrupta do mascote CLIMA.
+
+---
+
+### `ADR-009`: Validação Operacional *Human-in-the-Loop* e Coerência de Status no Card de Microterritório (`ZoneDetail`)
+- **Status:** **Aprovado (29/10/2026)**
+- **Contexto:** O bloco de *Recomendação Operacional* dentro do card de detalhes do bairro (`ZoneDetail`) exibia uma tag vermelha `"Despacho Imediato"` mesmo quando o território se encontrava em faixa segura/moderada, gerando contradição semântica. Além disso, havia espaço vertical ocioso no card e faltava uma trava de confirmação humana (*Human-in-the-Loop*) antes do acionamento de recursos da Defesa Civil e Secretaria de Saúde.
+- **Decisão:**
+  1. **Correção Semântica da Tag de Status:** Substituída a tag vermelha `"Despacho Imediato"` pela tag âmbar **`"AÇÃO PREVENTIVA"`** (`bg-amber-500 text-white`), indicando atenção preventiva coerente com o protocolo operacional.
+  2. **Checklist de Validação Operacional (*Human-in-the-Loop*):** Adicionado sub-bloco interno com estética *glassmorphism* (`backdrop-blur-md`, bordas translúcidas sutis), título discreto `"Validação Operacional"` e contador `0/2 verificados`, contendo dois itens obrigatórios:
+     - Item 1 (destaque Cyan Neon ao marcar): *"Confirmar quebra no abastecimento de água local."*
+     - Item 2 (destaque Laranja Neon ao marcar): *"Validar disponibilidade de agentes de saúde na região."*
+  3. **Botão Condicional (`Confirmar Ação`):** Posicionado no rodapé do bloco de recomendação; inicia desabilitado (`disabled`, `opacity-50`, `cursor-not-allowed`) e só é habilitado com destaque vibrante (`bg-gradient-to-r from-orange-500 to-amber-500`) quando ambos os itens do checklist estão marcados (`checkWater && checkAgents`). Ao trocar de bairro (`zone.id`), o estado do checklist é reiniciado automaticamente.
+  4. **Preservação Estrita da Altura do Card:** Os espaçamentos internos da lista `<dl>` (`py-1.5 sm:py-2`, `mt-2.5`) foram calibrados para que o checklist e o botão ocupem exatamente o espaço antes ocioso, mantendo a altura externa do bloco `ZoneDetail` inalterada.
+
+---
+
+### `ADR-010`: Engenharia de SEO Técnico, Schema.org JSON-LD, HTML5 Semântico e Core Web Vitals (MVP + Portal `site_arboris`)
+- **Status:** **Aprovado (29/10/2026)**
+- **Contexto:** Necessidade de maximizar a indexação orgânica no Google/Bing, habilitar Rich Snippets governamentais/científicos, enriquecer o compartilhamento em redes sociais (WhatsApp, LinkedIn, X) e otimizar métricas de Core Web Vitals (LCP, CLS e INP) tanto no aplicativo principal quanto no site institucional (`public/site_arboris/index.html`).
+- **Decisão:**
+  1. **Meta Tags, Open Graph & Twitter Cards:** Títulos otimizados para CTR, `meta description`, `keywords`, `robots`, `canonical` e metadados completos de Open Graph e Twitter Cards em `src/routes/__root.tsx`, `src/routes/index.tsx`, `src/routes/login.tsx` e `public/site_arboris/index.html`.
+  2. **Dados Estruturados (`Schema.org` JSON-LD):** Injeção automatizada de grafo `@graph` contendo `Organization` (Equipe Arboris — CESAR / COP Recife), `WebSite` e `SoftwareApplication` (`GovernmentApplication, EnvironmentalMonitoringApplication`).
+  3. **HTML5 Semântico, Hierarquia `<h1>` Único e ARIA:** Padronização de `<header role="banner">`, `<nav aria-label="...">`, `<main id="main-content" role="main">`, `<aside>`, `<article>`, `<footer role="contentinfo">`, `role="search"` e atributos `alt` descritivos em todas as imagens do MVP e das 18 imagens do portal institucional.
+  4. **Core Web Vitals & Indexação:** Adição de `<link rel="preload">` e `<link rel="preconnect">` para recursos críticos acima da dobra, `fetchpriority="high"` nas logos principais, `loading="lazy" decoding="async"` com `width`/`height` explícitos nas imagens abaixo da dobra, além da criação de `public/sitemap.xml` integrado ao `public/robots.txt`.
+
+---
+
+### `ADR-011`: Refinamento de UI/UX na Central de Alertas, Scrollbars Customizadas e Spotlight Retangular do Tour `CLIMA`
+- **Status:** **Aprovado (28–29/10/2026)**
+- **Contexto:** Ajustes de polimento visual solicitados durante homologação de interface: (1) o botão `+ Novo Alerta` quebrava linha abaixo das abas na Central de Alertas; (2) a barra lateral esquerda precisava de uma barra de rolagem sutil; (3) o modal do Menu Principal do Tour (`CLIMA`) exibia uma barra de rolagem nativa branca destoante do tema escuro; e (4) o contorno laranja de destaque do tour possuía cantos arredondados sobre um recorte de spotlight retangular.
+- **Decisão:**
+  1. **Cabeçalho da Central de Alertas (`AlertsPanel`):** Alinhado em linha única (`whitespace-nowrap`, `shrink-0`), posicionando o botão `+ Novo Alerta` diretamente à direita da aba `Histórico` e removendo o contador numérico redundante da aba `Histórico`.
+  2. **Scrollbars Customizadas em `src/styles.css`:**
+     - `@utility subtle-scrollbar`: barra de rolagem fina (`4px`) em linha cinza translúcida aplicada à `SidebarNav`.
+     - `@utility clima-tour-scrollbar`: barra estilizada (`12px`) sem botões de seta, com trilha arredondada em tom azul-ardósia (`#2b3952`) e cursor interno mais escuro (`#162033`) com borda embutida, aplicada ao modal do `ClimaTourOverlay`.
+  3. **Spotlight Retangular (`ClimaTourOverlay`):** Substituído `rounded-xl` por `rounded-none` no anel laranja de foco da área selecionada pelo CLIMA, mantendo o pop-up explicativo laranja inalterado.
 
 ---
 

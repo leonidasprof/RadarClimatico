@@ -278,8 +278,9 @@
                 </svg>
               </div>
               <div class="telemetry-data">
-                <span class="telemetry-label">TEMP. MÁXIMA HOJE</span>
-                <span class="telemetry-value val-cyan" id="liveTemp">34,2°C</span>
+                <span class="telemetry-label" id="liveTempLabel">PICO TÉRMICO HOJE</span>
+                <span class="telemetry-value val-cyan" id="liveTemp">--°C</span>
+                <span class="telemetry-sub" id="liveTempSub">Sincronizando Open-Meteo...</span>
               </div>
             </div>
 
@@ -292,7 +293,8 @@
               </div>
               <div class="telemetry-data">
                 <span class="telemetry-label">UMIDADE RELATIVA</span>
-                <span class="telemetry-value val-teal" id="liveHumidity">45%</span>
+                <span class="telemetry-value val-teal" id="liveHumidity">--%</span>
+                <span class="telemetry-sub" id="liveHumiditySub">API Open-Meteo • Ao vivo</span>
               </div>
             </div>
 
@@ -310,7 +312,10 @@
                 <span class="telemetry-label">RISCO ATUAL</span>
                 <span class="telemetry-value val-danger" id="liveRiskValue">
                   <span class="pulsing-mini-dot dot-danger" id="liveRiskDot"></span>
-                  <span id="liveRiskText">ALTO</span>
+                  <span id="liveRiskText">CALCULANDO</span>
+                </span>
+                <span class="telemetry-sub" id="liveRiskSub">Aferindo sensação térmica...</span>
+                <span style="display:none">
                 </span>
               </div>
             </div>
@@ -371,7 +376,8 @@
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </button>
-                <span class="badge-peak-label">Pico Térmico: <strong id="heroPeakTemp">34.2°C</strong></span>
+                <span class="badge-peak-label">Pico Hoje: <strong id="heroPeakTemp">--°C</strong> • Agora: <strong id="heroNowTemp">--°C</strong></span>
+                <span class="badge-live-hint" id="heroLiveStatus">● Ao vivo (Open-Meteo) • Trocar bairro</span>
               </div>
 
               <!-- Menu Suspenso de Bairros Piloto -->
@@ -379,9 +385,37 @@
                 aria-label="Selecione um bairro piloto">
                 <div class="dropdown-header">
                   <span class="dropdown-title">Bairros Piloto</span>
-                  <span class="dropdown-tag">6 Zonas</span>
+                  <span class="dropdown-tag" id="bairrosDropdownTag">8 Zonas • Ao Vivo</span>
                 </div>
                 <div class="bairros-list" id="bairrosDropdownList">
+                  <button type="button" class="bairro-dropdown-item" role="option" aria-selected="false"
+                    data-bairro="santo-amaro">
+                    <div class="bairro-item-left">
+                      <span class="bairro-item-name">Santo Amaro</span>
+                      <span class="bairro-item-zone">Centro Expandido • Ilha de Calor</span>
+                    </div>
+                    <div class="bairro-item-right">
+                      <span class="bairro-item-temp">--°C</span>
+                      <svg class="bairro-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                  </button>
+                  <button type="button" class="bairro-dropdown-item" role="option" aria-selected="false"
+                    data-bairro="dois-irmaos">
+                    <div class="bairro-item-left">
+                      <span class="bairro-item-name">Dois Irmãos</span>
+                      <span class="bairro-item-zone">Zona Noroeste • Mata Atlântica</span>
+                    </div>
+                    <div class="bairro-item-right">
+                      <span class="bairro-item-temp">--°C</span>
+                      <svg class="bairro-item-check" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                  </button>
                   <button type="button" class="bairro-dropdown-item active" role="option" aria-selected="true"
                     data-bairro="boa-viagem">
                     <div class="bairro-item-left">
@@ -475,7 +509,7 @@
               </div>
             </div>
 
-            <div class="floating-telemetry-badge f-bottom-left">
+            <div class="floating-telemetry-badge f-bottom-left" style="display: none;" aria-hidden="true">
               <span class="badge-icon">⚡</span>
               <div class="badge-info">
                 <strong>Frota Conectada</strong>
@@ -1011,12 +1045,40 @@
           <h2 class="section-title">Explore o Painel Gerencial (MVP)</h2>
 
           <!-- Imagem Preview do Dashboard -->
-          <div class="dashboard-preview-container">
+          <!-- Painel Principal do App Ao Vivo (Embed Interativo do MVP v2.1) -->
+          <div class="dashboard-preview-container dashboard-live-embed-container" id="mvpLivePreviewContainer">
+            <div class="mvp-browser-topbar">
+              <div class="mvp-browser-dots" aria-hidden="true">
+                <span class="mvp-dot dot-r"></span>
+                <span class="mvp-dot dot-y"></span>
+                <span class="mvp-dot dot-g"></span>
+              </div>
+              <div class="mvp-browser-url">
+                <span class="dash-tag-status"></span>
+                <span>radarclimatico.vercel.app • Painel Principal ao Vivo (v2.1)</span>
+              </div>
+              <div class="mvp-browser-actions">
+                <button type="button" class="mvp-bar-btn" id="btnReloadMvpIframe" title="Recarregar painel ao vivo">↻ Recarregar</button>
+                <a href="https://radarclimatico.vercel.app/" target="_blank" rel="noopener noreferrer" class="mvp-bar-btn mvp-bar-btn-primary" id="btnOpenMvpFull" title="Abrir aplicação em tela cheia">↗ Tela Cheia</a>
+              </div>
+            </div>
+            <div class="mvp-iframe-viewport" id="mvpIframeViewport">
+              <iframe
+                id="mvpLiveIframe"
+                src="/?preview=1"
+                title="Painel Principal Interativo do Radar Climático Recife — Equipe Arboris"
+                loading="lazy"
+                allow="fullscreen"
+                class="mvp-live-iframe"
+              ></iframe>
+            </div>
+            <div style="display: none;">
             <img src="https://clareia1.vercel.app/dash_radar.png" alt="Painel Gerencial MVP do Radar Climático Recife com mapa de ilhas de calor e alertas em tempo real" width="1200" height="675" loading="lazy" decoding="async"
               class="dashboard-preview-img" id="dashPreviewImg">
             <div class="dash-floating-tag">
               <span class="dash-tag-status"></span>
-              <span>SISTEMA DE TELEMETRIA AO VIVO v2.0</span>
+              <span>SISTEMA DE TELEMETRIA AO VIVO v2.1</span>
+            </div>
             </div>
           </div>
 

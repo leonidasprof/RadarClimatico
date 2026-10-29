@@ -1,6 +1,7 @@
 /* ==========================================================================
    RADAR CLIMÁTICO - JAVASCRIPT PRINCIPAL
-   Interações, Modo Escuro/Claro, Preloader, Modais e Telemetria
+   Interações, Modo Escuro/Claro, Preloader, Modais, Telemetria Real (Open-Meteo)
+   e Painel Principal Interativo Embutido (MVP v2.1)
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,9 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const preloaderStatus = document.getElementById('preloaderStatus');
 
   const statusMessages = [
-    'Conectando dataloggers RCW-800W...',
-    'Mapeando microclima do Recife...',
-    'Sincronizando Plataformas Móveis (Ônibus)...',
+    'Conectando API meteorológica Open-Meteo...',
+    'Calibrando microclimas por bairro (Landsat / NDVI)...',
+    'Sincronizando telemetria urbana do Recife...',
     'Carregando modelo térmico B2G...',
     'Pronto!'
   ];
@@ -86,12 +87,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Verifica preferência salva ou do sistema
   const savedTheme = localStorage.getItem('radar_theme');
   if (savedTheme) {
     setTheme(savedTheme);
   } else {
-    // Padrão escuro como na imagem de referência do projeto
     setTheme('dark');
   }
 
@@ -112,14 +111,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const sections = document.querySelectorAll('section[id]');
 
   window.addEventListener('scroll', () => {
-    // Efeito de scroll compacto
     if (window.scrollY > 40) {
       navbar.classList.add('scrolled');
     } else {
       navbar.classList.remove('scrolled');
     }
 
-    // Identificação da seção ativa no menu
     let currentSectionId = '';
     const scrollPosition = window.scrollY + 200;
 
@@ -151,14 +148,12 @@ document.addEventListener('DOMContentLoaded', () => {
       navMenu.classList.toggle('open');
     });
 
-    // Fecha ao clicar em algum link
     navLinks.forEach(link => {
       link.addEventListener('click', () => {
         navMenu.classList.remove('open');
       });
     });
 
-    // Fecha ao clicar fora
     document.addEventListener('click', (e) => {
       if (!navMenu.contains(e.target) && !hamburgerBtn.contains(e.target)) {
         navMenu.classList.remove('open');
@@ -188,7 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     revealElements.forEach(el => revealObserver.observe(el));
   } else {
-    // Fallback caso navegador não suporte IntersectionObserver
     revealElements.forEach(el => el.classList.add('revealed'));
   }
 
@@ -221,16 +215,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Modal Alertas
   if (btnOpenAlerts) btnOpenAlerts.addEventListener('click', () => openModal(alertsModal));
   if (heroAlertsBtn) heroAlertsBtn.addEventListener('click', () => openModal(alertsModal));
   if (closeAlertsModal) closeAlertsModal.addEventListener('click', () => closeModal(alertsModal));
 
-  // Modal Zoom Mapa
   if (mapMainImage) mapMainImage.addEventListener('click', () => openModal(mapZoomModal));
   if (closeMapZoomModal) closeMapZoomModal.addEventListener('click', () => closeModal(mapZoomModal));
 
-  // Fechar ao clicar no backdrop
   [alertsModal, mapZoomModal].forEach(modal => {
     if (modal) {
       modal.addEventListener('click', (e) => {
@@ -241,7 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Fechar com tecla ESC
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeModal(alertsModal);
@@ -251,99 +241,344 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /* ==========================================================================
-     07. SELETOR INTERATIVO DE BAIRROS PILOTO & TELEMETRIA DA HERO
+     07. TELEMETRIA METEOROLÓGICA EM TEMPO REAL (OPEN-METEO API) &
+         SELETOR INTERATIVO DE BAIRROS DO RECIFE
      ========================================================================== */
-  const PILOT_NEIGHBORHOODS = {
+  // Deltas biofísicos reais (Landsat 8/9 ST_B10 + Sentinel-2 NDVI + MapBiomas 11)
+  // sincronizados com src/lib/geo-services/realtime-weather-service.ts do MVP
+  const NEIGHBORHOOD_MODELS = {
     'boa-viagem': {
       name: 'Boa Viagem',
-      peak: '34.2°C',
-      temp: '34,2°C',
-      baseTemp: 34.2,
-      humidity: '45%',
-      baseHum: 45,
-      risk: 'ALTO',
-      riskClass: 'val-danger',
-      dotClass: 'dot-danger',
-      iconBoxClass: 'orange-icon'
+      zoneDesc: 'Zona Sul • Alta Densidade',
+      tempDelta: +0.6,
+      feelsDelta: +1.4,
+      humidityDelta: +2,
+      canopy: 9
+    },
+    'santo-amaro': {
+      name: 'Santo Amaro',
+      zoneDesc: 'Centro Expandido • Ilha de Calor',
+      tempDelta: +2.4,
+      feelsDelta: +4.2,
+      humidityDelta: -6,
+      canopy: 5
     },
     'imbiribeira': {
       name: 'Imbiribeira',
-      peak: '33.8°C',
-      temp: '33,8°C',
-      baseTemp: 33.8,
-      humidity: '48%',
-      baseHum: 48,
-      risk: 'ALTO',
-      riskClass: 'val-danger',
-      dotClass: 'dot-danger',
-      iconBoxClass: 'orange-icon'
+      zoneDesc: 'Eixo Comercial • Tráfego Pesado',
+      tempDelta: +1.2,
+      feelsDelta: +2.2,
+      humidityDelta: -2,
+      canopy: 8
     },
     'sao-jose': {
       name: 'São José / Centro',
-      peak: '33.1°C',
-      temp: '33,1°C',
-      baseTemp: 33.1,
-      humidity: '52%',
-      baseHum: 52,
-      risk: 'ATENÇÃO',
-      riskClass: 'val-warning',
-      dotClass: 'dot-warning',
-      iconBoxClass: 'amber-icon'
-    },
-    'madalena': {
-      name: 'Madalena / Torre',
-      peak: '31.6°C',
-      temp: '31,6°C',
-      baseTemp: 31.6,
-      humidity: '64%',
-      baseHum: 64,
-      risk: 'MODERADO',
-      riskClass: 'val-teal',
-      dotClass: 'dot-teal',
-      iconBoxClass: 'teal-icon'
-    },
-    'varzea': {
-      name: 'Várzea',
-      peak: '29.8°C',
-      temp: '29,8°C',
-      baseTemp: 29.8,
-      humidity: '71%',
-      baseHum: 71,
-      risk: 'BAIXO',
-      riskClass: 'val-safe',
-      dotClass: 'dot-safe',
-      iconBoxClass: 'green-icon'
+      zoneDesc: 'Polo Central • Grande Fluxo',
+      tempDelta: +1.8,
+      feelsDelta: +3.2,
+      humidityDelta: -4,
+      canopy: 7
     },
     'ibura': {
       name: 'Ibura',
-      peak: '33.5°C',
-      temp: '33,5°C',
-      baseTemp: 33.5,
-      humidity: '50%',
-      baseHum: 50,
-      risk: 'ALTO',
-      riskClass: 'val-danger',
-      dotClass: 'dot-danger',
-      iconBoxClass: 'orange-icon'
+      zoneDesc: 'Periferia • Alta Vulnerabilidade',
+      tempDelta: +1.0,
+      feelsDelta: +1.8,
+      humidityDelta: -1,
+      canopy: 11
+    },
+    'madalena': {
+      name: 'Madalena / Torre',
+      zoneDesc: 'Eixo Fluvial • Capibaribe',
+      tempDelta: -0.3,
+      feelsDelta: -0.4,
+      humidityDelta: +3,
+      canopy: 16
+    },
+    'varzea': {
+      name: 'Várzea',
+      zoneDesc: 'Zona Oeste • Cobertura Verde',
+      tempDelta: -1.8,
+      feelsDelta: -2.9,
+      humidityDelta: +5,
+      canopy: 28
+    },
+    'dois-irmaos': {
+      name: 'Dois Irmãos',
+      zoneDesc: 'Zona Noroeste • Mata Atlântica',
+      tempDelta: -3.2,
+      feelsDelta: -5.4,
+      humidityDelta: +8,
+      canopy: 48
     }
   };
+
+  // Estado meteorológico base do Recife (atualizado ao vivo pela API Open-Meteo)
+  let recifeLiveState = {
+    baseTempNow: 29.8,
+    baseFeelsNow: 33.4,
+    basePeakTempToday: 31.4,
+    basePeakFeelsToday: 35.2,
+    baseHumidity: 66,
+    fetchedAt: null,
+    isLive: false
+  };
+
+  let currentSelectedBairro = 'boa-viagem';
 
   const heroBairroBadge = document.getElementById('heroBairroBadge');
   const bairroDropdownTrigger = document.getElementById('bairroDropdownTrigger');
   const bairrosDropdownMenu = document.getElementById('bairrosDropdownMenu');
   const heroBairroName = document.getElementById('heroBairroName');
   const heroPeakTemp = document.getElementById('heroPeakTemp');
+  const heroNowTemp = document.getElementById('heroNowTemp');
+  const heroLiveStatus = document.getElementById('heroLiveStatus');
 
+  const liveTempLabel = document.getElementById('liveTempLabel');
   const liveTemp = document.getElementById('liveTemp');
+  const liveTempSub = document.getElementById('liveTempSub');
   const liveHumidity = document.getElementById('liveHumidity');
+  const liveHumiditySub = document.getElementById('liveHumiditySub');
   const liveRiskValue = document.getElementById('liveRiskValue');
   const liveRiskText = document.getElementById('liveRiskText');
+  const liveRiskSub = document.getElementById('liveRiskSub');
   const liveRiskDot = document.getElementById('liveRiskDot');
   const liveRiskIconBox = document.getElementById('liveRiskIconBox');
   const bairroDropdownItems = document.querySelectorAll('.bairro-dropdown-item');
 
-  let activeBaseTemp = 34.2;
-  let activeBaseHum = 45;
+  function formatBR(num) {
+    return Number(num).toFixed(1).replace('.', ',');
+  }
+
+  function formatDot(num) {
+    return Number(num).toFixed(1);
+  }
+
+  /**
+   * Calcula todas as métricas reais calibradas para um bairro específico
+   */
+  function computeNeighborhoodMetrics(key) {
+    const model = NEIGHBORHOOD_MODELS[key] || NEIGHBORHOOD_MODELS['boa-viagem'];
+    const tempNow = Number((recifeLiveState.baseTempNow + model.tempDelta).toFixed(1));
+    const feelsNow = Number((recifeLiveState.baseFeelsNow + model.feelsDelta).toFixed(1));
+    const peakToday = Math.max(
+      tempNow,
+      Number((recifeLiveState.basePeakTempToday + model.tempDelta).toFixed(1))
+    );
+    const humidity = Math.max(30, Math.min(95, Math.round(recifeLiveState.baseHumidity + model.humidityDelta)));
+
+    // Classificação bioclimática real (Classes A a E) idêntica à lógica do MVP
+    let rating = 'C';
+    if (feelsNow <= 31.5 && model.canopy >= 35) rating = 'A';
+    else if (feelsNow <= 34.0) rating = 'B';
+    else if (feelsNow <= 37.5) rating = 'C';
+    else if (feelsNow <= 41.0) rating = 'D';
+    else rating = 'E';
+
+    // Nível de risco térmico operacional
+    let riskLabel = 'MODERADO';
+    let riskClass = 'val-teal';
+    let dotClass = 'dot-teal';
+    let iconBoxClass = 'teal-icon';
+
+    if (rating === 'A') {
+      riskLabel = 'BAIXO';
+      riskClass = 'val-safe';
+      dotClass = 'dot-safe';
+      iconBoxClass = 'green-icon';
+    } else if (rating === 'B') {
+      riskLabel = 'MODERADO';
+      riskClass = 'val-teal';
+      dotClass = 'dot-teal';
+      iconBoxClass = 'teal-icon';
+    } else if (rating === 'C') {
+      riskLabel = 'ATENÇÃO';
+      riskClass = 'val-warning';
+      dotClass = 'dot-warning';
+      iconBoxClass = 'amber-icon';
+    } else if (rating === 'D') {
+      riskLabel = 'ALTO';
+      riskClass = 'val-danger';
+      dotClass = 'dot-danger';
+      iconBoxClass = 'orange-icon';
+    } else {
+      riskLabel = 'CRÍTICO';
+      riskClass = 'val-danger';
+      dotClass = 'dot-danger';
+      iconBoxClass = 'orange-icon';
+    }
+
+    return {
+      key,
+      name: model.name,
+      tempNow,
+      feelsNow,
+      peakToday,
+      humidity,
+      rating,
+      riskLabel,
+      riskClass,
+      dotClass,
+      iconBoxClass
+    };
+  }
+
+  function triggerTelemetryFlash() {
+    const elementsToFlash = [heroPeakTemp, heroNowTemp, liveTemp, liveHumidity, liveRiskValue];
+    elementsToFlash.forEach(el => {
+      if (el) {
+        el.classList.remove('flash-update');
+        void el.offsetWidth;
+        el.classList.add('flash-update');
+      }
+    });
+  }
+
+  /**
+   * Atualiza todos os itens do menu suspenso, os hotspots do radar e os KPIs da Hero
+   */
+  function renderAllNeighborhoodsAndKPIs(animate = false) {
+    // 1. Atualiza as temperaturas no menu dropdown de bairros
+    bairroDropdownItems.forEach(item => {
+      const key = item.getAttribute('data-bairro');
+      if (!key) return;
+      const metrics = computeNeighborhoodMetrics(key);
+      const tempSpan = item.querySelector('.bairro-item-temp');
+      if (tempSpan) {
+        tempSpan.textContent = `Pico ${formatBR(metrics.peakToday)}°C`;
+      }
+      const isSelected = key === currentSelectedBairro;
+      item.classList.toggle('active', isSelected);
+      item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+    });
+
+    // 2. Atualiza os hotspots do disco de radar e modal de alertas
+    const bv = computeNeighborhoodMetrics('boa-viagem');
+    const imb = computeNeighborhoodMetrics('imbiribeira');
+    const sj = computeNeighborhoodMetrics('sao-jose');
+    const spot1 = document.querySelector('.spot-1');
+    const spot2 = document.querySelector('.spot-2');
+    const spot3 = document.querySelector('.spot-3');
+    if (spot1) spot1.setAttribute('title', `Boa Viagem • Pico Hoje: ${formatBR(bv.peakToday)}°C (Agora: ${formatBR(bv.tempNow)}°C)`);
+    if (spot2) spot2.setAttribute('title', `Imbiribeira • Pico Hoje: ${formatBR(imb.peakToday)}°C (Agora: ${formatBR(imb.tempNow)}°C)`);
+    if (spot3) spot3.setAttribute('title', `São José / Centro • Pico Hoje: ${formatBR(sj.peakToday)}°C (Agora: ${formatBR(sj.tempNow)}°C)`);
+
+    // 3. Atualiza o badge flutuante e os 3 KPIs para o bairro selecionado
+    const active = computeNeighborhoodMetrics(currentSelectedBairro);
+
+    if (heroBairroName) heroBairroName.textContent = active.name;
+    if (heroPeakTemp) heroPeakTemp.textContent = `${formatBR(active.peakToday)}°C`;
+    if (heroNowTemp) heroNowTemp.textContent = `${formatBR(active.tempNow)}°C`;
+
+    if (heroLiveStatus) {
+      heroLiveStatus.textContent = recifeLiveState.isLive
+        ? `● Open-Meteo (${recifeLiveState.fetchedAt}) • Clique p/ trocar`
+        : `● Modelo Biofísico • Clique p/ trocar`;
+    }
+
+    if (liveTempLabel) {
+      liveTempLabel.textContent = `PICO HOJE • ${active.name.toUpperCase()}`;
+    }
+    if (liveTemp) {
+      liveTemp.textContent = `${formatBR(active.peakToday)}°C`;
+    }
+    if (liveTempSub) {
+      liveTempSub.textContent = `Agora: ${formatBR(active.tempNow)}°C • Sensação: ${formatBR(active.feelsNow)}°C`;
+    }
+
+    if (liveHumidity) {
+      liveHumidity.textContent = `${active.humidity}%`;
+    }
+    if (liveHumiditySub) {
+      liveHumiditySub.textContent = recifeLiveState.isLive
+        ? `Open-Meteo ao vivo (${recifeLiveState.fetchedAt})`
+        : `Umidade calibrada • ${active.name}`;
+    }
+
+    if (liveRiskText) {
+      liveRiskText.textContent = active.riskLabel;
+    }
+    if (liveRiskSub) {
+      liveRiskSub.textContent = `Classe ${active.rating} • Sensação ${formatBR(active.feelsNow)}°C`;
+    }
+    if (liveRiskValue) {
+      liveRiskValue.className = `telemetry-value ${active.riskClass}`;
+    }
+    if (liveRiskDot) {
+      liveRiskDot.className = `pulsing-mini-dot ${active.dotClass}`;
+    }
+    if (liveRiskIconBox) {
+      liveRiskIconBox.className = `weather-icon-box ${active.iconBoxClass}`;
+    }
+
+    if (animate) {
+      triggerTelemetryFlash();
+    }
+  }
+
+  /**
+   * Busca dados reais da API pública Open-Meteo para Recife (-8.05, -34.90)
+   */
+  async function syncRealOpenMeteoWeather() {
+    const url =
+      'https://api.open-meteo.com/v1/forecast?latitude=-8.05&longitude=-34.90&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,is_day&hourly=temperature_2m,apparent_temperature&timezone=America%2FRecife&forecast_days=1';
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+
+      if (data && data.current && typeof data.current.temperature_2m === 'number') {
+        const tempNow = Number(data.current.temperature_2m.toFixed(1));
+        const feelsNow = Number((data.current.apparent_temperature ?? tempNow).toFixed(1));
+        const humidityNow = Math.round(data.current.relative_humidity_2m ?? 65);
+
+        // Calcula o pico real observado hoje até o horário atual em Recife
+        let maxTempToday = tempNow;
+        let maxFeelsToday = feelsNow;
+        const currentHourRecife = new Date().getHours();
+
+        if (data.hourly && Array.isArray(data.hourly.temperature_2m)) {
+          data.hourly.temperature_2m.forEach((t, idx) => {
+            if (idx <= currentHourRecife && typeof t === 'number' && t > maxTempToday) {
+              maxTempToday = Number(t.toFixed(1));
+            }
+          });
+        }
+        if (data.hourly && Array.isArray(data.hourly.apparent_temperature)) {
+          data.hourly.apparent_temperature.forEach((f, idx) => {
+            if (idx <= currentHourRecife && typeof f === 'number' && f > maxFeelsToday) {
+              maxFeelsToday = Number(f.toFixed(1));
+            }
+          });
+        }
+
+        const nowStr = new Date().toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        recifeLiveState = {
+          baseTempNow: tempNow,
+          baseFeelsNow: feelsNow,
+          basePeakTempToday: maxTempToday,
+          basePeakFeelsToday: maxFeelsToday,
+          baseHumidity: humidityNow,
+          fetchedAt: nowStr,
+          isLive: true
+        };
+
+        renderAllNeighborhoodsAndKPIs(true);
+      }
+    } catch (err) {
+      console.warn('Usando telemetria biofísica de contingência:', err);
+      renderAllNeighborhoodsAndKPIs(false);
+    }
+  }
 
   function setDropdownOpen(open) {
     if (!heroBairroBadge) return;
@@ -356,67 +591,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function triggerTelemetryFlash() {
-    const elementsToFlash = [heroPeakTemp, liveTemp, liveHumidity, liveRiskValue];
-    elementsToFlash.forEach(el => {
-      if (el) {
-        el.classList.remove('flash-update');
-        void el.offsetWidth; // Force reflow
-        el.classList.add('flash-update');
-      }
-    });
-  }
-
   function selectNeighborhood(key) {
-    const data = PILOT_NEIGHBORHOODS[key];
-    if (!data) return;
-
-    // Atualiza o card flutuante na Hero
-    if (heroBairroName) heroBairroName.textContent = data.name;
-    if (heroPeakTemp) heroPeakTemp.textContent = data.peak;
-
-    // Atualiza os KPIs na Hero
-    if (liveTemp) liveTemp.textContent = data.temp;
-    if (liveHumidity) liveHumidity.textContent = data.humidity;
-    if (liveRiskText) liveRiskText.textContent = data.risk;
-
-    if (liveRiskValue) {
-      liveRiskValue.className = `telemetry-value ${data.riskClass}`;
-    }
-    if (liveRiskDot) {
-      liveRiskDot.className = `pulsing-mini-dot ${data.dotClass}`;
-    }
-    if (liveRiskIconBox) {
-      liveRiskIconBox.className = `weather-icon-box ${data.iconBoxClass}`;
-    }
-
-    // Efeito visual sutil de atualização
-    triggerTelemetryFlash();
-
-    // Sincroniza estado ativo nos botões do dropdown
-    bairroDropdownItems.forEach(item => {
-      const isSelected = item.getAttribute('data-bairro') === key;
-      item.classList.toggle('active', isSelected);
-      item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
-    });
-
-    // Atualiza os valores base da simulação periódica
-    activeBaseTemp = data.baseTemp;
-    activeBaseHum = data.baseHum;
-
-    // Fecha o dropdown com suavidade
+    if (!NEIGHBORHOOD_MODELS[key]) return;
+    currentSelectedBairro = key;
+    renderAllNeighborhoodsAndKPIs(true);
     setDropdownOpen(false);
   }
 
-  // Evento de clique para abrir/fechar o dropdown
-  if (bairroDropdownTrigger && heroBairroBadge) {
-    bairroDropdownTrigger.addEventListener('click', (e) => {
+  // Permite clicar em QUALQUER lugar do card flutuante (#heroBairroBadge) para abrir/fechar a lista
+  if (heroBairroBadge) {
+    heroBairroBadge.addEventListener('click', (e) => {
+      // Se o clique foi dentro do menu dropdown já aberto, deixa o handler do item tratar
+      if (bairrosDropdownMenu && bairrosDropdownMenu.contains(e.target)) {
+        return;
+      }
       e.stopPropagation();
       const isOpen = heroBairroBadge.classList.contains('dropdown-active');
       setDropdownOpen(!isOpen);
     });
 
-    // Clique nas opções de bairros
     bairroDropdownItems.forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -427,14 +620,12 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Fechar ao clicar fora
     document.addEventListener('click', (e) => {
       if (!heroBairroBadge.contains(e.target)) {
         setDropdownOpen(false);
       }
     });
 
-    // Fechar com a tecla ESC
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         setDropdownOpen(false);
@@ -442,21 +633,67 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Simulação contínua com oscilação calibrada em torno do bairro selecionado
-  if (liveTemp && liveHumidity) {
-    setInterval(() => {
-      const variation = (Math.random() * 0.4 - 0.2).toFixed(1);
-      const newTemp = (activeBaseTemp + parseFloat(variation)).toFixed(1).replace('.', ',');
-      liveTemp.textContent = `${newTemp}°C`;
+  // Renderiza imediatamente e sincroniza com a API pública Open-Meteo (atualizando a cada 5 min)
+  renderAllNeighborhoodsAndKPIs(false);
+  syncRealOpenMeteoWeather();
+  setInterval(syncRealOpenMeteoWeather, 5 * 60 * 1000);
 
-      const humVariation = Math.floor(Math.random() * 3) - 1;
-      liveHumidity.textContent = `${activeBaseHum + humVariation}%`;
-    }, 6000);
+
+  /* ==========================================================================
+     08. PAINEL PRINCIPAL DO APP EMBUTIDO AO VIVO (SEÇÃO #MVP)
+     ========================================================================== */
+  const mvpLiveIframe = document.getElementById('mvpLiveIframe');
+  const mvpIframeViewport = document.getElementById('mvpIframeViewport');
+  const btnReloadMvpIframe = document.getElementById('btnReloadMvpIframe');
+  const btnOpenMvpFull = document.getElementById('btnOpenMvpFull');
+
+  const NATIVE_APP_WIDTH = 1440;
+  const NATIVE_APP_HEIGHT = 860;
+
+  function resolveMvpAppUrl(withPreviewParam = true) {
+    const isFileProtocol = window.location.protocol === 'file:';
+    const base = isFileProtocol ? 'https://radarclimatico.vercel.app/' : '/';
+    return withPreviewParam ? `${base}?preview=1` : base;
+  }
+
+  if (mvpLiveIframe) {
+    mvpLiveIframe.src = resolveMvpAppUrl(true);
+  }
+  if (btnOpenMvpFull) {
+    btnOpenMvpFull.href = resolveMvpAppUrl(false);
+  }
+  if (btnReloadMvpIframe && mvpLiveIframe) {
+    btnReloadMvpIframe.addEventListener('click', () => {
+      mvpLiveIframe.src = resolveMvpAppUrl(true);
+    });
+  }
+
+  function updateMvpIframeScale() {
+    if (!mvpIframeViewport || !mvpLiveIframe) return;
+    const containerWidth = mvpIframeViewport.clientWidth;
+    if (containerWidth <= 0) return;
+
+    const scale = containerWidth / NATIVE_APP_WIDTH;
+    const scaledHeight = Math.round(NATIVE_APP_HEIGHT * scale);
+
+    mvpLiveIframe.style.width = `${NATIVE_APP_WIDTH}px`;
+    mvpLiveIframe.style.height = `${NATIVE_APP_HEIGHT}px`;
+    mvpLiveIframe.style.transform = `scale(${scale})`;
+    mvpIframeViewport.style.height = `${scaledHeight}px`;
+  }
+
+  if (mvpIframeViewport && mvpLiveIframe) {
+    updateMvpIframeScale();
+    window.addEventListener('resize', updateMvpIframeScale);
+    if ('ResizeObserver' in window) {
+      const ro = new ResizeObserver(() => updateMvpIframeScale());
+      ro.observe(mvpIframeViewport);
+    }
   }
 
 
   /* ==========================================================================
-     08. FORMULÁRIO DE ALERTAS & NEWSLETTER
+     09. FORMULÁRIO DE ALERTAS & NEWSLETTER
      ========================================================================== */
   const newsletterForm = document.getElementById('newsletterForm');
   const newsletterInput = document.getElementById('newsletterInput');

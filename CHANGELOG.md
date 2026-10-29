@@ -7,6 +7,42 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [2.1.0] - 2026-10-29
+
+### Adicionado
+- **Validação Operacional *Human-in-the-Loop* no Card de Microterritório (`ZoneDetail`):**
+  - Criação do bloco interno **"Validação Operacional"** com estética *glassmorphism* (`backdrop-blur-md`) abaixo da recomendação da Defesa Civil & Secretaria de Saúde.
+  - Dois itens de checklist tático interativos:
+    1. *"Confirmar quebra no abastecimento de água local."* (destaque interativo em **Cyan Neon**);
+    2. *"Validar disponibilidade de agentes de saúde na região."* (destaque interativo em **Laranja Neon**).
+  - Botão de ação condicional **"Confirmar Ação"** no rodapé do bloco: inicia bloqueado (`disabled`) e só adquire cor total e interatividade após o operador validar os dois itens do checklist, mudando para **"Ação Preventiva Confirmada"** após o envio.
+  - Ajuste de coerência visual na tag de status: substituição da tag vermelha `"Despacho Imediato"` pela tag âmbar **`"AÇÃO PREVENTIVA"`** (`bg-amber-500`), preservando a altura exata do card.
+- **Assistente Virtual e Tour Guiado Interativo (`CLIMA`):**
+  - Implementação completa do mascote caranguejo cibernético **CLIMA** (`src/components/tour/ClimaMascot.tsx`, `ClimaTourOverlay.tsx`, `tourStepsData.ts` e `TourContext.tsx`) com síntese de áudio Web Audio API (com botão *Mute/Unmute*).
+  - **Menu Principal do Tour** com duas trilhas: **Passo a Passo Geral (13 etapas)** e **Funcionalidades Internas (6 sub-funcionalidades)** que navegam automaticamente entre abas e modais.
+  - Contorno de foco (*spotlight*) laranja com cantos retos (`rounded-none`) alinhado à geometria ortogonal dos painéis e barra de rolagem customizada (`clima-tour-scrollbar`).
+- **Engenharia de SEO Técnico, Dados Estruturados (Schema.org) e Core Web Vitals:**
+  - Implementação completa de Meta Tags (`<title>` otimizado para CTR, `description`, `keywords`, `canonical`, `robots`), Open Graph (`og:*`) e Twitter Cards (`twitter:*`) no MVP (`src/routes/__root.tsx`, `src/routes/index.tsx`, `src/routes/login.tsx`) e no Portal Institucional (`public/site_arboris/index.html`).
+  - Injeção de scripts **JSON-LD (`Schema.org`)** com grafos conectados para `Organization`, `WebSite`, `SoftwareApplication` e `WebApplication`.
+  - Refatoração de **HTML5 Semântico** (`<header>`, `<aside>`, `<main>`, `<nav>`, `<section>`, `<article>`, `<footer>`), hierarquia de headings com `<h1>` único por página e atributos **ARIA** completos para acessibilidade e rastreabilidade.
+  - Otimização de **Core Web Vitals** (`preload` da imagem LCP, `loading="lazy"`, `decoding="async"`, `width`/`height` explícitos) e criação de `public/sitemap.xml` e `public/robots.txt`.
+- **Gerador de Relatórios Executivos (`ReportsModal`) e Portal Institucional (`site_arboris`):**
+  - Modal de exportação de dossiês técnicos na barra lateral com seleção de escopo, janela temporal e formato (`PDF Executivo` ou `Planilha CSV`).
+  - Portal institucional em `public/site_arboris/index.html` com integração ao fórum de transparência e sugestões **Fider** (`arboris.fider.io`).
+
+### Modificado
+- **Cabeçalho da Central de Alertas (`AlertsPanel`):**
+  - Alinhamento do botão **`+ Novo Alerta`** na mesma linha horizontal, posicionado imediatamente à direita da aba `Histórico`.
+  - Remoção do contador numérico redundante ao lado do rótulo da aba `Histórico`.
+- **Barras de Rolagem Customizadas (`src/styles.css`):**
+  - Criação do utilitário `subtle-scrollbar` (linha cinza sutil) aplicado à `SidebarNav.tsx`.
+  - Criação do utilitário `clima-tour-scrollbar` aplicado à janela do Menu Principal do Tour do mascote `CLIMA`.
+- **Arquitetura de Layout Command Center (Sidebar + TopHeader + Grid 8x4):**
+  - Migração da navegação para `SidebarNav` esquerda retrátil com minimapa `PernambucoMinimap`.
+  - `TopHeader` com busca rápida (`/`) e quadrinho unificado (`On line` + hora/data ao vivo + ícone climático dinâmico WMO da Open-Meteo).
+
+---
+
 ## [1.3.0] - 2026-10-19
 
 ### Adicionado
