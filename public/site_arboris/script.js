@@ -483,23 +483,23 @@ document.addEventListener('DOMContentLoaded', () => {
       liveTemp.textContent = `${formatBR(active.peakToday)}°C`;
     }
     if (liveTempSub) {
-      liveTempSub.textContent = `Agora: ${formatBR(active.tempNow)}°C • Sensação: ${formatBR(active.feelsNow)}°C`;
+      liveTempSub.innerHTML = `<span class="sub-part">Agora: ${formatBR(active.tempNow)}°C</span> <span class="sub-sep">•</span> <span class="sub-part">Sensação: ${formatBR(active.feelsNow)}°C</span>`;
     }
 
     if (liveHumidity) {
       liveHumidity.textContent = `${active.humidity}%`;
     }
     if (liveHumiditySub) {
-      liveHumiditySub.textContent = recifeLiveState.isLive
-        ? `Open-Meteo ao vivo (${recifeLiveState.fetchedAt})`
-        : `Umidade calibrada • ${active.name}`;
+      liveHumiditySub.innerHTML = recifeLiveState.isLive
+        ? `<span class="sub-part">Open-Meteo ao vivo</span> <span class="sub-part">(${recifeLiveState.fetchedAt})</span>`
+        : `<span class="sub-part">Umidade calibrada</span> <span class="sub-sep">•</span> <span class="sub-part">${active.name}</span>`;
     }
 
     if (liveRiskText) {
       liveRiskText.textContent = active.riskLabel;
     }
     if (liveRiskSub) {
-      liveRiskSub.textContent = `Classe ${active.rating} • Sensação ${formatBR(active.feelsNow)}°C`;
+      liveRiskSub.innerHTML = `<span class="sub-part">Classe ${active.rating}</span> <span class="sub-sep">•</span> <span class="sub-part">Sensação ${formatBR(active.feelsNow)}°C</span>`;
     }
     if (liveRiskValue) {
       liveRiskValue.className = `telemetry-value ${active.riskClass}`;
