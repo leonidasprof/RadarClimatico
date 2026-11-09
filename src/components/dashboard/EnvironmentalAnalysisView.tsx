@@ -121,14 +121,14 @@ export function EnvironmentalAnalysisView({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold tracking-tight">
-                  Análise Ambiental: Cobertura Vegetal × Temperatura de Superfície
+                  Vegetação × Calor
                 </h2>
                 <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono font-semibold text-emerald-400">
                   MapBiomas 11 + Landsat 8/9
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Modelagem biofísica e estatística espacial para Recife e os 14 municípios da Região Metropolitana do Recife (RMR).
+                Quanto as árvores ajudam a esfriar a cidade: cobertura vegetal comparada à temperatura do solo no Recife e nos 14 municípios da Região Metropolitana.
               </p>
             </div>
           </div>

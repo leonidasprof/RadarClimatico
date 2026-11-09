@@ -167,13 +167,13 @@ export function NasaPowerDashboardView({ onBack }: NasaPowerDashboardViewProps) 
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold tracking-tight">Dashboard Climático NASA POWER</h2>
+                <h2 className="text-xl font-bold tracking-tight">Tendências do Clima</h2>
                 <span className="rounded-full bg-sky-500/15 border border-sky-500/30 px-2 py-0.5 text-[10px] font-mono font-semibold text-sky-400">
                   API Oficial NASA LaRC
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Monitoramento de séries temporais de temperatura (T2M), precipitação (PRECTOTCORR), vento (WS10M) e pressão (PS).
+                Como a temperatura, a chuva, o vento e a pressão do ar vêm variando no Recife — com exportação dos dados em planilha.
               </p>
             </div>
           </div>

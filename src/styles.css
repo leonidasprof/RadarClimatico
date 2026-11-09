@@ -278,3 +278,11 @@
     scrollbar-color: #162033 #2b3952;
   }
 }
+
+/* Mapa real (Leaflet): versão escura das ruas do OpenStreetMap */
+.arboris-tiles-dark {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.6);
+}
+.leaflet-container {
+  font-family: inherit;
+}

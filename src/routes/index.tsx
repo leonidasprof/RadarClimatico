@@ -15,7 +15,7 @@ import {
   type Zone,
   type AlertItem,
 } from "@/lib/radar-data";
-import { RecifeStreetMesh } from "@/components/RecifeStreetMesh";
+import { RecifeLiveMap, type LiveMapLayers } from "@/components/dashboard/RecifeLiveMap";
 import { useAuth } from "@/context/auth-context";
 import { useTheme } from "@/context/theme-context";
 import { UserContactModal } from "@/components/auth/UserContactModal";
@@ -963,15 +963,13 @@ function MapPanel({
   activeLayer: "calor" | "vegetal" | "vulnerabilidade";
   onChangeLayer: (layer: "calor" | "vegetal" | "vulnerabilidade") => void;
 }) {
-  const [zoomLevel, setZoomLevel] = useState(1);
   const [isMaximized, setIsMaximized] = useState(false);
-  const [visibleLayers, setVisibleLayers] = useState({
+  const [baseMap, setBaseMap] = useState<"ruas" | "satelite">("ruas");
+  const [visibleLayers, setVisibleLayers] = useState<LiveMapLayers>({
     bairros: true,
-    estacoes: true,
     ilhas: true,
-    redeViaria: true,
-    hidrografia: true,
   });
+  const { isDark } = useTheme();
 
   const activeZones = zonesList || zones;
 
@@ -998,7 +996,7 @@ function MapPanel({
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-border/70 px-4 py-2.5 bg-card/40">
         <div className="min-w-0">
           <h2 className="text-xs sm:text-sm font-bold text-foreground whitespace-nowrap">
-            Mapa térmico real
+            Mapa térmico do Recife
           </h2>
           <p className="text-[11px] text-muted-foreground mt-0.5 whitespace-normal leading-tight">
             {activeLayer === "calor" && "Anomalias de calor e ilhas térmicas"}
@@ -1078,40 +1076,26 @@ function MapPanel({
         </div>
       </div>
 
-      {/* Viewport do Mapa Interativo */}
+      {/* Viewport do Mapa Real (Leaflet + OpenStreetMap) */}
       <div
         className={`relative overflow-hidden ${
           isMaximized ? "flex-1 min-h-[500px]" : "h-[420px] sm:h-[490px]"
         }`}
       >
-        {/* Controles de Zoom Flutuantes no Canto Superior Esquerdo */}
-        <div className="absolute top-3.5 left-3.5 z-10 flex flex-col gap-1 rounded-lg border border-border/80 bg-card/90 p-1 backdrop-blur-md shadow-md">
-          <button
-            onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.6))}
-            className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-foreground transition-colors cursor-pointer"
-            title="Aumentar zoom"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.85))}
-            className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-foreground transition-colors cursor-pointer"
-            title="Diminuir zoom"
-          >
-            <Minus className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => {
-              setZoomLevel(1);
-              const santoAmaro = activeZones.find((z) => z.id === "santo-amaro");
-              if (santoAmaro) onSelect(santoAmaro);
-            }}
-            className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-foreground transition-colors cursor-pointer"
-            title="Centralizar no Recife"
-          >
-            <Crosshair className="h-3.5 w-3.5 text-cyan-500" />
-          </button>
-        </div>
+        <RecifeLiveMap
+          className="absolute inset-0"
+          zones={activeZones}
+          selectedId={selected.id}
+          onSelect={onSelect}
+          getZoneColor={getZoneColor}
+          layers={visibleLayers}
+          baseMap={baseMap}
+          isDark={isDark}
+          onRecenter={() => {
+            const santoAmaro = activeZones.find((z) => z.id === "santo-amaro");
+            if (santoAmaro) onSelect(santoAmaro);
+          }}
+        />
 
         {/* Card Flutuante de Legenda e Filtros de Camadas no Lado Direito */}
         <div className="absolute top-3.5 right-3.5 z-10 rounded-xl border border-border/80 bg-card/90 p-3 backdrop-blur-md shadow-lg max-w-[210px] text-xs">
@@ -1135,14 +1119,34 @@ function MapPanel({
             <span>45°</span>
           </div>
 
+          {/* Tipo de mapa base */}
+          <div className="mt-3 grid grid-cols-2 gap-1 rounded-lg bg-muted/50 p-0.5 border border-border/60">
+            {(
+              [
+                { id: "ruas", label: "Mapa" },
+                { id: "satelite", label: "Satélite" },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setBaseMap(opt.id)}
+                className={`rounded-md py-1 text-[11px] font-medium transition-all cursor-pointer ${
+                  baseMap === opt.id
+                    ? "bg-card text-foreground shadow-xs ring-1 ring-border"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
           {/* Checkboxes de Camadas Operacionais */}
           <div className="mt-3 pt-2.5 border-t border-border/60 space-y-1.5 font-sans">
             {[
-              { key: "bairros", label: "Bairros" },
-              { key: "estacoes", label: "Estações meteorológicas" },
+              { key: "bairros", label: "Bairros monitorados" },
               { key: "ilhas", label: "Ilhas de calor" },
-              { key: "redeViaria", label: "Rede viária" },
-              { key: "hidrografia", label: "Hidrografia" },
             ].map(({ key, label }) => {
               const checked = visibleLayers[key as keyof typeof visibleLayers];
               return (
@@ -1161,113 +1165,6 @@ function MapPanel({
               );
             })}
           </div>
-        </div>
-
-        {/* Rótulo Oceano Atlântico sobre a orla */}
-        <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none select-none text-[10px] sm:text-xs font-mono tracking-[0.25em] text-cyan-700/35 dark:text-cyan-400/30 uppercase font-semibold text-center leading-loose">
-          OCEANO<br />ATLÂNTICO
-        </div>
-
-        {/* Escala Gráfica no Canto Inferior */}
-        <div className="absolute bottom-3.5 right-28 z-10 font-mono text-[9px] text-muted-foreground/80 flex flex-col items-center pointer-events-none select-none">
-          <div className="flex justify-between w-28 text-[9px]">
-            <span>0</span>
-            <span>2</span>
-            <span>4</span>
-            <span>6 km</span>
-          </div>
-          <div className="w-28 h-1 border-b-2 border-l-2 border-r-2 border-muted-foreground/60 mt-0.5" />
-        </div>
-
-        {/* Canvas de Ruas e Camadas com escala de zoom */}
-        <div
-          className="absolute inset-0 transition-transform duration-200"
-          style={{ transform: `scale(${zoomLevel})`, transformOrigin: "center center" }}
-        >
-          {visibleLayers.redeViaria && (
-            <RecifeStreetMesh className="absolute inset-0 h-full w-full" />
-          )}
-
-          {/* Mancha térmica / halos de calor suavizados no mapa */}
-          {visibleLayers.ilhas && (
-            <svg
-              className="absolute inset-0 h-full w-full pointer-events-none"
-              preserveAspectRatio="none"
-              viewBox="0 0 100 100"
-            >
-              <defs>
-                <radialGradient id="heatHaloCentral" cx="47%" cy="38%" r="32%">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.55" />
-                  <stop offset="35%" stopColor="#f97316" stopOpacity="0.42" />
-                  <stop offset="65%" stopColor="#eab308" stopOpacity="0.25" />
-                  <stop offset="90%" stopColor="#10b981" stopOpacity="0.1" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                </radialGradient>
-                <radialGradient id="heatHaloSouth" cx="62%" cy="78%" r="20%">
-                  <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
-                  <stop offset="70%" stopColor="#10b981" stopOpacity="0.15" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                </radialGradient>
-                <radialGradient id="heatHaloWest" cx="24%" cy="28%" r="20%">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
-                  <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.15" />
-                  <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
-                </radialGradient>
-              </defs>
-              <circle cx="47" cy="38" r="32" fill="url(#heatHaloCentral)" />
-              <circle cx="62" cy="78" r="20" fill="url(#heatHaloSouth)" />
-              <circle cx="24" cy="28" r="20" fill="url(#heatHaloWest)" />
-            </svg>
-          )}
-
-          {/* Pinos de monitoramento nos bairros com anel concêntrico de destaque */}
-          {visibleLayers.bairros &&
-            activeZones.map((z) => {
-              const active = z.id === selected.id;
-              const color = getZoneColor(z);
-              const isPeak = z.id === "santo-amaro" || z.temp >= 36;
-
-              return (
-                <div
-                  key={z.id}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-auto"
-                  style={{ left: `${z.x}%`, top: `${z.y}%` }}
-                >
-                  {/* Círculo concêntrico pulsante para bairros críticos ou selecionado */}
-                  {(active || isPeak) && (
-                    <>
-                      <span
-                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-14 w-14 rounded-full border border-rose-500/50 animate-ping pointer-events-none"
-                      />
-                      <span
-                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-rose-500/60 pointer-events-none"
-                      />
-                    </>
-                  )}
-
-                  {/* Marcador em Botão com Tag e Temperatura */}
-                  <button
-                    onClick={() => onSelect(z)}
-                    className={`group relative flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-md transition-all duration-150 cursor-pointer ${
-                      active
-                        ? "bg-slate-900 text-white ring-2 ring-rose-500 scale-105 shadow-xl"
-                        : "bg-slate-900/85 text-white/90 hover:bg-slate-900 hover:scale-105 backdrop-blur-xs border border-white/20"
-                    }`}
-                  >
-                    <span
-                      className="h-2.5 w-2.5 rounded-full shrink-0 shadow-xs"
-                      style={{ backgroundColor: color }}
-                    />
-                    <span className="font-sans font-medium text-[11px] whitespace-nowrap text-white">
-                      {z.name}
-                    </span>
-                    <span className="font-mono text-[11px] font-bold text-amber-300">
-                      {z.temp.toFixed(1).replace(".", ",")}°
-                    </span>
-                  </button>
-                </div>
-              );
-            })}
         </div>
       </div>
     </section>
@@ -2085,10 +1982,10 @@ function ZoneDetail({
               id="zone-detail-nasa-btn"
               onClick={onOpenNasaPower}
               className="flex items-center justify-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/10 py-2 px-2 text-xs font-medium text-sky-400 hover:bg-sky-500/20 transition-all cursor-pointer shadow-xs"
-              title={`Consultar dados climáticos da NASA POWER para ${zone.name}`}
+              title={`Ver tendências do clima (temperatura, chuva e vento) para ${zone.name}`}
             >
               <CloudRain className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Clima NASA</span>
+              <span className="truncate">Tendências</span>
             </button>
           )}
           {onOpenEnvironmentalAnalysis && (
@@ -2096,10 +1993,10 @@ function ZoneDetail({
               id="zone-detail-env-btn"
               onClick={onOpenEnvironmentalAnalysis}
               className="flex items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 py-2 px-2 text-xs font-medium text-primary hover:bg-primary/20 transition-all cursor-pointer shadow-xs"
-              title={`Ver Análise Ambiental MapBiomas / Landsat`}
+              title={`Ver quanto a vegetação ajuda a reduzir o calor`}
             >
               <TrendingDown className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">MapBiomas</span>
+              <span className="truncate">Vegetação × Calor</span>
             </button>
           )}
         </div>
