@@ -120,6 +120,11 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState<NavTab>("tempo-real");
   const [mapLayer, setMapLayer] = useState<"calor" | "vegetal" | "vulnerabilidade">("calor");
   const [alertsList, setAlertsList] = useState<AlertItem[]>(alerts);
+  const [alertsPageMode, setAlertsPageMode] = useState<"ativos" | "historico">("ativos");
+  // Ao sair da página de Alertas, ela volta a abrir em "Alertas do dia" pelo menu lateral
+  useEffect(() => {
+    if (activeTab !== "alertas") setAlertsPageMode("ativos");
+  }, [activeTab]);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [reportsModalOpen, setReportsModalOpen] = useState(false);
@@ -271,6 +276,11 @@ function Dashboard() {
                           alerts={alertsList}
                           onOpenReportModal={() => setReportModalOpen(true)}
                           onDispatchAlert={handleDispatchAlert}
+                          onOpenAlertsPage={(mode) => {
+                            setAlertsPageMode(mode);
+                            setActiveTab("alertas");
+                            if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
                         />
                         <div className="flex-1 flex flex-col min-h-0">
                           <ZoneDetail
@@ -381,10 +391,12 @@ function Dashboard() {
           {activeTab === "alertas" && (
             <div className="lg:col-span-12 space-y-4">
               <AlertsPanel
+                key={alertsPageMode}
                 alerts={alertsList}
                 onOpenReportModal={() => setReportModalOpen(true)}
                 onDispatchAlert={handleDispatchAlert}
                 expandedView
+                initialViewMode={alertsPageMode}
               />
             </div>
           )}
@@ -1285,18 +1297,192 @@ function PriorityPanel({ onOpenGreenDashboard }: { onOpenGreenDashboard?: () => 
   );
 }
 
+const SWEAT_DROPS = [
+  { left: "6%", delay: "0s", dur: "3.4s", size: 1 },
+  { left: "19%", delay: "1.6s", dur: "4.1s", size: 0.8 },
+  { left: "33%", delay: "0.7s", dur: "3.7s", size: 1.15 },
+  { left: "48%", delay: "2.3s", dur: "3.2s", size: 0.9 },
+  { left: "62%", delay: "1.1s", dur: "4.4s", size: 1.05 },
+  { left: "76%", delay: "2.9s", dur: "3.5s", size: 0.85 },
+  { left: "90%", delay: "0.4s", dur: "3.9s", size: 1.1 },
+];
+
+const LEVEL_ORDER: Record<AlertItem["level"], number> = { critico: 0, alto: 1, moderado: 2 };
+
+/**
+ * Card compacto da Central de Alertas na página principal quando há ocorrências em aberto.
+ * Fica vermelho, "suando", e leva o usuário à página de Alertas — com altura fixa,
+ * sem empurrar os blocos Índice Térmico e Histórico de Temperatura.
+ */
+function HotAlertsCard({
+  activeAlerts,
+  historyCount,
+  onOpenAlertsPage,
+  onOpenReportModal,
+}: {
+  activeAlerts: AlertItem[];
+  historyCount: number;
+  onOpenAlertsPage: (mode: "ativos" | "historico") => void;
+  onOpenReportModal: () => void;
+}) {
+  const sorted = [...activeAlerts].sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level]);
+  const top = sorted[0]!;
+  // Bairros com alerta em aberto, sem repetição, do mais grave para o menos grave
+  const zonesAffected = Array.from(new Set(sorted.map((a) => a.zone)));
+  const zonesText =
+    zonesAffected.length <= 3
+      ? zonesAffected.length > 1
+        ? `${zonesAffected.slice(0, -1).join(", ")} e ${zonesAffected[zonesAffected.length - 1]}`
+        : zonesAffected[0]
+      : `${zonesAffected.slice(0, 3).join(", ")} e mais ${zonesAffected.length - 3}`;
+  // O título costuma terminar com ": <bairro>"; tira o bairro para não repetir
+  const topType = top.title.replace(new RegExp(`\\s*[:·—-]\\s*${top.zone}\\s*$`, "i"), "").trim();
+  const counts = {
+    critico: activeAlerts.filter((a) => a.level === "critico").length,
+    alto: activeAlerts.filter((a) => a.level === "alto").length,
+    moderado: activeAlerts.filter((a) => a.level === "moderado").length,
+  };
+  const chips = [
+    { id: "critico", label: "Crítico", n: counts.critico },
+    { id: "alto", label: "Alto", n: counts.alto },
+    { id: "moderado", label: "Moderado", n: counts.moderado },
+  ].filter((c) => c.n > 0);
+
+  return (
+    <section
+      data-tour="alerts-panel"
+      role="button"
+      tabIndex={0}
+      aria-label={`${activeAlerts.length} alerta(s) do dia em aberto. Abrir a página de Alertas`}
+      onClick={() => onOpenAlertsPage("ativos")}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpenAlertsPage("ativos");
+        }
+      }}
+      className="hot-alerts-card group relative isolate overflow-hidden rounded-xl p-4 text-white shadow-lg shadow-red-600/30 ring-1 ring-red-400/40 cursor-pointer transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+    >
+      {/* Gotas de suor escorrendo pela borda superior */}
+      <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+        {SWEAT_DROPS.map((d, i) => (
+          <span
+            key={i}
+            className="sweat-drop"
+            style={{
+              left: d.left,
+              animationDelay: d.delay,
+              animationDuration: d.dur,
+              width: `${9 * d.size}px`,
+              height: `${13 * d.size}px`,
+            }}
+          />
+        ))}
+        {/* Brilho de calor no canto */}
+        <span className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-amber-300/30 blur-2xl" />
+      </div>
+
+      {/* Cabeçalho: Alertas do dia (destaque) · Histórico · Novo Alerta */}
+      <div className="flex items-center justify-between gap-2 border-b border-white/25 pb-3 mb-3">
+        <div className="flex items-center gap-1 rounded-xl bg-black/15 p-1 min-w-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenAlertsPage("ativos");
+            }}
+            className="relative flex items-center gap-1.5 rounded-lg bg-white px-2 py-1 text-[11px] xl:text-xs font-bold text-red-700 whitespace-nowrap shadow-sm cursor-pointer"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping motion-reduce:animate-none" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-600" />
+            </span>
+            <span>Alertas do dia</span>
+            <span className="rounded-full bg-red-600 px-1.5 font-mono text-[10px] text-white">{activeAlerts.length}</span>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenAlertsPage("historico");
+            }}
+            className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] xl:text-xs font-medium text-white/85 whitespace-nowrap hover:text-white cursor-pointer"
+            title={`${historyCount} alerta(s) no histórico`}
+          >
+            <History className="h-3 w-3" />
+            <span>Histórico</span>
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenReportModal();
+          }}
+          className="flex items-center gap-1 rounded-lg border border-white/60 bg-white/10 px-2.5 py-1.5 text-[11px] xl:text-xs font-semibold text-white whitespace-nowrap shrink-0 hover:bg-white/20 cursor-pointer"
+          title="Registrar nova ocorrência ou anomalia operacional"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>Novo Alerta</span>
+        </button>
+      </div>
+
+      {/* Resumo */}
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 ring-4 ring-white/10">
+          <Thermometer className="h-6 w-6" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-lg font-bold leading-tight">
+            {activeAlerts.length} {activeAlerts.length === 1 ? "alerta em aberto" : "alertas em aberto"}
+          </p>
+          <p className="mt-1 text-xs leading-snug text-white/95" title={zonesAffected.join(", ")}>
+            <span className="text-white/75">{zonesAffected.length === 1 ? "Bairro: " : "Bairros: "}</span>
+            <span className="font-semibold">{zonesText}</span>
+          </p>
+          <p className="mt-0.5 truncate text-xs text-white/90" title={`${topType} · ${top.zone}`}>
+            <span className="text-white/75">Mais grave: </span>
+            {topType} <span className="text-white/75">({top.zone})</span>
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {chips.map((c) => (
+              <span
+                key={c.id}
+                className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+              >
+                {c.n} {c.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Chamada para a página de Alertas */}
+      <div className="cta-glow mt-3.5 flex items-center justify-center gap-2 rounded-lg bg-white py-2 text-xs font-bold text-red-700 shadow-sm transition-colors group-hover:bg-amber-50">
+        <span>Ver alertas do dia</span>
+        <ArrowRight className="nudge-x h-4 w-4" />
+      </div>
+    </section>
+  );
+}
+
 function AlertsPanel({
   alerts: alertItems,
   onOpenReportModal,
   onDispatchAlert,
   expandedView = false,
+  onOpenAlertsPage,
+  initialViewMode = "ativos",
 }: {
   alerts: AlertItem[];
   onOpenReportModal: () => void;
   onDispatchAlert: (id: string | number) => void;
   expandedView?: boolean;
+  /** Na página principal: abre a página de Alertas no modo indicado. */
+  onOpenAlertsPage?: (mode: "ativos" | "historico") => void;
+  initialViewMode?: "ativos" | "historico";
 }) {
-  const [viewMode, setViewMode] = useState<"ativos" | "historico">("ativos");
+  const [viewMode, setViewMode] = useState<"ativos" | "historico">(initialViewMode);
   const [filter, setFilter] = useState<"todos" | "critico" | "alto" | "moderado">("todos");
 
   // Alertas do dia: ocorrências em aberto aguardando despacho das equipes
@@ -1342,6 +1528,19 @@ function AlertsPanel({
       activeClass: "bg-amber-500/15 text-amber-500 ring-1 ring-amber-500/40 shadow-sm font-semibold",
     },
   ] as const;
+
+  // Página principal com alertas em aberto: card compacto "quente" que leva à página de Alertas,
+  // para o bloco não crescer e desalinhar o restante do grid.
+  if (!expandedView && onOpenAlertsPage && activeAlerts.length > 0) {
+    return (
+      <HotAlertsCard
+        activeAlerts={activeAlerts}
+        historyCount={historyAlerts.length}
+        onOpenAlertsPage={onOpenAlertsPage}
+        onOpenReportModal={onOpenReportModal}
+      />
+    );
+  }
 
   return (
     <section className="panel p-4" data-tour="alerts-panel">

@@ -90,7 +90,7 @@ O nível do dia de cada bairro é o da **pior hora** do dia. A tela mostra tamb�
 ### 4.4. "Onde agir primeiro" — quem está em risco, não só onde está quente
 Calor igual não é risco igual. Um bairro com 18 mil idosos e crianças pequenas precisa de mais atenção do que um com 3 mil.
 
-A tabela ordena os bairros **pelo nível do calor** e, em empate, **por quem tem mais pessoas vulneráveis** (crianças < 5 anos e idosos > 65 anos), e mostra a **UPA de referência** de cada bairro.
+A tabela ordena os bairros **pelo nível do calor** e, em empate, **pelo número de pessoas vulneráveis** (crianças < 5 anos e idosos > 65 anos) **somado ao índice de vulnerabilidade social do bairro**, e mostra a **UPA de referência** de cada bairro. Por isso o Ibura (vulnerabilidade 82) pode vir antes de Boa Viagem (34) mesmo tendo menos idosos e crianças.
 
 ### 4.5. Protocolo de ação por secretaria — o grande diferencial
 Para cada nível, o Radar mostra **o que cada órgão deve fazer**, com caixas de seleção para marcar o que já foi feito. As ações **se acumulam**: no nível Perigo valem também as de Atenção e Alerta.

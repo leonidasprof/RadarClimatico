@@ -74,7 +74,7 @@ A barra lateral esquerda possui rolagem suave e discreta (linha cinza sutil) e o
 - **Como usar:**
   1. Escolha o dia (**Hoje / Amanhã / Depois**) no topo.
   2. Veja o **nível máximo da cidade**, quantos bairros estão em Alerta ou acima e quantas pessoas vulneráveis estão expostas.
-  3. Na tabela **Onde agir primeiro**, os bairros vêm ordenados pelo nível e, em empate, por quem tem mais pessoas vulneráveis. Clique em um bairro para ver a curva das próximas 72h.
+  3. Na tabela **Onde agir primeiro**, os bairros vêm ordenados pelo nível e, em empate, pelas pessoas vulneráveis somadas ao índice de vulnerabilidade social do bairro. Clique em um bairro para ver a curva das próximas 72h.
   4. Em **Protocolo de ação**, marque as ações concluídas por órgão (as ações se acumulam conforme o nível sobe).
   5. Use **Copiar** no **Boletim pronto para o COP** e em **SMS para a população** (contador de 160 caracteres).
 
@@ -148,6 +148,14 @@ Localizada no topo da coluna direita da tela principal (e também disponível em
 ```text
 [ ● Alertas do dia (N) | 🕒 Histórico ]          [ + Novo Alerta ]
 ```
+
+### 8.0. Card "quente" na tela principal (quando há alertas em aberto)
+Na tela principal, quando existe ao menos um alerta do dia em aberto, a Central de Alertas vira um **card compacto vermelho**, com gotas de suor escorrendo e brilho de calor. Ele tem altura fixa, então não empurra os blocos **Índice Térmico por Bairro** e **Histórico de Temperatura**. O card mostra:
+- o cabeçalho com **Alertas do dia** em destaque, **Histórico** e **+ Novo Alerta**;
+- o total de alertas em aberto, o alerta mais grave (bairro e título) e a contagem por severidade;
+- o botão pulsante **Ver alertas do dia →**.
+
+Clicar no card, em **Alertas do dia** ou no botão abre a página **Alertas** já em *Alertas do dia*. **Histórico** abre a mesma página já no histórico. **+ Novo Alerta** abre o formulário sem sair da tela principal. Sem alertas em aberto, a Central volta ao estado seguro verde (seção 8.2). Quem usa *reduzir movimento* no sistema vê o card sem animações.
 
 ### 8.1. Aba "Alertas do dia" e Filtros de Severidade
 - Exibe o contador de ocorrências ativas pendentes de despacho.

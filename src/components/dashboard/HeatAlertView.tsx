@@ -247,8 +247,11 @@ export function HeatAlertView({ onSelectZone }: HeatAlertViewProps) {
       return `Recife ${dayLabelText}: calor dentro do habitual. Beba água e evite sol forte das 11h às 15h. Defesa Civil`;
     }
     const peak = affected[0]!.day.peakHour;
-    return `ALERTA DE CALOR ${cityLevel.label.toUpperCase()} ${dayLabelText}: ${names.join(", ")}. Pico ~${peak}h. Beba água, evite sol 11h-15h, cuide de idosos e criancas. Defesa Civil`;
-  }, [affected, cityLevel, dayLabelText]);
+    const when = dayIndex < 2 ? dayLabelText.toLowerCase() : `na ${dayLabelText}`;
+    const list =
+      names.length > 1 ? `${names.slice(0, -1).join(", ")} e ${names[names.length - 1]}` : names[0];
+    return `Defesa Civil: calor nível ${cityLevel.label.toUpperCase()} ${when} em ${list}. Pico às ${peak}h. Beba água, evite sol das 11h às 15h, cuide de idosos e crianças.`;
+  }, [affected, cityLevel, dayLabelText, dayIndex]);
 
   const copy = async (text: string, what: string) => {
     try {
@@ -378,7 +381,7 @@ export function HeatAlertView({ onSelectZone }: HeatAlertViewProps) {
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-sm">Onde agir primeiro — {dayLabelText}</h3>
             <span className="text-[10px] text-muted-foreground">
-              ordem: nível do calor, depois pessoas vulneráveis
+              ordem: nível do calor, depois vulneráveis e vulnerabilidade social
             </span>
           </div>
           <div className="overflow-x-auto">
@@ -618,7 +621,7 @@ export function HeatAlertView({ onSelectZone }: HeatAlertViewProps) {
             <li>Ajuste de ilha de calor do bairro (asfalto, pouca árvore, distância do mar).</li>
             <li>Índice de Calor NOAA: combina temperatura e umidade no que o corpo sente.</li>
             <li>
-              Nível do dia = pior hora do dia; ordem: nível do calor, depois pessoas vulneráveis.
+              Nível do dia = pior hora do dia; ordem: nível do calor, depois vulneráveis e vulnerabilidade social.
             </li>
           </ol>
           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
