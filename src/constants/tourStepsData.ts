@@ -13,6 +13,7 @@ export type TourCategory =
   | "detalhes"
   | "insights"
   | "curva"
+  | "sub-alerta-calor"
   | "sub-mapbiomas"
   | "sub-verde"
   | "sub-nasa"
@@ -24,7 +25,7 @@ export interface TourStep {
   id: string;
   category: TourCategory;
   isSubFeature?: boolean;
-  requiredTab?: "tempo-real" | "historico" | "verde" | "clima-nasa" | "analise-ambiental" | "alertas" | "indice";
+  requiredTab?: "tempo-real" | "historico" | "verde" | "clima-nasa" | "analise-ambiental" | "alerta-calor" | "alertas" | "indice";
   requiredLayer?: "calor" | "vegetal" | "vulnerabilidade";
   menuTitle: string;
   badgeLabel: string;
@@ -222,6 +223,20 @@ export const CLIMA_TOUR_STEPS: TourStep[] = [
   },
 
   // ─── SUB-FUNCIONALIDADES INTERNAS (MÓDULOS ESPECIALIZADOS) ────────────────
+  {
+    id: "sub-alerta-calor",
+    category: "sub-alerta-calor",
+    isSubFeature: true,
+    requiredTab: "alerta-calor",
+    menuTitle: "Alerta de Calor",
+    badgeLabel: "Resposta ao Calor",
+    targetTourId: "sub-heat-alert-view",
+    title: "O alerta de calor que faltava ao COP",
+    climaSpeech:
+      "Para a chuva, o Recife tem quem avise e quem aja. Para o calor, agora tem também! 🚨 Aqui eu prevejo as próximas 72 horas em cada bairro, combino temperatura e umidade no Índice de Calor e classifico em 5 níveis. Para cada nível, mostro o que cada secretaria deve fazer e já entrego o boletim e o SMS prontos para o COP disparar.",
+    climaMood: "alert",
+    positionPreference: "top",
+  },
   {
     id: "sub-mapbiomas",
     category: "sub-mapbiomas",

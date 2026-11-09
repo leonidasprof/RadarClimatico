@@ -43,14 +43,15 @@ Localizada de forma fixa no topo do painel, a barra superior oferece contexto op
 
 ## 4. Barra Lateral Esquerda (`SidebarNav`) e Módulos do Sistema
 
-A barra lateral esquerda possui rolagem suave e discreta (linha cinza sutil) e organiza os **8 módulos principais** do Radar Climático, além do minimapa estadual e status das fontes de dados:
+A barra lateral esquerda possui rolagem suave e discreta (linha cinza sutil) e organiza os **9 módulos principais** do Radar Climático, além do minimapa estadual e status das fontes de dados:
 
 ```text
 [ Tempo real ]
+[ Alerta de Calor ]
 [ Comparação & Histórico ]
 [ Dashboard Verde ]
-[ Clima NASA POWER ]
-[ MapBiomas & Landsat ]
+[ Tendências do Clima ]
+[ Vegetação × Calor ]
 [ Alertas ]
 [ Índice Térmico ]
 [ Relatórios ]
@@ -67,6 +68,16 @@ A barra lateral esquerda possui rolagem suave e discreta (linha cinza sutil) e o
   - **À direita (4 colunas):** **Central de Alertas** no topo e **Detalhes do Microterritório (`ZoneDetail`)** abaixo.
   - **Base horizontal (12 colunas):** Painel de **Insights & Inteligência Territorial** cruzando cobertura arbórea, janela crítica de calor (13h às 16h30) e efeito da brisa marítima.
 
+### 4.1.1. Módulo `Alerta de Calor` (Sistema de Alerta e Resposta ao Calor)
+- **Finalidade:** Avisar com até 72h de antecedência **onde** o calor vai ficar perigoso, **quem** está em risco e **o que cada secretaria deve fazer**, entregando ao COP o boletim e o SMS prontos.
+- **Como funciona:** previsão horária do Open-Meteo para cada bairro → ajuste de ilha de calor do bairro → **Índice de Calor NOAA** (temperatura + umidade) → 5 níveis: **Normal (< 32 °C), Atenção (32–37), Alerta (37–41), Perigo (41–46), Emergência (≥ 46)**.
+- **Como usar:**
+  1. Escolha o dia (**Hoje / Amanhã / Depois**) no topo.
+  2. Veja o **nível máximo da cidade**, quantos bairros estão em Alerta ou acima e quantas pessoas vulneráveis estão expostas.
+  3. Na tabela **Onde agir primeiro**, os bairros vêm ordenados pelo nível e, em empate, por quem tem mais pessoas vulneráveis. Clique em um bairro para ver a curva das próximas 72h.
+  4. Em **Protocolo de ação**, marque as ações concluídas por órgão (as ações se acumulam conforme o nível sobe).
+  5. Use **Copiar** no **Boletim pronto para o COP** e em **SMS para a população** (contador de 160 caracteres).
+
 ### 4.2. Módulo `Comparação & Histórico`
 - **Finalidade:** Permite comparar lado a lado o comportamento térmico de dois bairros (**Bairro A × Bairro B**) em múltiplos níveis temporais (*Drill-down* por Ano, Mês e janelas de 3, 7, 14 ou 30 dias).
 - **Como usar:** Escolha o Bairro A à esquerda e o Bairro B à direita para confrontar curvas históricas, amplitudes térmicas e disparidades de cobertura vegetal.
@@ -75,11 +86,11 @@ A barra lateral esquerda possui rolagem suave e discreta (linha cinza sutil) e o
 - **Finalidade:** Painel de planejamento florestal urbano para a EMLURB e Secretaria de Meio Ambiente.
 - **Como usar:** Identifique o maior refúgio térmico, a zona de maior déficit arbóreo e simule intervenções de plantio para atingir a meta de 30% de cobertura vegetal recomendada pela OMS.
 
-### 4.4. Módulo `Clima NASA POWER`
+### 4.4. Módulo `Tendências do Clima` (dados NASA POWER)
 - **Finalidade:** Monitora séries oficiais da NASA (*Langley Research Center*) para o Recife: Temperatura a 2m (`T2M`), Precipitação Corrigida (`PRECTOTCORR`), Velocidade do Vento a 10m (`WS10M`) e Pressão Atmosférica (`PS`).
 - **Recurso especial:** Botão **"Exportar Dados Clima (.CSV)"** compatível com Excel, Python/Pandas e Google Colab para fundamentar termos de referência e relatórios públicos.
 
-### 4.5. Módulo `MapBiomas & Landsat` (Análise Ambiental)
+### 4.5. Módulo `Vegetação × Calor` (MapBiomas + Landsat)
 - **Finalidade:** Laboratório biofísico do Arboris que cruza a Coleção 11 do MapBiomas (25,13% de cobertura vegetal na RMR) com a radiometria termal do satélite Landsat 8/9 ($r = -0.638$), permitindo exportar a grade espacial de 1 km do Recife em `.CSV`.
 
 ### 4.6. Módulo `Alertas` (Visão Expandida)

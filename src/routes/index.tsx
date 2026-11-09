@@ -26,6 +26,7 @@ import { VegetationCoverView } from "@/components/dashboard/VegetationCoverView"
 import { SocialVulnerabilityView } from "@/components/dashboard/SocialVulnerabilityView";
 import { NasaPowerDashboardView } from "@/components/dashboard/NasaPowerDashboardView";
 import { EnvironmentalAnalysisView } from "@/components/dashboard/EnvironmentalAnalysisView";
+import { HeatAlertView } from "@/components/dashboard/HeatAlertView";
 import {
   fetchRealtimeRecifeWeather,
   type RealtimeWeatherSnapshot,
@@ -109,6 +110,7 @@ export type NavTab =
   | "verde"
   | "clima-nasa"
   | "analise-ambiental"
+  | "alerta-calor"
   | "alertas"
   | "indice";
 
@@ -332,6 +334,18 @@ function Dashboard() {
           {activeTab === "verde" && (
             <div className="lg:col-span-12" data-tour="sub-green-view">
               <GreenDashboardView
+                onSelectZone={(z) => {
+                  setSelected(z);
+                  setActiveTab("tempo-real");
+                }}
+              />
+            </div>
+          )}
+
+          {/* Alerta de Calor: previsão 72h + protocolo de ação para o COP */}
+          {activeTab === "alerta-calor" && (
+            <div className="lg:col-span-12" data-tour="sub-heat-alert-view">
+              <HeatAlertView
                 onSelectZone={(z) => {
                   setSelected(z);
                   setActiveTab("tempo-real");

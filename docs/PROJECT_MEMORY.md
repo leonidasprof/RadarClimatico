@@ -182,6 +182,17 @@ Recife apresenta um dos maiores índices de vulnerabilidade climática da Améri
 
 ---
 
+### `ADR-012`: Mapa real (Leaflet + OSM/Esri), renomeação de menus e módulo `Alerta de Calor`
+- **Status:** **Aprovado (09/11/2026)**
+- **Contexto:** (1) O professor pediu um mapa real no lugar do esquema SVG do Recife; (2) os nomes "Clima NASA POWER" e "MapBiomas & Landsat" não comunicavam valor ao usuário; (3) o desafio "o que só nós podemos fazer que a COP e a ARIES não conseguem?" — o COP coordena respostas a partir de alertas de terceiros (APAC/CEMADEN para chuva), mas não existe alerta de calor por bairro com protocolo de ação.
+- **Decisão:**
+  1. `RecifeLiveMap.tsx` com Leaflet 1.9.4 (import dinâmico, sem SSR), tiles OpenStreetMap e Esri World Imagery (gratuitos, sem chave). Modo escuro por filtro CSS `.arboris-tiles-dark`.
+  2. Menus renomeados para **Tendências do Clima** e **Vegetação × Calor**; o rodapé de fontes permanece inalterado.
+  3. Novo módulo **Alerta de Calor** (`HeatAlertView.tsx` + `heat-alert-service.ts`): previsão horária 72h do Open-Meteo (uma requisição com as 8 coordenadas), ajuste `tempDelta`/`humidityDelta` por bairro, Índice de Calor NOAA (Rothfusz), 5 níveis, protocolo acumulativo por órgão, boletim e SMS copiáveis, e calibração calor × atendimentos UPA (`calibrateWithHealthData`). Cache de 30 min e curva de referência offline.
+- **Pendências:** validar limiares e protocolo com o COP; recalibrar limiares com dados reais de atendimento; usar os sensores fixos (quando chegarem) para corrigir o ajuste de cada bairro.
+
+---
+
 ## 4. Regras de Negócio Biofísicas e Equações
 
 ### 4.1 Cálculo da Temperatura de Superfície Terrestre (LST)

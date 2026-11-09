@@ -9,6 +9,7 @@ import {
   FileText,
   Clock,
   Radio,
+  Siren,
   X,
 } from "lucide-react";
 import type { NavTab } from "@/routes/index";
@@ -45,6 +46,7 @@ export function SidebarNav({
     badge?: number;
   }[] = [
     { id: "tempo-real", label: "Tempo real", icon: Activity },
+    { id: "alerta-calor", label: "Alerta de Calor", icon: Siren },
     { id: "historico", label: "Comparação & Histórico", icon: BarChart3 },
     { id: "verde", label: "Dashboard Verde", icon: Trees },
     { id: "clima-nasa", label: "Tendências do Clima", icon: CloudSun },

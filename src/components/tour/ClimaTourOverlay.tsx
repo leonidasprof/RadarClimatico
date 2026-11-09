@@ -374,6 +374,7 @@ export function ClimaTourOverlay() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3">
                             <div className="h-9 w-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                              {step.category === "sub-alerta-calor" && <AlertTriangle className="h-4 w-4 text-red-400" />}
                               {step.category === "sub-mapbiomas" && <Satellite className="h-4 w-4 text-sky-400" />}
                               {step.category === "sub-verde" && <Trees className="h-4 w-4 text-emerald-400" />}
                               {step.category === "sub-nasa" && <FileSpreadsheet className="h-4 w-4 text-amber-400" />}
