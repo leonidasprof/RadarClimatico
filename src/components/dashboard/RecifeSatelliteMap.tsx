@@ -1,6 +1,10 @@
-import React from "react";
+import { useEffect, useRef, useState } from "react";
+import "leaflet/dist/leaflet.css";
+import type * as Leaflet from "leaflet";
+import { Crosshair, Layers, Minus, Plus, Satellite, Map as MapIcon } from "lucide-react";
 import { zones, ndviVar, vulnVar, type Zone } from "@/lib/radar-data";
-import { Crosshair } from "lucide-react";
+import { useTheme } from "@/context/theme-context";
+import { RECIFE_CENTER, zoneCoordinates } from "./RecifeLiveMap";
 
 interface RecifeSatelliteMapProps {
   mode: "ndvi" | "vuln";
@@ -14,10 +18,123 @@ interface RecifeSatelliteMapProps {
 }
 
 /**
- * Mapa de Satélite com Manchas Verdes (NDVI) e Camadas de Vulnerabilidade Social do Recife.
- * Incorpora malha viária esquemática, hidrografia do Capibaribe e Beberibe,
- * e polígonos de manchas de dossel/densidade arbórea.
+ * Mapa real do Recife (Leaflet) para as camadas de Cobertura Vegetal (NDVI)
+ * e Vulnerabilidade Social (IVS).
+ *
+ * Usa as mesmas bases públicas e sem chave da tela principal:
+ *  - Satélite: Esri World Imagery (+ rótulos de vias e lugares)
+ *  - Ruas: OpenStreetMap
+ *  - NDVI orbital opcional: NASA GIBS · MODIS Terra NDVI 8 dias (250 m)
  */
+
+const OSM_ATTR =
+  '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>';
+const ESRI_ATTR = "Imagens &copy; Esri, Maxar, Earthstar Geographics";
+const GIBS_ATTR =
+  'NDVI &copy; <a href="https://earthdata.nasa.gov/gibs" target="_blank" rel="noreferrer">NASA GIBS</a> / MODIS';
+
+const BASE_TILES = {
+  ruas: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  satelite:
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+};
+const SAT_LABEL_TILES = [
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+];
+const GIBS_NDVI_TILES =
+  "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_NDVI_8Day/default/default/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png";
+
+/** Refúgios verdes reais do Recife (centro aproximado + raio em metros). */
+const GREEN_AREAS: {
+  name: string;
+  pos: [number, number];
+  radius: number;
+  ndvi: number;
+  note: string;
+}[] = [
+  {
+    name: "Parque Estadual de Dois Irmãos",
+    pos: [-8.0105, -34.9445],
+    radius: 950,
+    ndvi: 0.82,
+    note: "Remanescente de Mata Atlântica",
+  },
+  {
+    name: "Mata do Engenho Uchôa",
+    pos: [-8.0965, -34.9555],
+    radius: 650,
+    ndvi: 0.74,
+    note: "Unidade de conservação",
+  },
+  {
+    name: "Jardim Botânico do Recife",
+    pos: [-8.0765, -34.9605],
+    radius: 450,
+    ndvi: 0.78,
+    note: "Mata Atlântica urbana",
+  },
+  {
+    name: "Parque dos Manguezais",
+    pos: [-8.0935, -34.8975],
+    radius: 850,
+    ndvi: 0.68,
+    note: "Manguezal do Pina",
+  },
+  {
+    name: "Campus UFPE",
+    pos: [-8.0505, -34.9515],
+    radius: 550,
+    ndvi: 0.55,
+    note: "Mancha verde universitária",
+  },
+  {
+    name: "Parque da Jaqueira",
+    pos: [-8.0375, -34.9035],
+    radius: 220,
+    ndvi: 0.58,
+    note: "Corredor verde Zona Norte",
+  },
+  {
+    name: "Sítio Trindade",
+    pos: [-8.0245, -34.9105],
+    radius: 180,
+    ndvi: 0.6,
+    note: "Área verde histórica",
+  },
+  {
+    name: "Parque 13 de Maio",
+    pos: [-8.0565, -34.8845],
+    radius: 150,
+    ndvi: 0.5,
+    note: "Ilha de frescor central",
+  },
+  {
+    name: "Parque Dona Lindu",
+    pos: [-8.1415, -34.9015],
+    radius: 120,
+    ndvi: 0.32,
+    note: "Área verde litorânea",
+  },
+];
+
+function escapeHtml(s: string) {
+  return s.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
+  );
+}
+
+/** Resolve `var(--x)` para a cor real (atributos SVG do Leaflet não resolvem variáveis CSS). */
+function resolveColor(value: string) {
+  if (typeof window === "undefined") return value;
+  const styles = getComputedStyle(document.documentElement);
+  return value.replace(
+    /var\((--[\w-]+)\)/g,
+    (_, name: string) => styles.getPropertyValue(name).trim() || "#10b981",
+  );
+}
+
 export function RecifeSatelliteMap({
   mode,
   selectedZoneA,
@@ -28,308 +145,438 @@ export function RecifeSatelliteMap({
   hideInlineLegend = false,
   className = "",
 }: RecifeSatelliteMapProps) {
-  // Coordenadas esquemáticas das vias arteriais e hidrografia
-  const arterialRoads = [
-    "M40 0 C 38 18, 42 34, 46 46 S 52 74, 54 100", // Av. Agamenon Magalhães / Norte
-    "M0 30 C 22 26, 44 33, 68 30 S 90 26, 100 28", // Caxangá / Conde da Boa Vista
-    "M2 68 C 24 64, 46 66, 66 60 S 86 52, 100 50", // Av. Sul / Boa Viagem
-    "M70 4 C 68 26, 66 48, 64 72 S 62 90, 62 100", // Av. Boa Viagem
-    "M18 0 C 20 24, 16 50, 22 76 S 28 92, 30 100", // Radial Oeste
-  ];
+  const { isDark } = useTheme();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<Leaflet.Map | null>(null);
+  const LRef = useRef<typeof Leaflet | null>(null);
+  const baseLayersRef = useRef<Leaflet.TileLayer[]>([]);
+  const ndviTileRef = useRef<Leaflet.TileLayer | null>(null);
+  const thematicRef = useRef<Leaflet.LayerGroup | null>(null);
+  const compareRef = useRef<Leaflet.LayerGroup | null>(null);
+  const markersRef = useRef<Leaflet.LayerGroup | null>(null);
+  const [ready, setReady] = useState(false);
 
-  // Manchas de NDVI (dossel e refúgios verdes baseados em dados multiespectrais Landsat/Sentinel)
-  const ndviPatches = [
-    // Dois Irmãos (Reserva Florestal / Parque Estadual - NDVI > 0.75)
-    { id: "p-dois-irmaos", path: "M 8 10 Q 18 6, 24 16 Q 26 26, 18 30 Q 10 32, 6 22 Z", fill: "var(--canopy)", opacity: 0.75 },
-    { id: "p-dois-irmaos-core", path: "M 11 14 Q 17 11, 20 18 Q 21 24, 15 26 Q 10 24, 9 18 Z", fill: "#10b981", opacity: 0.9 },
-    // Casa Forte / Poço da Panela (Corredor Verde Zona Norte - NDVI ~ 0.60)
-    { id: "p-casa-forte", path: "M 24 24 Q 35 22, 38 32 Q 34 38, 26 36 Q 22 30, 24 24 Z", fill: "var(--canopy)", opacity: 0.65 },
-    // Várzea / UFPE (Campus Universitário - Mancha verde)
-    { id: "p-ufpe", path: "M 8 40 Q 16 38, 20 46 Q 16 54, 8 50 Z", fill: "oklch(0.72 0.16 135)", opacity: 0.6 },
-    // Santo Amaro (NDVI 0.11 - Manchas fragmentadas mínimas no Cemitério e Treze de Maio)
-    { id: "p-sto-amaro-1", path: "M 46 32 Q 49 32, 48 35 Q 45 35, 46 32 Z", fill: "oklch(0.78 0.12 95)", opacity: 0.5 },
-    { id: "p-sto-amaro-2", path: "M 48 37 Q 50 36, 49 39 Q 47 39, 48 37 Z", fill: "oklch(0.78 0.12 95)", opacity: 0.45 },
-    // Boa Vista (Parque 13 de Maio e Praça do Derby)
-    { id: "p-boa-vista", path: "M 38 44 Q 42 43, 42 47 Q 37 48, 38 44 Z", fill: "oklch(0.75 0.14 125)", opacity: 0.5 },
-    // Boa Viagem (Parque Dona Lindu e manguezais adjacentes)
-    { id: "p-bv-lindu", path: "M 60 76 Q 64 74, 65 79 Q 59 81, 60 76 Z", fill: "oklch(0.75 0.14 125)", opacity: 0.55 },
-    // Bacia do Pina / Manguezal Parque dos Mangues (NDVI alto)
-    { id: "p-mangues", path: "M 50 64 Q 58 60, 60 68 Q 54 74, 48 70 Z", fill: "var(--canopy)", opacity: 0.7 },
-    // Ibura (Encostas verdes residuais da UR-1 e Monte dos Guararapes)
-    { id: "p-ibura", path: "M 28 84 Q 38 82, 36 92 Q 26 94, 28 84 Z", fill: "oklch(0.72 0.16 135)", opacity: 0.5 },
-    // Afogados / Bacia do Tejipió (faixa ciliar degradada)
-    { id: "p-afogados", path: "M 22 60 Q 28 58, 29 64 Q 23 66, 22 60 Z", fill: "oklch(0.78 0.12 95)", opacity: 0.45 },
-  ];
+  const [baseMap, setBaseMap] = useState<"satelite" | "ruas">("satelite");
+  const [showThematic, setShowThematic] = useState(true);
+  const [showNasaNdvi, setShowNasaNdvi] = useState(false);
+  const [showLabels, setShowLabels] = useState(true);
 
-  // Manchas de Vulnerabilidade Social (IVS - assentamentos precários, palafitas e alta exposição ao calor)
-  const vulnPatches = [
-    // Santo Amaro / Ilha do Chié / Santa Teresinha (IVS 76)
-    { id: "v-sto-amaro", path: "M 42 30 Q 52 28, 52 40 Q 44 42, 42 30 Z", fill: "var(--heat-5)", opacity: 0.45 },
-    // Ibura / Encostas desprovidas de infraestrutura (IVS 82)
-    { id: "v-ibura", path: "M 26 80 Q 40 78, 38 94 Q 24 96, 26 80 Z", fill: "var(--heat-5)", opacity: 0.5 },
-    // Afogados / Bacia do Tejipió e favela do Coque contígua (IVS 68)
-    { id: "v-afogados", path: "M 20 58 Q 32 56, 32 68 Q 20 70, 20 58 Z", fill: "var(--heat-4)", opacity: 0.42 },
-    // Imbiribeira / Comunidade Beira Rio / Alagados (IVS 61)
-    { id: "v-imbiribeira", path: "M 40 66 Q 50 64, 48 76 Q 38 78, 40 66 Z", fill: "var(--heat-4)", opacity: 0.38 },
-    // Boa Vista / Habitações precárias centrais (IVS 55)
-    { id: "v-boa-vista", path: "M 36 42 Q 44 40, 44 50 Q 36 52, 36 42 Z", fill: "var(--heat-3)", opacity: 0.32 },
-  ];
+  // Refs estáveis para os callbacks (evita recriar camadas a cada render)
+  const handlersRef = useRef({ onSelectZone, onSelectComparisonZone, mode, selectedZoneA });
+  handlersRef.current = { onSelectZone, onSelectComparisonZone, mode, selectedZoneA };
+
+  const fitAll = (animate = true) => {
+    const map = mapRef.current;
+    const L = LRef.current;
+    if (!map || !L) return;
+    const pts = zones.map((z) => zoneCoordinates[z.id]).filter(Boolean) as [number, number][];
+    if (!pts.length) {
+      map.setView(RECIFE_CENTER, 12);
+      return;
+    }
+    map.fitBounds(L.latLngBounds(pts), {
+      paddingTopLeft: [60, 56],
+      paddingBottomRight: [40, hideInlineLegend ? 40 : 110],
+      animate,
+    });
+  };
+  const fitAllRef = useRef(fitAll);
+  fitAllRef.current = fitAll;
+
+  // 1. Cria o mapa uma única vez (somente no navegador)
+  useEffect(() => {
+    let cancelled = false;
+    let resizeObs: ResizeObserver | null = null;
+    let fitted = false;
+
+    (async () => {
+      const L = (await import("leaflet")).default;
+      if (cancelled || !containerRef.current || mapRef.current) return;
+      LRef.current = L;
+
+      const map = L.map(containerRef.current, {
+        center: RECIFE_CENTER,
+        zoom: 12,
+        minZoom: 10,
+        maxZoom: 18,
+        zoomControl: false,
+        attributionControl: true,
+        maxBounds: L.latLngBounds([-8.45, -35.3], [-7.7, -34.6]),
+        maxBoundsViscosity: 0.8,
+      });
+      map.attributionControl.setPrefix(false);
+      L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
+
+      thematicRef.current = L.layerGroup().addTo(map);
+      compareRef.current = L.layerGroup().addTo(map);
+      markersRef.current = L.layerGroup().addTo(map);
+      mapRef.current = map;
+
+      resizeObs = new ResizeObserver(() => {
+        map.invalidateSize();
+        if (!fitted && map.getSize().y > 0) {
+          fitted = true;
+          fitAllRef.current(false);
+        }
+      });
+      resizeObs.observe(containerRef.current);
+      setReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+      resizeObs?.disconnect();
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  // 2. Camada base (satélite com rótulos ou ruas)
+  useEffect(() => {
+    const map = mapRef.current;
+    const L = LRef.current;
+    if (!ready || !map || !L) return;
+    baseLayersRef.current.forEach((l) => l.remove());
+
+    const isSat = baseMap === "satelite";
+    const base = L.tileLayer(BASE_TILES[baseMap], {
+      attribution: isSat ? ESRI_ATTR : OSM_ATTR,
+      maxZoom: 19,
+      className: !isSat && isDark ? "arboris-tiles-dark" : "",
+    }).addTo(map);
+    base.bringToBack();
+    const labels =
+      isSat && showLabels
+        ? SAT_LABEL_TILES.map((url) =>
+            L.tileLayer(url, { maxZoom: 19, pane: "overlayPane", opacity: 0.7 }).addTo(map),
+          )
+        : [];
+    baseLayersRef.current = [base, ...labels];
+  }, [ready, baseMap, isDark, showLabels]);
+
+  // 3. NDVI orbital real (NASA GIBS / MODIS)
+  useEffect(() => {
+    const map = mapRef.current;
+    const L = LRef.current;
+    if (!ready || !map || !L) return;
+    ndviTileRef.current?.remove();
+    ndviTileRef.current = null;
+    if (mode !== "ndvi" || !showNasaNdvi) return;
+    ndviTileRef.current = L.tileLayer(GIBS_NDVI_TILES, {
+      attribution: GIBS_ATTR,
+      maxNativeZoom: 9,
+      maxZoom: 19,
+      opacity: 0.55,
+      pane: "overlayPane",
+    }).addTo(map);
+  }, [ready, mode, showNasaNdvi]);
+
+  // 4. Camada temática: manchas verdes (NDVI) ou manchas de vulnerabilidade (IVS)
+  useEffect(() => {
+    const L = LRef.current;
+    const group = thematicRef.current;
+    if (!ready || !L || !group) return;
+    group.clearLayers();
+    if (!showThematic) return;
+
+    if (mode === "ndvi") {
+      GREEN_AREAS.forEach((g) => {
+        const color = resolveColor(ndviVar(g.ndvi));
+        L.circle(g.pos, {
+          radius: g.radius,
+          color,
+          weight: 1.5,
+          opacity: 0.9,
+          fillColor: color,
+          fillOpacity: 0.38,
+        })
+          .bindTooltip(
+            `<strong>${escapeHtml(g.name)}</strong><br/>${escapeHtml(g.note)} · NDVI ${g.ndvi.toFixed(2)}`,
+            { direction: "top", sticky: true },
+          )
+          .addTo(group);
+      });
+
+      zones.forEach((z) => {
+        const pos = zoneCoordinates[z.id];
+        if (!pos) return;
+        const color = resolveColor(ndviVar(z.ndvi));
+        L.circle(pos, {
+          radius: 850,
+          stroke: true,
+          color,
+          weight: 1,
+          opacity: 0.6,
+          dashArray: "4 4",
+          fillColor: color,
+          fillOpacity: 0.18 + z.ndvi * 0.35,
+          interactive: false,
+        }).addTo(group);
+      });
+
+      // Expansão da copa simulada no bairro A
+      const posA = zoneCoordinates[selectedZoneA.id];
+      if (posA && additionalTreesPct > 0) {
+        const canopy = resolveColor("var(--canopy)");
+        L.circle(posA, {
+          radius: 450 + additionalTreesPct * 30,
+          color: canopy,
+          weight: 2,
+          dashArray: "6 4",
+          fillColor: canopy,
+          fillOpacity: 0.32,
+          className: "arboris-pulse",
+          interactive: false,
+        }).addTo(group);
+      }
+    } else {
+      zones.forEach((z) => {
+        const pos = zoneCoordinates[z.id];
+        if (!pos) return;
+        const color = resolveColor(vulnVar(z.vuln));
+        const radius = 450 + z.vuln * 9;
+        L.circle(pos, {
+          radius: radius * 1.5,
+          stroke: false,
+          fillColor: color,
+          fillOpacity: 0.14,
+          interactive: false,
+        }).addTo(group);
+        L.circle(pos, {
+          radius,
+          color,
+          weight: 1.5,
+          opacity: 0.85,
+          fillColor: color,
+          fillOpacity: 0.36,
+        })
+          .bindTooltip(
+            `<strong>${escapeHtml(z.name)}</strong><br/>IVS ${z.vuln} · ${z.popLowIncomeRisk.toLocaleString("pt-BR")} hab. em risco<br/>Saneamento deficitário: ${z.sanitationDeficitPct}%`,
+            { direction: "top", sticky: true },
+          )
+          .on("click", () => {
+            const h = handlersRef.current;
+            if (h.onSelectComparisonZone) {
+              if (z.id !== h.selectedZoneA.id) h.onSelectComparisonZone(z);
+            } else h.onSelectZone(z);
+          })
+          .addTo(group);
+      });
+    }
+  }, [ready, mode, showThematic, selectedZoneA.id, additionalTreesPct, isDark]);
+
+  // 5. Linha de comparação A → B (com distância real)
+  useEffect(() => {
+    const L = LRef.current;
+    const map = mapRef.current;
+    const group = compareRef.current;
+    if (!ready || !L || !map || !group) return;
+    group.clearLayers();
+    if (!selectedZoneB) return;
+    const a = zoneCoordinates[selectedZoneA.id];
+    const b = zoneCoordinates[selectedZoneB.id];
+    if (!a || !b) return;
+
+    L.polyline([a, b], { color: "#0f172a", opacity: 0.75, weight: 6, interactive: false }).addTo(
+      group,
+    );
+    L.polyline([a, b], {
+      color: "#38bdf8",
+      opacity: 0.95,
+      weight: 3,
+      dashArray: "8 8",
+      interactive: false,
+    }).addTo(group);
+    const km = (map.distance(a, b) / 1000).toFixed(1).replace(".", ",");
+    const mid: [number, number] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    L.marker(mid, {
+      interactive: false,
+      icon: L.divIcon({
+        className: "",
+        iconSize: [0, 0],
+        html: `<div style="transform: translate(-50%, -50%); width: max-content;" class="rounded-full bg-sky-500 px-2 py-0.5 font-mono text-[10px] font-bold text-white shadow-md ring-2 ring-white/70">${km} km</div>`,
+      }),
+    }).addTo(group);
+  }, [ready, selectedZoneA.id, selectedZoneB?.id]);
+
+  // 6. Marcadores dos bairros (A / B / demais)
+  useEffect(() => {
+    const L = LRef.current;
+    const group = markersRef.current;
+    if (!ready || !L || !group) return;
+    group.clearLayers();
+
+    zones.forEach((z) => {
+      const pos = zoneCoordinates[z.id];
+      if (!pos) return;
+      const isA = z.id === selectedZoneA.id;
+      const isB = selectedZoneB?.id === z.id;
+      const color = resolveColor(mode === "ndvi" ? ndviVar(z.ndvi) : vulnVar(z.vuln));
+      const metric = mode === "ndvi" ? `${z.canopy}% copa` : `IVS ${z.vuln}`;
+
+      const dot = isA
+        ? `<span class="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 font-mono text-[10px] font-extrabold text-white ring-2 ring-white shadow-lg">A</span>`
+        : isB
+          ? `<span class="flex h-6 w-6 items-center justify-center rounded-full bg-sky-500 font-mono text-[10px] font-extrabold text-white ring-2 ring-white shadow-lg">B</span>`
+          : `<span class="h-3 w-3 rounded-full ring-2 ring-white shadow" style="background:${escapeHtml(color)}"></span>`;
+
+      const pill = isA
+        ? "bg-red-600 text-white ring-2 ring-red-300/60"
+        : isB
+          ? "bg-sky-600 text-white ring-2 ring-sky-300/60"
+          : "bg-slate-900/85 text-white/90 border border-white/20 hover:bg-slate-900";
+
+      const ring =
+        isA || isB
+          ? `<span class="absolute left-3 top-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 ${isA ? "border-red-500/70" : "border-sky-400/70"} animate-ping pointer-events-none"></span>`
+          : "";
+
+      const html = `
+        <div class="relative" style="transform: translate(-12px, -50%); width: max-content;">
+          ${ring}
+          <div class="relative flex items-center gap-1.5 rounded-full pr-2.5 py-0.5 pl-0.5 text-[11px] font-semibold shadow-md cursor-pointer transition-transform hover:scale-105 ${pill}">
+            ${dot}
+            <span class="whitespace-nowrap">${escapeHtml(z.name)}</span>
+            <span class="font-mono font-bold" style="color:${isA || isB ? "#fff" : escapeHtml(color)}">${metric}</span>
+          </div>
+        </div>`;
+
+      const title =
+        mode === "vuln"
+          ? isA
+            ? `${z.name} · Bairro fixado (origem) · IVS ${z.vuln}`
+            : isB
+              ? `${z.name} · Bairro comparado · IVS ${z.vuln}`
+              : `${z.name} · Clique para comparar com ${selectedZoneA.name}`
+          : `${z.name} · NDVI ${z.ndvi.toFixed(2)} (${z.canopy}% copa)`;
+
+      L.marker(pos, {
+        icon: L.divIcon({ className: "", html, iconSize: [0, 0], iconAnchor: [0, 0] }),
+        zIndexOffset: isA ? 1000 : isB ? 900 : 0,
+        title,
+        keyboard: true,
+      })
+        .on("click", () => {
+          const h = handlersRef.current;
+          if (h.mode === "vuln" && h.onSelectComparisonZone) {
+            if (z.id === h.selectedZoneA.id) return;
+            h.onSelectComparisonZone(z);
+          } else {
+            h.onSelectZone(z);
+          }
+        })
+        .addTo(group);
+    });
+  }, [ready, mode, selectedZoneA.id, selectedZoneB?.id, isDark]);
+
+  const toggleBtn = (active: boolean) =>
+    `flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold transition-colors cursor-pointer ${
+      active
+        ? "bg-primary text-primary-foreground"
+        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+    }`;
 
   return (
-    <div className={`relative overflow-hidden rounded-xl border border-border/80 bg-[#090d12] shadow-2xl ${className}`}>
-      {/* Grade e Textura Tática de Satélite */}
-      <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px]" />
-
-      {/* SVG Central do Satélite */}
-      <svg
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        className="h-full w-full select-none"
-        aria-label="Mapa de Satélite NDVI e Vulnerabilidade do Recife"
-      >
-        <defs>
-          {/* Gradiente do Oceano Atlântico */}
-          <linearGradient id="oceanGradient" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#0369a1" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#0284c7" stopOpacity="0.45" />
-          </linearGradient>
-
-          {/* Gradiente para Mancha de Simulação Ativa no Bairro Selecionado */}
-          <radialGradient id="simulatedCanopyGradient" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="var(--canopy)" stopOpacity="0.9" />
-            <stop offset="60%" stopColor="#10b981" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-
-        {/* Oceano Atlântico (Orla Leste do Recife) */}
-        <path
-          d="M 80 0 C 78 26, 75 52, 72 76 S 68 94, 68 100 L 100 100 L 100 0 Z"
-          fill="url(#oceanGradient)"
-        />
-
-        {/* Hidrografia Principal: Rio Capibaribe, Rio Beberibe e Bacia do Pina */}
-        <g fill="none" strokeLinecap="round">
-          {/* Rio Capibaribe Principal */}
-          <path
-            d="M 0 20 C 18 28, 28 38, 38 52 S 50 60, 62 58"
-            stroke="#0ea5e9"
-            strokeOpacity="0.55"
-            strokeWidth="1.8"
-          />
-          {/* Braço Norte / Rio Beberibe */}
-          <path
-            d="M 24 0 C 30 14, 36 30, 44 44 S 54 56, 62 58"
-            stroke="#0ea5e9"
-            strokeOpacity="0.45"
-            strokeWidth="1.3"
-          />
-          {/* Deságue na Bacia do Pina / Bacia Portuária */}
-          <path
-            d="M 62 58 C 66 56, 70 52, 72 46"
-            stroke="#0ea5e9"
-            strokeOpacity="0.6"
-            strokeWidth="2.0"
-          />
-          {/* Linha Costeira da Praia de Boa Viagem */}
-          <path
-            d="M 80 0 C 78 26, 75 52, 72 76 S 68 94, 68 100"
-            stroke="#38bdf8"
-            strokeOpacity="0.5"
-            strokeWidth="1.2"
-          />
-        </g>
-
-        {/* Malha Viária de Satélite */}
-        <g stroke="#94a3b8" strokeOpacity="0.18" strokeWidth="0.65" fill="none" strokeLinecap="round">
-          {arterialRoads.map((d, i) => (
-            <path key={i} d={d} />
-          ))}
-        </g>
-
-        {/* CAMADA ESPECTRAL: NDVI (Manchas Verdes) */}
-        {mode === "ndvi" && (
-          <g id="ndvi-layer">
-            {ndviPatches.map((patch) => (
-              <path
-                key={patch.id}
-                d={patch.path}
-                fill={patch.fill}
-                fillOpacity={patch.opacity}
-                className="transition-all duration-700 filter drop-shadow-sm"
-              />
-            ))}
-
-            {/* Expansão Visual da Copa Simulada no Bairro A */}
-            {additionalTreesPct > 0 && (
-              <circle
-                cx={selectedZoneA.x}
-                cy={selectedZoneA.y}
-                r={12 + additionalTreesPct * 0.4}
-                fill="url(#simulatedCanopyGradient)"
-                className="animate-pulse"
-              />
-            )}
-          </g>
-        )}
-
-        {/* CAMADA ESPECTRAL: Vulnerabilidade Social (IVS) */}
-        {mode === "vuln" && (
-          <g id="vuln-layer">
-            {vulnPatches.map((patch) => (
-              <path
-                key={patch.id}
-                d={patch.path}
-                fill={patch.fill}
-                fillOpacity={patch.opacity}
-                className="transition-all duration-700 filter blur-xs"
-              />
-            ))}
-          </g>
-        )}
-
-        {/* Conexão Visual de Comparação entre Zona A (Fixado) e Zona B (Comparação) */}
-        {selectedZoneB && (
-          <g id="comparison-line-group">
-            {/* Halo de contraste ao redor da linha */}
-            <line
-              x1={selectedZoneA.x}
-              y1={selectedZoneA.y}
-              x2={selectedZoneB.x}
-              y2={selectedZoneB.y}
-              stroke="#0f172a"
-              strokeOpacity="0.8"
-              strokeWidth="3.2"
-              strokeLinecap="round"
-            />
-            {/* Traço pontilhado saindo estritamente do bairro fixado (A) para o bairro comparado (B) */}
-            <line
-              x1={selectedZoneA.x}
-              y1={selectedZoneA.y}
-              x2={selectedZoneB.x}
-              y2={selectedZoneB.y}
-              stroke="#38bdf8"
-              strokeOpacity="0.95"
-              strokeWidth="1.6"
-              strokeDasharray="2.5 2.5"
-              strokeLinecap="round"
-            />
-            {/* Ponto luminoso pulsante no centro do vetor de comparação */}
-            <circle
-              cx={(selectedZoneA.x + selectedZoneB.x) / 2}
-              cy={(selectedZoneA.y + selectedZoneB.y) / 2}
-              r="1.8"
-              fill="#38bdf8"
-              className="animate-pulse"
-            />
-          </g>
-        )}
-      </svg>
-
-      {/* Marcadores Interativos dos Bairros sobrepostos com posicionamento absoluto */}
-      {zones.map((z) => {
-        const isA = z.id === selectedZoneA.id;
-        const isB = selectedZoneB && z.id === selectedZoneB.id;
-        const isSelected = isA || isB;
-
-        // Cor de destaque baseada no modo
-        const color =
+    <div
+      className={`relative isolate overflow-hidden rounded-xl border border-border/80 bg-muted shadow-xl ${className}`}
+    >
+      <div
+        ref={containerRef}
+        className="absolute inset-0 z-0"
+        role="region"
+        aria-label={
           mode === "ndvi"
-            ? ndviVar(z.ndvi)
-            : vulnVar(z.vuln);
+            ? "Mapa de cobertura vegetal do Recife"
+            : "Mapa de vulnerabilidade social do Recife"
+        }
+      />
 
-        return (
+      {!ready && (
+        <div className="absolute inset-0 z-[5] flex items-center justify-center text-xs text-muted-foreground font-mono">
+          Carregando mapa…
+        </div>
+      )}
+
+      {/* Zoom e recentralizar */}
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 rounded-lg border border-border/80 bg-card/90 p-1 backdrop-blur-md shadow-md">
+        <button
+          type="button"
+          onClick={() => mapRef.current?.zoomIn()}
+          className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-foreground cursor-pointer"
+          title="Aumentar zoom"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => mapRef.current?.zoomOut()}
+          className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-foreground cursor-pointer"
+          title="Diminuir zoom"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => fitAll(true)}
+          className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted text-foreground cursor-pointer"
+          title="Centralizar no Recife"
+        >
+          <Crosshair className="h-3.5 w-3.5 text-cyan-500" />
+        </button>
+      </div>
+
+      {/* Base e camadas */}
+      <div className="absolute top-3 left-14 z-10 flex flex-wrap items-center gap-1 rounded-lg border border-border/80 bg-card/90 p-1 backdrop-blur-md shadow-md max-w-[calc(100%-4.5rem)]">
+        <button
+          type="button"
+          className={toggleBtn(baseMap === "satelite")}
+          onClick={() => setBaseMap("satelite")}
+          title="Imagem de satélite (Esri)"
+        >
+          <Satellite className="h-3 w-3" /> Satélite
+        </button>
+        <button
+          type="button"
+          className={toggleBtn(baseMap === "ruas")}
+          onClick={() => setBaseMap("ruas")}
+          title="Mapa de ruas (OpenStreetMap)"
+        >
+          <MapIcon className="h-3 w-3" /> Ruas
+        </button>
+        <span className="mx-0.5 h-4 w-px bg-border" />
+        <button
+          type="button"
+          className={toggleBtn(showThematic)}
+          onClick={() => setShowThematic((v) => !v)}
+          title="Mostrar/ocultar a camada temática"
+        >
+          <Layers className="h-3 w-3" /> {mode === "ndvi" ? "Manchas verdes" : "Manchas IVS"}
+        </button>
+        {mode === "ndvi" && (
           <button
-            key={z.id}
-            onClick={() => {
-              if (mode === "vuln" && onSelectComparisonZone) {
-                // Se clicou no bairro já fixado, mantém fixo
-                if (z.id === selectedZoneA.id) return;
-                // Se clicou em outro bairro no mapa, projeta a comparação para ele (B)
-                onSelectComparisonZone(z);
-              } else {
-                onSelectZone(z);
-              }
-            }}
-            className="group absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer focus:outline-none transition-transform hover:scale-110"
-            style={{ left: `${z.x}%`, top: `${z.y}%` }}
-            title={
-              mode === "vuln"
-                ? isA
-                  ? `${z.name} · Bairro Fixado (Origem da Comparação) · IVS ${z.vuln}`
-                  : isB
-                  ? `${z.name} · Bairro Comparado (Destino da Linha) · IVS ${z.vuln}`
-                  : `${z.name} · Clique para comparar com ${selectedZoneA.name} · IVS ${z.vuln}`
-                : `${z.name} · NDVI ${z.ndvi.toFixed(2)} (${z.canopy}% copa)`
-            }
+            type="button"
+            className={toggleBtn(showNasaNdvi)}
+            onClick={() => setShowNasaNdvi((v) => !v)}
+            title="NDVI real do satélite MODIS (NASA GIBS, 250 m, composição de 8 dias)"
           >
-            {/* Halo de pulso em bairros sob intervenção ou selecionados */}
-            {isSelected && (
-              <span
-                className="absolute -inset-3 rounded-full animate-ping opacity-60 pointer-events-none"
-                style={{ background: isA ? "var(--destructive)" : isB ? "var(--accent)" : color }}
-              />
-            )}
-
-            {/* Círculo do Marcador */}
-            <div
-              className={`relative flex items-center justify-center rounded-full transition-all duration-300 ${
-                isA
-                  ? "h-8 w-8 ring-2 ring-destructive shadow-[0_0_18px_rgba(239,68,68,0.7)] bg-destructive"
-                  : isB
-                  ? "h-8 w-8 ring-2 ring-accent shadow-[0_0_18px_rgba(56,189,248,0.7)] bg-accent"
-                  : isSelected
-                  ? "h-8 w-8 ring-2 ring-white shadow-lg"
-                  : "h-5 w-5 ring-1 ring-border/80 opacity-85 group-hover:opacity-100"
-              }`}
-              style={{
-                background: isA ? undefined : isB ? undefined : color,
-                boxShadow: !isA && !isB && isSelected ? `0 0 16px ${color}` : undefined,
-              }}
-            >
-              {isA && (
-                <span className="font-mono text-[10px] font-extrabold text-white">
-                  A
-                </span>
-              )}
-              {isB && (
-                <span className="font-mono text-[10px] font-extrabold text-white">
-                  B
-                </span>
-              )}
-              {!isSelected && (
-                <span className="h-1.5 w-1.5 rounded-full bg-white/90" />
-              )}
-            </div>
-
-            {/* Tag Flutuante com Nome e Métrica */}
-            <div
-              className={`absolute left-1/2 top-full -translate-x-1/2 mt-1.5 whitespace-nowrap rounded-md px-2 py-0.5 text-[10px] font-mono shadow-md backdrop-blur border transition-all ${
-                isA
-                  ? "bg-destructive/95 border-destructive text-white font-bold ring-2 ring-destructive/40 z-30"
-                  : isB
-                  ? "bg-sky-600/95 border-sky-400 text-white font-bold ring-2 ring-sky-400/40 z-30"
-                  : isSelected
-                  ? "bg-background/95 border-white text-foreground font-bold ring-1 ring-white/30 z-20"
-                  : "bg-background/80 border-border/60 text-muted-foreground group-hover:text-foreground z-10"
-              }`}
-            >
-              <div className="flex items-center gap-1">
-                {isA && <span className="text-[9px] uppercase tracking-wide opacity-90">[Fixado]</span>}
-                {isB && <span className="text-[9px] uppercase tracking-wide opacity-90">[Comparação]</span>}
-                <span>{z.name}</span>
-                <span className="font-semibold" style={{ color: isA || isB ? "#ffffff" : color }}>
-                  {mode === "ndvi" ? `${z.canopy}%` : `IVS ${z.vuln}`}
-                </span>
-              </div>
-            </div>
+            NDVI NASA
           </button>
-        );
-      })}
+        )}
+        {baseMap === "satelite" && (
+          <button
+            type="button"
+            className={toggleBtn(showLabels)}
+            onClick={() => setShowLabels((v) => !v)}
+            title="Rótulos de vias e lugares"
+          >
+            Rótulos
+          </button>
+        )}
+      </div>
 
-      {/* Legenda Espectral de Satélite no Canto Inferior Esquerdo (renderizada se hideInlineLegend for false) */}
+      {/* Legenda */}
       {!hideInlineLegend && (
-        <div className="absolute bottom-3 left-3 rounded-lg border border-border/80 bg-background/90 p-3 backdrop-blur shadow-xl text-xs max-w-xs z-20">
+        <div className="absolute bottom-10 left-3 rounded-lg border border-border/80 bg-background/90 p-3 backdrop-blur shadow-xl text-xs max-w-xs z-10">
           {mode === "ndvi" ? (
             <div>
               <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -337,7 +584,6 @@ export function RecifeSatelliteMap({
                   <span className="h-2 w-2 rounded-full bg-canopy" />
                   Índice NDVI (Densidade de Copa)
                 </span>
-                <span className="font-mono text-[10px] text-emerald-400 font-semibold">Satélite Sentinel</span>
               </div>
               <div
                 className="h-2 w-48 rounded-full"
@@ -352,20 +598,19 @@ export function RecifeSatelliteMap({
                 <span>0.80 (Refúgio)</span>
               </div>
               {additionalTreesPct > 0 && (
-                <div className="mt-2 pt-1.5 border-t border-border/50 flex items-center gap-1.5 text-[10px] text-emerald-400 font-mono">
+                <div className="mt-2 pt-1.5 border-t border-border/50 flex items-center gap-1.5 text-[10px] text-emerald-500 font-mono">
                   <Crosshair className="h-3 w-3" />
-                  <span>Simulação ativa: +{additionalTreesPct}% copa em {selectedZoneA.name}</span>
+                  <span>
+                    Simulação ativa: +{additionalTreesPct}% copa em {selectedZoneA.name}
+                  </span>
                 </div>
               )}
             </div>
           ) : (
             <div>
-              <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-destructive" />
-                  Vulnerabilidade Social (IVS)
-                </span>
-                <span className="font-mono text-[10px] text-amber-400 font-semibold">Censo & Saúde</span>
+              <div className="flex items-center gap-1 mb-1.5 font-mono text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                <span className="h-2 w-2 rounded-full bg-destructive" />
+                Vulnerabilidade Social (IVS)
               </div>
               <div
                 className="h-2 w-48 rounded-full"
@@ -384,22 +629,16 @@ export function RecifeSatelliteMap({
         </div>
       )}
 
-      {/* Indicador de Comparação Territorial Ativa (Canto Superior Direito) */}
+      {/* Indicador de comparação A → B */}
       {selectedZoneB && (
-        <div className="absolute top-3 right-3 rounded-lg border border-border/80 bg-background/90 px-3 py-1.5 backdrop-blur shadow-md text-xs z-20 flex items-center gap-2">
-          <div className="flex items-center gap-1 font-mono text-[11px]">
-            <span className="rounded bg-destructive/20 px-1.5 py-0.5 font-bold text-destructive flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
-              A · {selectedZoneA.name}
-            </span>
-          </div>
-          <span className="text-muted-foreground font-mono text-xs">─┄┄→</span>
-          <div className="flex items-center gap-1 font-mono text-[11px]">
-            <span className="rounded bg-sky-500/20 px-1.5 py-0.5 font-bold text-sky-400 flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
-              B · {selectedZoneB.name}
-            </span>
-          </div>
+        <div className="absolute top-14 right-3 z-10 hidden sm:flex items-center gap-2 rounded-lg border border-border/80 bg-background/90 px-3 py-1.5 backdrop-blur shadow-md font-mono text-[11px]">
+          <span className="rounded bg-red-500/15 px-1.5 py-0.5 font-bold text-red-600 dark:text-red-400">
+            A · {selectedZoneA.name}
+          </span>
+          <span className="text-muted-foreground">┄┄→</span>
+          <span className="rounded bg-sky-500/15 px-1.5 py-0.5 font-bold text-sky-600 dark:text-sky-400">
+            B · {selectedZoneB.name}
+          </span>
         </div>
       )}
     </div>

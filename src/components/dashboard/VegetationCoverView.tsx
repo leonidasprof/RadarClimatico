@@ -311,15 +311,15 @@ export function VegetationCoverView({
               <div>
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-canopy animate-pulse" />
-                  Mosaico de Satélite Multiespectral · Recife
+                  Mapa de Cobertura Vegetal · Recife
                 </h3>
                 <p className="text-[11px] text-muted-foreground">
-                  Camada NDVI renderizada com isolinhas de calor e malha urbana. Clique nos marcadores para trocar o território.
+                  Imagem de satélite real com refúgios verdes, NDVI por bairro e a copa simulada. Clique nos marcadores para trocar o território.
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="rounded bg-secondary/80 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-                  Resolução 10m · Sentinel-2
+                  Esri · OSM · NASA GIBS
                 </span>
               </div>
             </div>

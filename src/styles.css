@@ -367,3 +367,17 @@
     opacity: 0.8;
   }
 }
+
+/* Mapa de cobertura vegetal: pulso da copa simulada */
+@keyframes arboris-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+.arboris-pulse {
+  animation: arboris-pulse 2.4s ease-in-out infinite;
+}

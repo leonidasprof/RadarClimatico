@@ -15,7 +15,7 @@ import type { Zone } from "@/lib/radar-data";
  */
 
 // Centroides aproximados dos bairros monitorados (WGS84)
-const zoneCoordinates: Record<string, [number, number]> = {
+export const zoneCoordinates: Record<string, [number, number]> = {
   "boa-viagem": [-8.1275, -34.9015],
   "santo-amaro": [-8.0478, -34.8785],
   "boa-vista": [-8.0605, -34.8895],
@@ -26,7 +26,7 @@ const zoneCoordinates: Record<string, [number, number]> = {
   ibura: [-8.1185, -34.9465],
 };
 
-const RECIFE_CENTER: [number, number] = [-8.07, -34.91];
+export const RECIFE_CENTER: [number, number] = [-8.07, -34.91];
 
 const OSM_ATTR =
   '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>';
